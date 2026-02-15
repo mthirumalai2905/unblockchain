@@ -1,212 +1,178 @@
 import { motion } from "framer-motion";
 import {
-  CheckSquare,
-  Lightbulb,
-  AlertTriangle,
-  HelpCircle,
-  FileText,
-  ArrowRight,
-  Check,
-  X,
-  Pencil,
-  Sparkles,
+  CheckSquare, Lightbulb, AlertTriangle, HelpCircle,
+  FileText, ArrowRight, Check, X, Pencil, Sparkles,
+  ChevronUp, ArrowUpRight, Circle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useWorkspace } from "@/store/WorkspaceStore";
 
 const AIStructuredView = () => {
+  const { themes, actions, questions, risks, docs, selectTheme, setActiveSection } = useWorkspace();
+
   return (
-    <div className="space-y-6">
-      {/* AI Processing Status */}
+    <div className="space-y-8 max-w-3xl">
+      {/* Status Bar */}
       <motion.div
-        initial={{ opacity: 0, y: 8 }}
+        initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20"
+        className="flex items-center gap-3 p-3.5 rounded-lg border border-border bg-card"
       >
-        <div className="w-8 h-8 rounded-lg cf-gradient-primary flex items-center justify-center">
-          <Sparkles className="w-4 h-4 text-primary-foreground" />
+        <div className="w-7 h-7 rounded-md bg-foreground flex items-center justify-center">
+          <Sparkles className="w-3.5 h-3.5 text-background" />
         </div>
         <div className="flex-1">
-          <p className="text-sm font-medium text-foreground">AI has processed 12 dumps</p>
-          <p className="text-xs text-muted-foreground">Last updated 2 minutes ago · 94% confidence</p>
+          <p className="text-[13px] font-medium text-foreground">12 dumps processed</p>
+          <p className="text-[11px] text-muted-foreground font-mono">3 themes · 5 actions · 4 questions · updated 2m ago</p>
         </div>
-        <div className="w-2 h-2 rounded-full bg-cf-decision animate-pulse-soft" />
+        <div className="flex items-center gap-1.5">
+          <div className="w-1.5 h-1.5 rounded-full bg-cf-decision animate-pulse-dot" />
+          <span className="text-[11px] text-muted-foreground font-mono">94%</span>
+        </div>
       </motion.div>
 
-      {/* Extracted Themes */}
-      <Section title="Identified Themes" icon={Lightbulb} color="text-cf-idea">
-        <ThemeCard
-          title="Enterprise Pricing Strategy"
-          dumpCount={4}
-          confidence={92}
-          tags={["pricing", "enterprise", "competitors"]}
-        />
-        <ThemeCard
-          title="Product Launch Timeline"
-          dumpCount={3}
-          confidence={88}
-          tags={["Q2", "launch", "milestones"]}
-        />
-        <ThemeCard
-          title="Startup Market Concerns"
-          dumpCount={2}
-          confidence={76}
-          tags={["startups", "accessibility", "pricing"]}
-        />
+      {/* Themes */}
+      <Section title="Themes" count={themes.length}>
+        {themes.map((theme) => (
+          <motion.button
+            key={theme.id}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            onClick={() => { selectTheme(theme.id); setActiveSection("themes"); }}
+            className="w-full text-left p-3.5 rounded-lg bg-card border border-border hover:border-ring/30 transition-all group cursor-pointer hover:cf-shadow-md"
+          >
+            <div className="flex items-start justify-between mb-2">
+              <h4 className="text-[13px] font-medium text-foreground group-hover:text-foreground">{theme.title}</h4>
+              <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {theme.tags.map((tag) => (
+                <span key={tag} className="px-2 py-[2px] text-[10px] font-mono rounded bg-accent text-muted-foreground">
+                  {tag}
+                </span>
+              ))}
+              <span className="text-[10px] text-muted-foreground/50 font-mono ml-auto">
+                {theme.dumpIds.length} dumps · {theme.confidence}%
+              </span>
+            </div>
+          </motion.button>
+        ))}
       </Section>
 
-      {/* Action Items */}
-      <Section title="Action Items" icon={CheckSquare} color="text-cf-action">
-        <ActionItem text="Validate pricing with finance team" owner="Unassigned" priority="high" />
-        <ActionItem text="Prepare competitive analysis deck" owner="Sarah" priority="medium" />
-        <ActionItem text="Schedule stakeholder review meeting" owner="Unassigned" priority="medium" />
-        <ActionItem text="Draft enterprise tier feature comparison" owner="Alex" priority="low" />
+      {/* Actions */}
+      <Section title="Action Items" count={actions.filter((a) => !a.done).length}>
+        {actions.map((action) => (
+          <ActionRow key={action.id} action={action} />
+        ))}
       </Section>
 
-      {/* Open Questions */}
-      <Section title="Open Questions" icon={HelpCircle} color="text-cf-question">
-        <QuestionItem text="Will $75/user/month price out startup customers?" votes={3} />
-        <QuestionItem text="Should we offer a discount for annual billing?" votes={1} />
-        <QuestionItem text="What's our cost per user for AI processing?" votes={2} />
+      {/* Questions */}
+      <Section title="Open Questions" count={questions.filter((q) => !q.answered).length}>
+        {questions.map((q) => (
+          <QuestionRow key={q.id} question={q} />
+        ))}
       </Section>
 
       {/* Risks */}
-      <Section title="Risks & Blockers" icon={AlertTriangle} color="text-cf-blocker">
-        <RiskItem text="Pricing may exclude startup market segment" severity="medium" />
-        <RiskItem text="AI processing costs could increase with scale" severity="high" />
+      <Section title="Risks" count={risks.length}>
+        {risks.map((risk) => (
+          <div key={risk.id} className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border">
+            <span className={cn(
+              "px-1.5 py-[1px] text-[10px] font-semibold uppercase rounded font-mono",
+              risk.severity === "high" ? "bg-cf-blocker/10 text-cf-blocker" : "bg-cf-question/10 text-cf-question"
+            )}>
+              {risk.severity}
+            </span>
+            <span className="text-[13px] text-foreground/80 flex-1">{risk.text}</span>
+            <button className="text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+              onClick={() => {}}>
+              <ArrowUpRight className="w-3 h-3" />
+              {risk.sourceDumpIds.length}
+            </button>
+          </div>
+        ))}
       </Section>
 
-      {/* Generated Document */}
-      <Section title="Generated Documents" icon={FileText} color="text-foreground">
-        <DocCard
-          title="Enterprise Pricing Strategy Brief"
-          status="draft"
-          lastUpdated="2 min ago"
-          sources={4}
-        />
-        <DocCard
-          title="Q2 Launch Checklist"
-          status="draft"
-          lastUpdated="5 min ago"
-          sources={3}
-        />
+      {/* Docs */}
+      <Section title="Generated Documents" count={docs.length}>
+        {docs.map((doc) => (
+          <div key={doc.id} className="flex items-center gap-3 p-3.5 rounded-lg bg-card border border-border hover:border-ring/30 transition-all cursor-pointer group hover:cf-shadow-md">
+            <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="text-[13px] font-medium text-foreground">{doc.title}</div>
+              <div className="text-[11px] text-muted-foreground font-mono">{doc.lastUpdated} · {doc.sourceDumpIds.length} sources</div>
+            </div>
+            <span className="px-2 py-[2px] text-[10px] font-mono rounded bg-cf-question/10 text-cf-question uppercase">
+              {doc.status}
+            </span>
+            <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+          </div>
+        ))}
       </Section>
     </div>
   );
 };
 
-const Section = ({ title, icon: Icon, color, children }: {
-  title: string;
-  icon: typeof Lightbulb;
-  color: string;
-  children: React.ReactNode;
-}) => (
-  <motion.div
-    initial={{ opacity: 0, y: 8 }}
-    animate={{ opacity: 1, y: 0 }}
-    className="space-y-2"
-  >
-    <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground px-1">
-      <Icon className={cn("w-4 h-4", color)} />
-      {title}
-    </h3>
-    <div className="space-y-2">{children}</div>
+const Section = ({ title, count, children }: { title: string; count: number; children: React.ReactNode }) => (
+  <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
+    <div className="flex items-center gap-2 px-0.5">
+      <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{title}</h3>
+      <span className="text-[11px] font-mono text-muted-foreground/50">{count}</span>
+    </div>
+    <div className="space-y-1.5">{children}</div>
   </motion.div>
 );
 
-const ThemeCard = ({ title, dumpCount, confidence, tags }: {
-  title: string;
-  dumpCount: number;
-  confidence: number;
-  tags: string[];
-}) => (
-  <div className="group p-3.5 rounded-lg bg-card border border-border hover:border-cf-idea/30 cf-card-shadow transition-all">
-    <div className="flex items-start justify-between mb-2">
-      <h4 className="text-sm font-medium text-foreground">{title}</h4>
-      <FeedbackButtons />
-    </div>
-    <div className="flex items-center gap-2 flex-wrap">
-      {tags.map((tag) => (
-        <span key={tag} className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-cf-idea/10 text-cf-idea">
-          {tag}
-        </span>
-      ))}
-      <span className="text-[10px] text-muted-foreground ml-auto">
-        {dumpCount} dumps · {confidence}% confidence
+const ActionRow = ({ action }: { action: ReturnType<typeof useWorkspace>["actions"][0] }) => {
+  const { toggleAction, setActiveSection, selectDump } = useWorkspace();
+  return (
+    <div className="group flex items-center gap-3 p-3 rounded-lg bg-card border border-border hover:border-ring/30 transition-all">
+      <button onClick={() => toggleAction(action.id)} className="shrink-0">
+        {action.done ? (
+          <Check className="w-4 h-4 text-cf-decision" />
+        ) : (
+          <Circle className={cn(
+            "w-4 h-4",
+            action.priority === "high" ? "text-cf-blocker" : action.priority === "medium" ? "text-cf-question" : "text-muted-foreground/30"
+          )} />
+        )}
+      </button>
+      <span className={cn("text-[13px] flex-1", action.done ? "line-through text-muted-foreground" : "text-foreground/80")}>
+        {action.text}
       </span>
+      <span className="text-[11px] font-mono text-muted-foreground">{action.owner}</span>
+      <button
+        onClick={() => { selectDump(action.sourceDumpIds[0]); setActiveSection("dumps"); }}
+        className="text-[11px] text-muted-foreground/50 hover:text-foreground flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-all"
+      >
+        <ArrowUpRight className="w-3 h-3" />
+        source
+      </button>
     </div>
-  </div>
-);
+  );
+};
 
-const ActionItem = ({ text, owner, priority }: {
-  text: string;
-  owner: string;
-  priority: "high" | "medium" | "low";
-}) => (
-  <div className="group flex items-center gap-3 p-3 rounded-lg bg-card border border-border hover:border-cf-action/30 cf-card-shadow transition-all">
-    <div className={cn(
-      "w-2 h-2 rounded-full shrink-0",
-      priority === "high" && "bg-cf-blocker",
-      priority === "medium" && "bg-cf-question",
-      priority === "low" && "bg-cf-decision",
-    )} />
-    <span className="text-sm text-foreground flex-1">{text}</span>
-    <span className="text-xs text-muted-foreground">{owner}</span>
-    <FeedbackButtons />
-  </div>
-);
-
-const QuestionItem = ({ text, votes }: { text: string; votes: number }) => (
-  <div className="group flex items-center gap-3 p-3 rounded-lg bg-card border border-border hover:border-cf-question/30 cf-card-shadow transition-all">
-    <span className="text-sm text-foreground flex-1">{text}</span>
-    <span className="text-xs text-muted-foreground">{votes} votes</span>
-    <FeedbackButtons />
-  </div>
-);
-
-const RiskItem = ({ text, severity }: { text: string; severity: "high" | "medium" | "low" }) => (
-  <div className="group flex items-center gap-3 p-3 rounded-lg bg-card border border-border hover:border-cf-blocker/30 cf-card-shadow transition-all">
-    <div className={cn(
-      "px-2 py-0.5 text-[10px] font-semibold uppercase rounded",
-      severity === "high" ? "bg-cf-blocker/10 text-cf-blocker" : "bg-cf-question/10 text-cf-question"
-    )}>
-      {severity}
+const QuestionRow = ({ question }: { question: ReturnType<typeof useWorkspace>["questions"][0] }) => {
+  const { voteQuestion, selectDump, setActiveSection } = useWorkspace();
+  return (
+    <div className="group flex items-center gap-3 p-3 rounded-lg bg-card border border-border hover:border-ring/30 transition-all">
+      <button
+        onClick={() => voteQuestion(question.id)}
+        className="shrink-0 flex flex-col items-center gap-0.5 px-1"
+      >
+        <ChevronUp className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground transition-colors" />
+        <span className="text-[11px] font-mono text-muted-foreground">{question.votes}</span>
+      </button>
+      <span className="text-[13px] text-foreground/80 flex-1">{question.text}</span>
+      <button
+        onClick={() => { selectDump(question.sourceDumpIds[0]); setActiveSection("dumps"); }}
+        className="text-[11px] text-muted-foreground/50 hover:text-foreground flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-all"
+      >
+        <ArrowUpRight className="w-3 h-3" />
+        source
+      </button>
     </div>
-    <span className="text-sm text-foreground flex-1">{text}</span>
-    <FeedbackButtons />
-  </div>
-);
-
-const DocCard = ({ title, status, lastUpdated, sources }: {
-  title: string;
-  status: string;
-  lastUpdated: string;
-  sources: number;
-}) => (
-  <div className="group flex items-center gap-3 p-3.5 rounded-lg bg-card border border-border hover:border-primary/20 cf-card-shadow transition-all cursor-pointer">
-    <FileText className="w-4 h-4 text-primary shrink-0" />
-    <div className="flex-1 min-w-0">
-      <div className="text-sm font-medium text-foreground">{title}</div>
-      <div className="text-xs text-muted-foreground">{lastUpdated} · {sources} source dumps</div>
-    </div>
-    <span className="px-2 py-0.5 text-[10px] font-medium rounded bg-cf-question/10 text-cf-question uppercase">
-      {status}
-    </span>
-    <ArrowRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-  </div>
-);
-
-const FeedbackButtons = () => (
-  <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-    <button className="p-1 rounded hover:bg-cf-decision/10 text-muted-foreground hover:text-cf-decision transition-colors">
-      <Check className="w-3 h-3" />
-    </button>
-    <button className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground transition-colors">
-      <Pencil className="w-3 h-3" />
-    </button>
-    <button className="p-1 rounded hover:bg-cf-blocker/10 text-muted-foreground hover:text-cf-blocker transition-colors">
-      <X className="w-3 h-3" />
-    </button>
-  </div>
-);
+  );
+};
 
 export default AIStructuredView;
