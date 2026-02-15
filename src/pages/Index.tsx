@@ -1,142 +1,144 @@
-import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Eye, EyeOff, Sparkles, Brain } from "lucide-react";
+import { Users, Eye, EyeOff, Brain } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { WorkspaceProvider, useWorkspace } from "@/store/WorkspaceStore";
 import AppSidebar from "@/components/AppSidebar";
 import DumpInput from "@/components/DumpInput";
-import DumpCard, { Dump } from "@/components/DumpCard";
+import DumpCard from "@/components/DumpCard";
 import AIStructuredView from "@/components/AIStructuredView";
-import { mockDumps } from "@/data/mockDumps";
+import ThemesView from "@/components/ThemesView";
+import ActionsView from "@/components/ActionsView";
+import QuestionsView from "@/components/QuestionsView";
+import TimelineView from "@/components/TimelineView";
 
-const Index = () => {
-  const [activeSection, setActiveSection] = useState("dumps");
-  const [dumps, setDumps] = useState<Dump[]>(mockDumps);
-  const [showAI, setShowAI] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
+const WorkspaceContent = () => {
+  const {
+    dumps, activeSection, isProcessing, showAIPanel, toggleAIPanel, selectedDumpId,
+  } = useWorkspace();
 
-  const handleNewDump = (content: string) => {
-    const newDump: Dump = {
-      id: String(Date.now()),
-      content,
-      author: "You",
-      avatar: "YO",
-      timestamp: "Just now",
-      type: "note",
-      aiDetected: false,
-    };
-    setDumps([newDump, ...dumps]);
+  const filteredDumps = selectedDumpId
+    ? dumps.filter((d) => d.id === selectedDumpId)
+    : dumps;
 
-    // Simulate AI processing
-    setIsProcessing(true);
-    setTimeout(() => {
-      setDumps((prev) =>
-        prev.map((d) =>
-          d.id === newDump.id ? { ...d, aiDetected: true, type: "idea" as const } : d
-        )
-      );
-      setIsProcessing(false);
-    }, 2000);
+  const renderContent = () => {
+    switch (activeSection) {
+      case "structures":
+        return <AIStructuredView />;
+      case "themes":
+        return <ThemesView />;
+      case "actions":
+        return <ActionsView />;
+      case "questions":
+        return <QuestionsView />;
+      case "timeline":
+        return <TimelineView />;
+      case "archive":
+        return (
+          <div className="flex items-center justify-center h-64 text-muted-foreground text-[13px]">
+            No archived sessions yet
+          </div>
+        );
+      case "dumps":
+      default:
+        return (
+          <div className="space-y-3 max-w-3xl">
+            <DumpInput />
+
+            {isProcessing && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg border border-border bg-card"
+              >
+                <div className="w-1.5 h-1.5 rounded-full bg-foreground animate-pulse-dot" />
+                <span className="text-[12px] text-muted-foreground font-mono">Processing dump...</span>
+              </motion.div>
+            )}
+
+            <div className="space-y-1.5">
+              {filteredDumps.map((dump, i) => (
+                <DumpCard key={dump.id} dump={dump} index={i} />
+              ))}
+            </div>
+          </div>
+        );
+    }
   };
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
-      <AppSidebar activeSection={activeSection} onSectionChange={setActiveSection} />
+      <AppSidebar />
 
-      {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="h-14 border-b border-border flex items-center justify-between px-6 shrink-0 bg-card/50 backdrop-blur-sm">
+        <header className="h-14 border-b border-border flex items-center justify-between px-6 shrink-0">
           <div className="flex items-center gap-3">
-            <h1 className="text-base font-semibold text-foreground">Q2 Pricing Strategy</h1>
-            <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-cf-decision/10 text-cf-decision">
-              Active
-            </span>
+            <h1 className="text-[14px] font-semibold text-foreground">Q2 Pricing Strategy</h1>
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-cf-decision" />
+              <span className="text-[11px] font-mono text-muted-foreground">active</span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Online Users */}
-            <div className="flex items-center gap-1.5">
-              <div className="flex -space-x-2">
+          <div className="flex items-center gap-4">
+            {/* Avatars */}
+            <div className="flex items-center gap-2">
+              <div className="flex -space-x-1.5">
                 {["MC", "AR", "JL", "SK"].map((initials) => (
                   <div
                     key={initials}
-                    className="w-7 h-7 rounded-full bg-accent border-2 border-card flex items-center justify-center text-[10px] font-semibold text-accent-foreground"
+                    className="w-6 h-6 rounded-full bg-accent border-2 border-background flex items-center justify-center text-[9px] font-semibold text-muted-foreground"
                   >
                     {initials}
                   </div>
                 ))}
               </div>
-              <span className="text-xs text-muted-foreground ml-1">
-                <Users className="w-3 h-3 inline mr-0.5" />4 online
+              <span className="text-[11px] text-muted-foreground font-mono">
+                <Users className="w-3 h-3 inline mr-0.5" />4
               </span>
             </div>
 
             {/* AI Toggle */}
             <button
-              onClick={() => setShowAI(!showAI)}
+              onClick={toggleAIPanel}
               className={cn(
-                "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
-                showAI
-                  ? "cf-gradient-primary text-primary-foreground cf-glow"
-                  : "bg-secondary text-secondary-foreground hover:bg-accent"
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium border transition-all duration-150",
+                showAIPanel
+                  ? "bg-foreground text-background border-foreground"
+                  : "bg-transparent text-muted-foreground border-border hover:border-ring/50 hover:text-foreground"
               )}
             >
-              {showAI ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-              {showAI ? "AI View" : "Raw Dumps"}
+              <Brain className="w-3.5 h-3.5" />
+              {showAIPanel ? "AI On" : "AI Off"}
             </button>
           </div>
         </header>
 
-        {/* Content Area */}
-        <div className="flex-1 overflow-hidden">
-          <AnimatePresence mode="wait">
-            {showAI ? (
+        {/* Content */}
+        <div className="flex-1 overflow-auto cf-scrollbar">
+          <div className="p-6">
+            <AnimatePresence mode="wait">
               <motion.div
-                key="ai"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="h-full overflow-auto p-6"
+                key={activeSection + (showAIPanel ? "-ai" : "")}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.15 }}
               >
-                <AIStructuredView />
+                {showAIPanel && activeSection === "dumps" ? <AIStructuredView /> : renderContent()}
               </motion.div>
-            ) : (
-              <motion.div
-                key="dumps"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                className="h-full overflow-auto p-6 space-y-4"
-              >
-                {/* Input */}
-                <DumpInput onSubmit={handleNewDump} />
-
-                {/* Processing indicator */}
-                {isProcessing && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary/5 border border-primary/10"
-                  >
-                    <Brain className="w-4 h-4 text-primary animate-pulse-soft" />
-                    <span className="text-xs text-primary font-medium">AI is processing your dump...</span>
-                  </motion.div>
-                )}
-
-                {/* Dumps List */}
-                <div className="space-y-2">
-                  {dumps.map((dump, i) => (
-                    <DumpCard key={dump.id} dump={dump} index={i} />
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+            </AnimatePresence>
+          </div>
         </div>
       </main>
     </div>
   );
 };
+
+const Index = () => (
+  <WorkspaceProvider>
+    <WorkspaceContent />
+  </WorkspaceProvider>
+);
 
 export default Index;

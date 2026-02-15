@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,105 +6,61 @@
 
 @layer base {
   :root {
-    --background: 220 20% 97%;
-    --foreground: 220 25% 10%;
+    --background: 0 0% 4%;
+    --foreground: 0 0% 93%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 220 25% 10%;
+    --card: 0 0% 7%;
+    --card-foreground: 0 0% 93%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 25% 10%;
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 93%;
 
-    --primary: 220 90% 56%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
 
-    --secondary: 220 14% 92%;
-    --secondary-foreground: 220 25% 10%;
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 93%;
 
-    --muted: 220 14% 95%;
-    --muted-foreground: 220 10% 46%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 45%;
 
-    --accent: 220 14% 92%;
-    --accent-foreground: 220 25% 10%;
+    --accent: 0 0% 12%;
+    --accent-foreground: 0 0% 93%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 90%;
-    --input: 220 13% 90%;
-    --ring: 220 90% 56%;
+    --border: 0 0% 14%;
+    --input: 0 0% 14%;
+    --ring: 0 0% 30%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
-    /* ClarityFlow Intelligence Colors */
+    /* ClarityFlow semantic colors */
     --cf-idea: 217 91% 60%;
     --cf-decision: 142 71% 45%;
-    --cf-question: 38 92% 50%;
-    --cf-blocker: 0 84% 60%;
+    --cf-question: 45 93% 58%;
+    --cf-blocker: 0 72% 55%;
     --cf-action: 262 83% 58%;
-    --cf-note: 220 10% 46%;
+    --cf-note: 0 0% 45%;
 
-    /* Surface layers */
-    --cf-surface-1: 220 20% 97%;
-    --cf-surface-2: 0 0% 100%;
-    --cf-surface-3: 220 14% 95%;
-    --cf-surface-elevated: 0 0% 100%;
+    /* Surfaces */
+    --cf-surface-0: 0 0% 4%;
+    --cf-surface-1: 0 0% 7%;
+    --cf-surface-2: 0 0% 9%;
+    --cf-surface-3: 0 0% 12%;
+    --cf-surface-hover: 0 0% 14%;
 
     /* Sidebar */
-    --sidebar-background: 220 25% 10%;
-    --sidebar-foreground: 220 14% 80%;
-    --sidebar-primary: 220 90% 56%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 20% 16%;
-    --sidebar-accent-foreground: 220 14% 90%;
-    --sidebar-border: 220 20% 18%;
-    --sidebar-ring: 220 90% 56%;
-    --sidebar-muted: 220 10% 40%;
-  }
-
-  .dark {
-    --background: 222 25% 6%;
-    --foreground: 220 14% 92%;
-
-    --card: 222 20% 9%;
-    --card-foreground: 220 14% 92%;
-
-    --popover: 222 20% 9%;
-    --popover-foreground: 220 14% 92%;
-
-    --primary: 220 90% 56%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 222 15% 14%;
-    --secondary-foreground: 220 14% 92%;
-
-    --muted: 222 15% 14%;
-    --muted-foreground: 220 10% 50%;
-
-    --accent: 222 15% 14%;
-    --accent-foreground: 220 14% 92%;
-
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 222 15% 16%;
-    --input: 222 15% 16%;
-    --ring: 220 90% 56%;
-
-    --cf-surface-1: 222 25% 6%;
-    --cf-surface-2: 222 20% 9%;
-    --cf-surface-3: 222 15% 12%;
-    --cf-surface-elevated: 222 20% 11%;
-
-    --sidebar-background: 222 30% 4%;
-    --sidebar-foreground: 220 14% 70%;
-    --sidebar-primary: 220 90% 56%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 20% 10%;
-    --sidebar-accent-foreground: 220 14% 90%;
-    --sidebar-border: 222 20% 12%;
-    --sidebar-ring: 220 90% 56%;
-    --sidebar-muted: 220 10% 35%;
+    --sidebar-background: 0 0% 5.5%;
+    --sidebar-foreground: 0 0% 55%;
+    --sidebar-primary: 0 0% 93%;
+    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-accent: 0 0% 10%;
+    --sidebar-accent-foreground: 0 0% 93%;
+    --sidebar-border: 0 0% 12%;
+    --sidebar-ring: 0 0% 30%;
+    --sidebar-muted: 0 0% 35%;
   }
 }
 
@@ -114,8 +70,9 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    letter-spacing: -0.011em;
   }
 
   .font-mono {
@@ -124,23 +81,46 @@
 }
 
 @layer utilities {
-  .cf-gradient-primary {
-    background: linear-gradient(135deg, hsl(220 90% 56%), hsl(250 80% 60%));
+  .cf-gradient-brand {
+    background: linear-gradient(135deg, hsl(0 0% 100%), hsl(0 0% 70%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
-  .cf-gradient-surface {
-    background: linear-gradient(180deg, hsl(var(--cf-surface-2)), hsl(var(--cf-surface-1)));
+  .cf-border-glow {
+    box-shadow: 0 0 0 1px hsl(0 0% 20%), 0 0 20px -5px hsl(0 0% 30% / 0.3);
   }
 
-  .cf-glow {
-    box-shadow: 0 0 40px -10px hsl(220 90% 56% / 0.3);
+  .cf-shadow-sm {
+    box-shadow: 0 1px 2px 0 hsl(0 0% 0% / 0.3);
   }
 
-  .cf-card-shadow {
-    box-shadow: 0 1px 3px 0 hsl(var(--foreground) / 0.04), 0 1px 2px -1px hsl(var(--foreground) / 0.04);
+  .cf-shadow-md {
+    box-shadow: 0 2px 8px -2px hsl(0 0% 0% / 0.4), 0 0 0 1px hsl(0 0% 14%);
   }
 
-  .cf-card-shadow-lg {
-    box-shadow: 0 4px 16px -2px hsl(var(--foreground) / 0.08), 0 2px 4px -2px hsl(var(--foreground) / 0.04);
+  .cf-shadow-lg {
+    box-shadow: 0 8px 30px -4px hsl(0 0% 0% / 0.5), 0 0 0 1px hsl(0 0% 14%);
+  }
+
+  .cf-dot-pattern {
+    background-image: radial-gradient(circle, hsl(0 0% 18%) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* Scrollbar styling */
+  .cf-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .cf-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .cf-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(0 0% 20%);
+    border-radius: 3px;
+  }
+  .cf-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(0 0% 28%);
   }
 }
