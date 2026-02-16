@@ -40,7 +40,7 @@ const TimelineView = () => {
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-[11px] font-mono text-muted-foreground/50">{dump.timestamp}</span>
+                    <span className="text-[11px] font-mono text-muted-foreground/50">{new Date(dump.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     <span className="text-[12px] font-medium text-muted-foreground">{dump.author}</span>
                   </div>
                   <p className="text-[13px] text-foreground/70 leading-relaxed truncate">{dump.content}</p>
