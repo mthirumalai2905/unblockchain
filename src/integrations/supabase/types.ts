@@ -14,7 +14,245 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      actions: {
+        Row: {
+          created_at: string
+          done: boolean
+          id: string
+          owner: string | null
+          priority: string
+          session_id: string
+          source_dump_ids: string[] | null
+          text: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          done?: boolean
+          id?: string
+          owner?: string | null
+          priority?: string
+          session_id: string
+          source_dump_ids?: string[] | null
+          text: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          done?: boolean
+          id?: string
+          owner?: string | null
+          priority?: string
+          session_id?: string
+          source_dump_ids?: string[] | null
+          text?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "actions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dump_themes: {
+        Row: {
+          dump_id: string
+          theme_id: string
+        }
+        Insert: {
+          dump_id: string
+          theme_id: string
+        }
+        Update: {
+          dump_id?: string
+          theme_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dump_themes_dump_id_fkey"
+            columns: ["dump_id"]
+            isOneToOne: false
+            referencedRelation: "dumps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dump_themes_theme_id_fkey"
+            columns: ["theme_id"]
+            isOneToOne: false
+            referencedRelation: "themes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dumps: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          session_id: string
+          type: Database["public"]["Enums"]["dump_type"]
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          session_id: string
+          type?: Database["public"]["Enums"]["dump_type"]
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          session_id?: string
+          type?: Database["public"]["Enums"]["dump_type"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dumps_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_initials: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          avatar_initials?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          avatar_initials?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      questions: {
+        Row: {
+          answered: boolean
+          created_at: string
+          id: string
+          session_id: string
+          source_dump_ids: string[] | null
+          text: string
+          user_id: string
+          votes: number
+        }
+        Insert: {
+          answered?: boolean
+          created_at?: string
+          id?: string
+          session_id: string
+          source_dump_ids?: string[] | null
+          text: string
+          user_id: string
+          votes?: number
+        }
+        Update: {
+          answered?: boolean
+          created_at?: string
+          id?: string
+          session_id?: string
+          source_dump_ids?: string[] | null
+          text?: string
+          user_id?: string
+          votes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sessions: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      themes: {
+        Row: {
+          confidence: number | null
+          created_at: string
+          id: string
+          session_id: string
+          tags: string[] | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string
+          id?: string
+          session_id: string
+          tags?: string[] | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string
+          id?: string
+          session_id?: string
+          tags?: string[] | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "themes_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +261,13 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      dump_type:
+        | "idea"
+        | "decision"
+        | "question"
+        | "blocker"
+        | "action"
+        | "note"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +394,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      dump_type: ["idea", "decision", "question", "blocker", "action", "note"],
+    },
   },
 } as const

@@ -1,7 +1,8 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Eye, EyeOff, Brain } from "lucide-react";
+import { Brain, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WorkspaceProvider, useWorkspace } from "@/store/WorkspaceStore";
+import { useAuth } from "@/hooks/useAuth";
 import AppSidebar from "@/components/AppSidebar";
 import DumpInput from "@/components/DumpInput";
 import DumpCard from "@/components/DumpCard";
@@ -10,15 +11,27 @@ import ThemesView from "@/components/ThemesView";
 import ActionsView from "@/components/ActionsView";
 import QuestionsView from "@/components/QuestionsView";
 import TimelineView from "@/components/TimelineView";
+import AISummaryPanel from "@/components/AISummaryPanel";
+import Auth from "@/pages/Auth";
 
 const WorkspaceContent = () => {
   const {
-    dumps, activeSection, isProcessing, showAIPanel, toggleAIPanel, selectedDumpId,
+    dumps, activeSection, isProcessing, showAIPanel, toggleAIPanel, selectedDumpId, loading, sessions, activeSessionId,
   } = useWorkspace();
+
+  const activeSession = sessions.find((s) => s.id === activeSessionId);
 
   const filteredDumps = selectedDumpId
     ? dumps.filter((d) => d.id === selectedDumpId)
     : dumps;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-background">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   const renderContent = () => {
     switch (activeSection) {
@@ -41,7 +54,7 @@ const WorkspaceContent = () => {
       case "dumps":
       default:
         return (
-          <div className="space-y-3 max-w-3xl">
+          <div className="space-y-3">
             <DumpInput />
 
             {isProcessing && (
@@ -59,6 +72,11 @@ const WorkspaceContent = () => {
               {filteredDumps.map((dump, i) => (
                 <DumpCard key={dump.id} dump={dump} index={i} />
               ))}
+              {dumps.length === 0 && !isProcessing && (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <p className="text-[13px] text-muted-foreground">No dumps yet. Start typing above!</p>
+                </div>
+              )}
             </div>
           </div>
         );
@@ -73,7 +91,7 @@ const WorkspaceContent = () => {
         {/* Header */}
         <header className="h-14 border-b border-border flex items-center justify-between px-6 shrink-0">
           <div className="flex items-center gap-3">
-            <h1 className="text-[14px] font-semibold text-foreground">Q2 Pricing Strategy</h1>
+            <h1 className="text-[14px] font-semibold text-foreground">{activeSession?.name || "Untitled"}</h1>
             <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-cf-decision" />
               <span className="text-[11px] font-mono text-muted-foreground">active</span>
@@ -81,22 +99,7 @@ const WorkspaceContent = () => {
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Avatars */}
-            <div className="flex items-center gap-2">
-              <div className="flex -space-x-1.5">
-                {["MC", "AR", "JL", "SK"].map((initials) => (
-                  <div
-                    key={initials}
-                    className="w-6 h-6 rounded-full bg-accent border-2 border-background flex items-center justify-center text-[9px] font-semibold text-muted-foreground"
-                  >
-                    {initials}
-                  </div>
-                ))}
-              </div>
-              <span className="text-[11px] text-muted-foreground font-mono">
-                <Users className="w-3 h-3 inline mr-0.5" />4
-              </span>
-            </div>
+            <span className="text-[11px] text-muted-foreground font-mono">{dumps.length} dumps</span>
 
             {/* AI Toggle */}
             <button
@@ -114,31 +117,62 @@ const WorkspaceContent = () => {
           </div>
         </header>
 
-        {/* Content */}
-        <div className="flex-1 overflow-auto cf-scrollbar">
-          <div className="p-6">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeSection + (showAIPanel ? "-ai" : "")}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.15 }}
-              >
-                {showAIPanel && activeSection === "dumps" ? <AIStructuredView /> : renderContent()}
-              </motion.div>
-            </AnimatePresence>
+        {/* Content area with optional AI panel */}
+        <div className="flex-1 flex overflow-hidden">
+          <div className="flex-1 overflow-auto cf-scrollbar">
+            <div className="p-6 max-w-3xl">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeSection + (showAIPanel ? "-ai" : "") + activeSessionId}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  {showAIPanel && activeSection === "dumps" ? <AIStructuredView /> : renderContent()}
+                </motion.div>
+              </AnimatePresence>
+            </div>
           </div>
+
+          {/* AI Summary Panel - Right Side */}
+          <AnimatePresence>
+            {showAIPanel && (
+              <motion.aside
+                initial={{ width: 0, opacity: 0 }}
+                animate={{ width: 300, opacity: 1 }}
+                exit={{ width: 0, opacity: 0 }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
+                className="border-l border-border bg-sidebar shrink-0 overflow-hidden"
+              >
+                <AISummaryPanel />
+              </motion.aside>
+            )}
+          </AnimatePresence>
         </div>
       </main>
     </div>
   );
 };
 
-const Index = () => (
-  <WorkspaceProvider>
-    <WorkspaceContent />
-  </WorkspaceProvider>
-);
+const Index = () => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-background">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!user) return <Auth />;
+
+  return (
+    <WorkspaceProvider>
+      <WorkspaceContent />
+    </WorkspaceProvider>
+  );
+};
 
 export default Index;
