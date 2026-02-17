@@ -12,6 +12,7 @@ import ActionsView from "@/components/ActionsView";
 import QuestionsView from "@/components/QuestionsView";
 import TimelineView from "@/components/TimelineView";
 import AISummaryPanel from "@/components/AISummaryPanel";
+import DraftView from "@/components/DraftView";
 import Auth from "@/pages/Auth";
 
 const WorkspaceContent = () => {
@@ -45,6 +46,8 @@ const WorkspaceContent = () => {
         return <QuestionsView />;
       case "timeline":
         return <TimelineView />;
+      case "draft":
+        return null; // Draft has its own full-height layout
       case "archive":
         return (
           <div className="flex items-center justify-center h-64 text-muted-foreground text-[13px]">
@@ -119,21 +122,27 @@ const WorkspaceContent = () => {
 
         {/* Content area with optional AI panel */}
         <div className="flex-1 flex overflow-hidden">
-          <div className="flex-1 overflow-auto cf-scrollbar">
-            <div className="p-6 max-w-3xl">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={activeSection + (showAIPanel ? "-ai" : "") + activeSessionId}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.15 }}
-                >
-                  {showAIPanel && activeSection === "dumps" ? <AIStructuredView /> : renderContent()}
-                </motion.div>
-              </AnimatePresence>
+          {activeSection === "draft" ? (
+            <div className="flex-1 overflow-hidden">
+              <DraftView />
             </div>
-          </div>
+          ) : (
+            <div className="flex-1 overflow-auto cf-scrollbar">
+              <div className="p-6 max-w-3xl">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeSection + (showAIPanel ? "-ai" : "") + activeSessionId}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.15 }}
+                  >
+                    {showAIPanel && activeSection === "dumps" ? <AIStructuredView /> : renderContent()}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            </div>
+          )}
 
           {/* AI Summary Panel - Right Side */}
           <AnimatePresence>

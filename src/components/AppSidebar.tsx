@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap, MessageSquare, Brain, CheckSquare, Lightbulb,
   HelpCircle, Clock, Archive, ChevronDown, Plus, Search,
-  Command, LogOut,
+  Command, LogOut, FileText, Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace, ViewSection } from "@/store/WorkspaceStore";
@@ -16,11 +16,12 @@ const navItems: { id: ViewSection; label: string; icon: typeof Brain }[] = [
   { id: "themes", label: "Themes", icon: Lightbulb },
   { id: "questions", label: "Questions", icon: HelpCircle },
   { id: "timeline", label: "Timeline", icon: Clock },
+  { id: "draft", label: "Draft PRD", icon: FileText },
   { id: "archive", label: "Archive", icon: Archive },
 ];
 
 const AppSidebar = () => {
-  const { activeSection, setActiveSection, actions, questions, themes, dumps, sessions, activeSessionId, switchSession, createSession } = useWorkspace();
+  const { activeSection, setActiveSection, actions, questions, themes, dumps, sessions, activeSessionId, switchSession, createSession, deleteSession } = useWorkspace();
   const { signOut, user } = useAuth();
   const [sessionsOpen, setSessionsOpen] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -121,26 +122,37 @@ const AppSidebar = () => {
               {sessions.map((session) => {
                 const isActive = session.id === activeSessionId;
                 return (
-                  <button
+                  <div
                     key={session.id}
-                    onClick={() => switchSession(session.id)}
                     className={cn(
-                      "w-full text-left px-2.5 py-2 rounded-md transition-colors group",
+                      "flex items-center rounded-md transition-colors group",
                       isActive ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"
                     )}
                   >
-                    <div className="flex items-center justify-between">
-                      <span className={cn(
-                        "text-[13px] truncate",
-                        isActive ? "text-sidebar-accent-foreground font-medium" : "text-sidebar-foreground"
-                      )}>
-                        {session.name}
-                      </span>
-                      {isActive && (
-                        <div className="w-1.5 h-1.5 rounded-full bg-cf-decision shrink-0" />
-                      )}
-                    </div>
-                  </button>
+                    <button
+                      onClick={() => switchSession(session.id)}
+                      className="flex-1 text-left px-2.5 py-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className={cn(
+                          "text-[13px] truncate",
+                          isActive ? "text-sidebar-accent-foreground font-medium" : "text-sidebar-foreground"
+                        )}>
+                          {session.name}
+                        </span>
+                        {isActive && (
+                          <div className="w-1.5 h-1.5 rounded-full bg-cf-decision shrink-0" />
+                        )}
+                      </div>
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); deleteSession(session.id); }}
+                      className="p-1.5 mr-1 rounded text-muted-foreground/30 hover:text-destructive opacity-0 group-hover:opacity-100 transition-all"
+                      title="Delete session"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
                 );
               })}
             </motion.div>
