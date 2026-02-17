@@ -53,7 +53,7 @@ export interface Question {
   sourceDumpIds: string[];
 }
 
-export type ViewSection = "dumps" | "structures" | "actions" | "themes" | "questions" | "timeline" | "archive";
+export type ViewSection = "dumps" | "structures" | "actions" | "themes" | "questions" | "timeline" | "archive" | "draft";
 
 interface WorkspaceState {
   sessions: Session[];
@@ -73,6 +73,7 @@ interface WorkspaceState {
 interface WorkspaceActions {
   addDump: (content: string) => void;
   createSession: (name: string) => void;
+  deleteSession: (id: string) => void;
   switchSession: (id: string) => void;
   renameSession: (id: string, name: string) => void;
   setActiveSection: (section: ViewSection) => void;
@@ -84,6 +85,7 @@ interface WorkspaceActions {
   getDumpsForTheme: (themeId: string) => Dump[];
   getDumpsForAction: (actionId: string) => Dump[];
   getThemesForDump: (dumpId: string) => Theme[];
+  refreshSessionData: () => void;
 }
 
 const WorkspaceContext = createContext<(WorkspaceState & WorkspaceActions) | null>(null);
@@ -248,6 +250,18 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
 
     // Update session timestamp
     await supabase.from("sessions").update({ updated_at: new Date().toISOString() }).eq("id", activeSessionId);
+
+    // Auto-process with AI
+    try {
+      await supabase.functions.invoke("process-dump", {
+        body: { dump_id: data.id, session_id: activeSessionId, user_id: user.id },
+      });
+      // Refresh session data after AI processing
+      await refreshSessionData();
+    } catch (e) {
+      console.error("AI processing failed:", e);
+    }
+
     setIsProcessing(false);
   }, [user, activeSessionId]);
 
@@ -281,6 +295,58 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
       setSessions((prev) => prev.map((s) => s.id === id ? { ...s, name } : s));
     }
   }, []);
+
+  const deleteSession = useCallback(async (id: string) => {
+    // Delete related data first
+    await Promise.all([
+      supabase.from("dumps").delete().eq("session_id", id),
+      supabase.from("themes").delete().eq("session_id", id),
+      supabase.from("actions").delete().eq("session_id", id),
+      supabase.from("questions").delete().eq("session_id", id),
+    ]);
+    const { error } = await supabase.from("sessions").delete().eq("id", id);
+    if (error) { toast.error("Failed to delete session"); return; }
+    setSessions((prev) => {
+      const remaining = prev.filter((s) => s.id !== id);
+      if (id === activeSessionId && remaining.length > 0) {
+        setActiveSessionId(remaining[0].id);
+      } else if (remaining.length === 0) {
+        setActiveSessionId(null);
+      }
+      return remaining;
+    });
+    toast.success("Session deleted");
+  }, [activeSessionId]);
+
+  const refreshSessionData = useCallback(async () => {
+    if (!activeSessionId || !user) return;
+    const [dumpsRes, themesRes, actionsRes, questionsRes] = await Promise.all([
+      supabase.from("dumps").select("*").eq("session_id", activeSessionId).order("created_at", { ascending: false }),
+      supabase.from("themes").select("*").eq("session_id", activeSessionId),
+      supabase.from("actions").select("*").eq("session_id", activeSessionId),
+      supabase.from("questions").select("*").eq("session_id", activeSessionId),
+    ]);
+    if (dumpsRes.data) {
+      const userIds = [...new Set(dumpsRes.data.map((d: any) => d.user_id))];
+      const { data: profiles } = await supabase.from("profiles").select("user_id, display_name, avatar_initials").in("user_id", userIds);
+      const profileMap = new Map(profiles?.map((p: any) => [p.user_id, p]) || []);
+      setDumps(dumpsRes.data.map((d: any) => {
+        const profile = profileMap.get(d.user_id) as any;
+        return { id: d.id, session_id: d.session_id, content: d.content, type: d.type as DumpType, created_at: d.created_at, author: profile?.display_name || "Unknown", avatar: profile?.avatar_initials || "??" };
+      }));
+    }
+    if (themesRes.data) {
+      const themeIds = themesRes.data.map((t: any) => t.id);
+      const { data: relations } = themeIds.length > 0 ? await supabase.from("dump_themes").select("*").in("theme_id", themeIds) : { data: [] };
+      setThemes(themesRes.data.map((t: any) => ({ id: t.id, session_id: t.session_id, title: t.title, tags: t.tags || [], confidence: t.confidence || 0, dumpIds: (relations || []).filter((r: any) => r.theme_id === t.id).map((r: any) => r.dump_id) })));
+    }
+    if (actionsRes.data) {
+      setActions(actionsRes.data.map((a: any) => ({ id: a.id, session_id: a.session_id, text: a.text, owner: a.owner || "Unassigned", priority: a.priority as "high" | "medium" | "low", done: a.done, sourceDumpIds: a.source_dump_ids || [] })));
+    }
+    if (questionsRes.data) {
+      setQuestions(questionsRes.data.map((q: any) => ({ id: q.id, session_id: q.session_id, text: q.text, votes: q.votes, answered: q.answered, sourceDumpIds: q.source_dump_ids || [] })));
+    }
+  }, [activeSessionId, user]);
 
   const toggleAction = useCallback(async (id: string) => {
     const action = actions.find((a) => a.id === id);
@@ -321,11 +387,11 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const value = useMemo(() => ({
     sessions, activeSessionId, dumps, themes, actions, questions,
     activeSection, selectedThemeId, selectedDumpId, isProcessing, showAIPanel, loading,
-    addDump, createSession, switchSession, renameSession,
+    addDump, createSession, deleteSession, switchSession, renameSession,
     setActiveSection, selectTheme, selectDump,
     toggleAction, voteQuestion, toggleAIPanel,
-    getDumpsForTheme, getDumpsForAction, getThemesForDump,
-  }), [sessions, activeSessionId, dumps, themes, actions, questions, activeSection, selectedThemeId, selectedDumpId, isProcessing, showAIPanel, loading, addDump, createSession, switchSession, renameSession, toggleAction, voteQuestion, toggleAIPanel, getDumpsForTheme, getDumpsForAction, getThemesForDump]);
+    getDumpsForTheme, getDumpsForAction, getThemesForDump, refreshSessionData,
+  }), [sessions, activeSessionId, dumps, themes, actions, questions, activeSection, selectedThemeId, selectedDumpId, isProcessing, showAIPanel, loading, addDump, createSession, deleteSession, switchSession, renameSession, toggleAction, voteQuestion, toggleAIPanel, getDumpsForTheme, getDumpsForAction, getThemesForDump, refreshSessionData]);
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
 };
