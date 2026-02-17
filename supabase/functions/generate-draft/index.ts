@@ -51,15 +51,15 @@ QUESTIONS:
 ${questions.map((q: any) => `- ${q.text} (${q.answered ? "answered" : "open"}, ${q.votes} votes)`).join("\n")}
 `;
 
-    // Stream from Grok
-    const grokResponse = await fetch("https://api.x.ai/v1/chat/completions", {
+    // Stream from Groq
+    const grokResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${GROK_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "grok-3-mini-fast",
+        model: "llama-3.3-70b-versatile",
         messages: [
           {
             role: "system",
