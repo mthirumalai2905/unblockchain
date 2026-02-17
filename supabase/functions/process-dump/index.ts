@@ -39,15 +39,15 @@ serve(async (req) => {
 
     const context = (existingDumps || []).map((d: any) => `[${d.type}] ${d.content}`).join("\n");
 
-    // Call Grok API to classify and extract
-    const grokResponse = await fetch("https://api.x.ai/v1/chat/completions", {
+    // Call Groq API to classify and extract
+    const grokResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${GROK_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "grok-3-mini-fast",
+        model: "llama-3.3-70b-versatile",
         messages: [
           {
             role: "system",

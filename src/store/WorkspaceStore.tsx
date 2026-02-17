@@ -86,6 +86,7 @@ interface WorkspaceActions {
   getDumpsForAction: (actionId: string) => Dump[];
   getThemesForDump: (dumpId: string) => Theme[];
   refreshSessionData: () => void;
+  processAllDumps: () => void;
 }
 
 const WorkspaceContext = createContext<(WorkspaceState & WorkspaceActions) | null>(null);
@@ -250,20 +251,9 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
 
     // Update session timestamp
     await supabase.from("sessions").update({ updated_at: new Date().toISOString() }).eq("id", activeSessionId);
-
-    // Auto-process with AI
-    try {
-      await supabase.functions.invoke("process-dump", {
-        body: { dump_id: data.id, session_id: activeSessionId, user_id: user.id },
-      });
-      // Refresh session data after AI processing
-      await refreshSessionData();
-    } catch (e) {
-      console.error("AI processing failed:", e);
-    }
-
     setIsProcessing(false);
   }, [user, activeSessionId]);
+
 
   const createSession = useCallback(async (name: string) => {
     if (!user) return;
@@ -348,6 +338,26 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     }
   }, [activeSessionId, user]);
 
+  const processAllDumps = useCallback(async () => {
+    if (!user || !activeSessionId) return;
+    setIsProcessing(true);
+    try {
+      const unprocessed = dumps.filter((d) => d.type === "note");
+      const toProcess = unprocessed.length > 0 ? unprocessed : dumps;
+      for (const dump of toProcess) {
+        await supabase.functions.invoke("process-dump", {
+          body: { dump_id: dump.id, session_id: activeSessionId, user_id: user.id },
+        });
+      }
+      await refreshSessionData();
+      toast.success(`Processed ${toProcess.length} dumps with AI`);
+    } catch (e) {
+      console.error("AI processing failed:", e);
+      toast.error("AI processing failed");
+    }
+    setIsProcessing(false);
+  }, [user, activeSessionId, dumps, refreshSessionData]);
+
   const toggleAction = useCallback(async (id: string) => {
     const action = actions.find((a) => a.id === id);
     if (!action) return;
@@ -390,8 +400,8 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     addDump, createSession, deleteSession, switchSession, renameSession,
     setActiveSection, selectTheme, selectDump,
     toggleAction, voteQuestion, toggleAIPanel,
-    getDumpsForTheme, getDumpsForAction, getThemesForDump, refreshSessionData,
-  }), [sessions, activeSessionId, dumps, themes, actions, questions, activeSection, selectedThemeId, selectedDumpId, isProcessing, showAIPanel, loading, addDump, createSession, deleteSession, switchSession, renameSession, toggleAction, voteQuestion, toggleAIPanel, getDumpsForTheme, getDumpsForAction, getThemesForDump, refreshSessionData]);
+    getDumpsForTheme, getDumpsForAction, getThemesForDump, refreshSessionData, processAllDumps,
+  }), [sessions, activeSessionId, dumps, themes, actions, questions, activeSection, selectedThemeId, selectedDumpId, isProcessing, showAIPanel, loading, addDump, createSession, deleteSession, switchSession, renameSession, toggleAction, voteQuestion, toggleAIPanel, getDumpsForTheme, getDumpsForAction, getThemesForDump, refreshSessionData, processAllDumps]);
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
 };

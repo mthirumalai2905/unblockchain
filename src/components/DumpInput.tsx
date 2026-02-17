@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Mic, Image, Link, Paperclip, Send, Sparkles, ArrowUp } from "lucide-react";
+import { Mic, Image, Link, Paperclip, Sparkles, ArrowUp, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/store/WorkspaceStore";
 
 const DumpInput = () => {
-  const { addDump } = useWorkspace();
+  const { addDump, processAllDumps, isProcessing, dumps } = useWorkspace();
   const [value, setValue] = useState("");
   const [isFocused, setIsFocused] = useState(false);
 
@@ -61,10 +61,21 @@ const DumpInput = () => {
           ))}
         </div>
         <div className="flex items-center gap-2.5">
-          <span className="text-[11px] text-muted-foreground/50 flex items-center gap-1 font-mono">
-            <Sparkles className="w-3 h-3" />
-            auto-process
-          </span>
+          <button
+            onClick={processAllDumps}
+            disabled={isProcessing || dumps.length === 0}
+            className={cn(
+              "text-[11px] flex items-center gap-1 font-mono px-2 py-1 rounded-md transition-all",
+              isProcessing
+                ? "text-cf-decision bg-cf-decision/10"
+                : dumps.length === 0
+                ? "text-muted-foreground/30 cursor-not-allowed"
+                : "text-muted-foreground/50 hover:text-foreground hover:bg-accent cursor-pointer"
+            )}
+          >
+            {isProcessing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+            {isProcessing ? "processing..." : "auto-process"}
+          </button>
           <button
             onClick={handleSubmit}
             disabled={!value.trim()}
