@@ -13,14 +13,12 @@ serve(async (req) => {
     const GROK_API_KEY = Deno.env.get("DUMPIFY_AI");
     if (!GROK_API_KEY) throw new Error("DUMPIFY_AI key not configured");
 
-    const authHeader = req.headers.get("Authorization")!;
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { dump_id, session_id, user_id } = await req.json();
 
-    // Get the dump content
     const { data: dump, error: dumpErr } = await supabase
       .from("dumps")
       .select("*")
@@ -29,7 +27,6 @@ serve(async (req) => {
 
     if (dumpErr || !dump) throw new Error("Dump not found");
 
-    // Get existing dumps for context
     const { data: existingDumps } = await supabase
       .from("dumps")
       .select("content, type")
@@ -39,7 +36,6 @@ serve(async (req) => {
 
     const context = (existingDumps || []).map((d: any) => `[${d.type}] ${d.content}`).join("\n");
 
-    // Call Groq API to classify and extract
     const grokResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -57,8 +53,17 @@ serve(async (req) => {
 3. Extract any questions raised
 4. Identify themes/topics
 
+IMPORTANT: Include a "reasoning" field that shows your step-by-step thinking process. This will be displayed to the user so they can see your thought process. Write it as a series of clear, concise thoughts.
+
 Respond with a JSON object (no markdown):
 {
+  "reasoning": [
+    "Step 1: Reading the dump content...",
+    "Step 2: This appears to be about X because...",
+    "Step 3: Classifying as 'idea' because...",
+    "Step 4: Found actionable items: ...",
+    "Step 5: Identified themes related to..."
+  ],
   "type": "idea|decision|question|blocker|action|note",
   "actions": [{"text": "...", "priority": "high|medium|low"}],
   "questions": [{"text": "..."}],
@@ -76,19 +81,18 @@ Respond with a JSON object (no markdown):
 
     if (!grokResponse.ok) {
       const errText = await grokResponse.text();
-      console.error("Grok API error:", grokResponse.status, errText);
-      throw new Error(`Grok API error: ${grokResponse.status}`);
+      console.error("Groq API error:", grokResponse.status, errText);
+      throw new Error(`Groq API error: ${grokResponse.status}`);
     }
 
     const grokData = await grokResponse.json();
     let result;
     try {
       const raw = grokData.choices[0].message.content.trim();
-      // Strip potential markdown code fences
       const cleaned = raw.replace(/^```json?\n?/, "").replace(/\n?```$/, "");
       result = JSON.parse(cleaned);
     } catch (e) {
-      console.error("Failed to parse Grok response:", grokData.choices?.[0]?.message?.content);
+      console.error("Failed to parse Groq response:", grokData.choices?.[0]?.message?.content);
       throw new Error("Failed to parse AI response");
     }
 
@@ -120,7 +124,7 @@ Respond with a JSON object (no markdown):
       await supabase.from("questions").insert(questionsToInsert);
     }
 
-    // Insert themes (merge with existing)
+    // Insert themes
     if (result.themes?.length > 0) {
       const { data: existingThemes } = await supabase
         .from("themes")
@@ -133,14 +137,11 @@ Respond with a JSON object (no markdown):
         );
 
         if (existing) {
-          // Link dump to existing theme
           await supabase.from("dump_themes").insert({ dump_id, theme_id: existing.id });
-          // Update confidence
           if (theme.confidence > (existing.confidence || 0)) {
             await supabase.from("themes").update({ confidence: theme.confidence }).eq("id", existing.id);
           }
         } else {
-          // Create new theme
           const { data: newTheme } = await supabase
             .from("themes")
             .insert({

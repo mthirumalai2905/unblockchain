@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Brain, Loader2 } from "lucide-react";
+import { Brain, Loader2, PanelLeftClose, PanelLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WorkspaceProvider, useWorkspace } from "@/store/WorkspaceStore";
 import { useAuth } from "@/hooks/useAuth";
@@ -13,11 +13,14 @@ import QuestionsView from "@/components/QuestionsView";
 import TimelineView from "@/components/TimelineView";
 import AISummaryPanel from "@/components/AISummaryPanel";
 import DraftView from "@/components/DraftView";
+import RoadmapView from "@/components/RoadmapView";
+import ThinkingPanel from "@/components/ThinkingPanel";
 import Auth from "@/pages/Auth";
 
 const WorkspaceContent = () => {
   const {
     dumps, activeSection, isProcessing, showAIPanel, toggleAIPanel, selectedDumpId, loading, sessions, activeSessionId,
+    sidebarCollapsed, toggleSidebar, thinkingSteps, showThinking, closeThinking,
   } = useWorkspace();
 
   const activeSession = sessions.find((s) => s.id === activeSessionId);
@@ -47,7 +50,8 @@ const WorkspaceContent = () => {
       case "timeline":
         return <TimelineView />;
       case "draft":
-        return null; // Draft has its own full-height layout
+      case "roadmap":
+        return null;
       case "archive":
         return (
           <div className="flex items-center justify-center h-64 text-muted-foreground text-[13px]">
@@ -86,14 +90,38 @@ const WorkspaceContent = () => {
     }
   };
 
+  const isFullLayout = activeSection === "draft" || activeSection === "roadmap";
+
   return (
     <div className="flex h-screen bg-background overflow-hidden">
-      <AppSidebar />
+      {/* Collapsible Sidebar */}
+      <AnimatePresence>
+        {!sidebarCollapsed && (
+          <motion.div
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 240, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="shrink-0 overflow-hidden"
+          >
+            <AppSidebar />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <main className="flex-1 flex flex-col min-w-0">
         {/* Header */}
         <header className="h-14 border-b border-border flex items-center justify-between px-6 shrink-0">
           <div className="flex items-center gap-3">
+            {/* Sidebar toggle */}
+            <button
+              onClick={toggleSidebar}
+              className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+              title={sidebarCollapsed ? "Open sidebar" : "Close sidebar"}
+            >
+              {sidebarCollapsed ? <PanelLeft className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
+            </button>
+
             <h1 className="text-[14px] font-semibold text-foreground">{activeSession?.name || "Untitled"}</h1>
             <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-cf-decision" />
@@ -104,7 +132,6 @@ const WorkspaceContent = () => {
           <div className="flex items-center gap-4">
             <span className="text-[11px] text-muted-foreground font-mono">{dumps.length} dumps</span>
 
-            {/* AI Toggle */}
             <button
               onClick={toggleAIPanel}
               className={cn(
@@ -120,11 +147,11 @@ const WorkspaceContent = () => {
           </div>
         </header>
 
-        {/* Content area with optional AI panel */}
+        {/* Content area */}
         <div className="flex-1 flex overflow-hidden">
-          {activeSection === "draft" ? (
+          {isFullLayout ? (
             <div className="flex-1 overflow-hidden">
-              <DraftView />
+              {activeSection === "draft" ? <DraftView /> : <RoadmapView />}
             </div>
           ) : (
             <div className="flex-1 overflow-auto cf-scrollbar">
@@ -144,7 +171,7 @@ const WorkspaceContent = () => {
             </div>
           )}
 
-          {/* AI Summary Panel - Right Side */}
+          {/* AI Summary Panel */}
           <AnimatePresence>
             {showAIPanel && (
               <motion.aside
@@ -160,6 +187,9 @@ const WorkspaceContent = () => {
           </AnimatePresence>
         </div>
       </main>
+
+      {/* AI Thinking Panel */}
+      <ThinkingPanel steps={thinkingSteps} isOpen={showThinking} onClose={closeThinking} />
     </div>
   );
 };
