@@ -5,6 +5,7 @@ import {
   Command, LogOut, FileText, Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Map } from "lucide-react";
 import { useWorkspace, ViewSection } from "@/store/WorkspaceStore";
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
@@ -17,6 +18,7 @@ const navItems: { id: ViewSection; label: string; icon: typeof Brain }[] = [
   { id: "questions", label: "Questions", icon: HelpCircle },
   { id: "timeline", label: "Timeline", icon: Clock },
   { id: "draft", label: "Draft PRD", icon: FileText },
+  { id: "roadmap", label: "Roadmap", icon: Map },
   { id: "archive", label: "Archive", icon: Archive },
 ];
 

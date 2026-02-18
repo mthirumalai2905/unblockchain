@@ -152,7 +152,7 @@ const DraftView = () => {
           </div>
           <div className="flex-1 overflow-auto cf-scrollbar">
             {markdown ? (
-              <div className="p-6 prose prose-invert prose-sm max-w-none prose-headings:text-foreground prose-p:text-foreground/80 prose-li:text-foreground/80 prose-strong:text-foreground prose-a:text-cf-idea">
+              <div className="p-6 draft-preview prose prose-sm prose-invert max-w-none">
                 <ReactMarkdown>{markdown}</ReactMarkdown>
               </div>
             ) : (

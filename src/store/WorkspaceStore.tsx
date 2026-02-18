@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useMemo, useEf
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import type { ThinkingStep } from "@/components/ThinkingPanel";
 
 // ─── Types ──────────────────────────────────────────────
 
@@ -53,7 +54,7 @@ export interface Question {
   sourceDumpIds: string[];
 }
 
-export type ViewSection = "dumps" | "structures" | "actions" | "themes" | "questions" | "timeline" | "archive" | "draft";
+export type ViewSection = "dumps" | "structures" | "actions" | "themes" | "questions" | "timeline" | "archive" | "draft" | "roadmap";
 
 interface WorkspaceState {
   sessions: Session[];
@@ -68,6 +69,9 @@ interface WorkspaceState {
   isProcessing: boolean;
   showAIPanel: boolean;
   loading: boolean;
+  sidebarCollapsed: boolean;
+  thinkingSteps: ThinkingStep[];
+  showThinking: boolean;
 }
 
 interface WorkspaceActions {
@@ -87,6 +91,8 @@ interface WorkspaceActions {
   getThemesForDump: (dumpId: string) => Theme[];
   refreshSessionData: () => void;
   processAllDumps: () => void;
+  toggleSidebar: () => void;
+  closeThinking: () => void;
 }
 
 const WorkspaceContext = createContext<(WorkspaceState & WorkspaceActions) | null>(null);
@@ -113,6 +119,9 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const [isProcessing, setIsProcessing] = useState(false);
   const [showAIPanel, setShowAIPanel] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [thinkingSteps, setThinkingSteps] = useState<ThinkingStep[]>([]);
+  const [showThinking, setShowThinking] = useState(false);
 
   // Load sessions
   useEffect(() => {
@@ -341,13 +350,70 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const processAllDumps = useCallback(async () => {
     if (!user || !activeSessionId) return;
     setIsProcessing(true);
+    const unprocessed = dumps.filter((d) => d.type === "note");
+    const toProcess = unprocessed.length > 0 ? unprocessed : dumps;
+
+    // Initialize thinking steps
+    const initialSteps: ThinkingStep[] = toProcess.map((d) => ({
+      dumpId: d.id,
+      dumpContent: d.content,
+      status: "pending" as const,
+      reasoning: [],
+    }));
+    setThinkingSteps(initialSteps);
+    setShowThinking(true);
+
     try {
-      const unprocessed = dumps.filter((d) => d.type === "note");
-      const toProcess = unprocessed.length > 0 ? unprocessed : dumps;
-      for (const dump of toProcess) {
-        await supabase.functions.invoke("process-dump", {
-          body: { dump_id: dump.id, session_id: activeSessionId, user_id: user.id },
-        });
+      for (let i = 0; i < toProcess.length; i++) {
+        const dump = toProcess[i];
+        // Mark current as processing
+        setThinkingSteps((prev) =>
+          prev.map((s, idx) => idx === i ? { ...s, status: "processing" as const } : s)
+        );
+
+        try {
+          const resp = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/process-dump`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+              },
+              body: JSON.stringify({ dump_id: dump.id, session_id: activeSessionId, user_id: user.id }),
+            }
+          );
+          const data = await resp.json();
+
+          if (data.success && data.result) {
+            const r = data.result;
+            setThinkingSteps((prev) =>
+              prev.map((s, idx) =>
+                idx === i
+                  ? {
+                      ...s,
+                      status: "done" as const,
+                      reasoning: r.reasoning || ["Analysis complete"],
+                      result: {
+                        type: r.type || "note",
+                        actionsCount: r.actions?.length || 0,
+                        questionsCount: r.questions?.length || 0,
+                        themesCount: r.themes?.length || 0,
+                      },
+                    }
+                  : s
+              )
+            );
+          } else {
+            setThinkingSteps((prev) =>
+              prev.map((s, idx) => idx === i ? { ...s, status: "error" as const, reasoning: [data.error || "Failed"] } : s)
+            );
+          }
+        } catch {
+          setThinkingSteps((prev) =>
+            prev.map((s, idx) => idx === i ? { ...s, status: "error" as const, reasoning: ["Network error"] } : s)
+          );
+        }
       }
       await refreshSessionData();
       toast.success(`Processed ${toProcess.length} dumps with AI`);
@@ -377,6 +443,8 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   }, [questions]);
 
   const toggleAIPanel = useCallback(() => setShowAIPanel((p) => !p), []);
+  const toggleSidebar = useCallback(() => setSidebarCollapsed((p) => !p), []);
+  const closeThinking = useCallback(() => setShowThinking(false), []);
 
   const getDumpsForTheme = useCallback((themeId: string) => {
     const theme = themes.find((t) => t.id === themeId);
@@ -397,11 +465,12 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const value = useMemo(() => ({
     sessions, activeSessionId, dumps, themes, actions, questions,
     activeSection, selectedThemeId, selectedDumpId, isProcessing, showAIPanel, loading,
+    sidebarCollapsed, thinkingSteps, showThinking,
     addDump, createSession, deleteSession, switchSession, renameSession,
     setActiveSection, selectTheme, selectDump,
-    toggleAction, voteQuestion, toggleAIPanel,
+    toggleAction, voteQuestion, toggleAIPanel, toggleSidebar, closeThinking,
     getDumpsForTheme, getDumpsForAction, getThemesForDump, refreshSessionData, processAllDumps,
-  }), [sessions, activeSessionId, dumps, themes, actions, questions, activeSection, selectedThemeId, selectedDumpId, isProcessing, showAIPanel, loading, addDump, createSession, deleteSession, switchSession, renameSession, toggleAction, voteQuestion, toggleAIPanel, getDumpsForTheme, getDumpsForAction, getThemesForDump, refreshSessionData, processAllDumps]);
+  }), [sessions, activeSessionId, dumps, themes, actions, questions, activeSection, selectedThemeId, selectedDumpId, isProcessing, showAIPanel, loading, sidebarCollapsed, thinkingSteps, showThinking, addDump, createSession, deleteSession, switchSession, renameSession, toggleAction, voteQuestion, toggleAIPanel, toggleSidebar, closeThinking, getDumpsForTheme, getDumpsForAction, getThemesForDump, refreshSessionData, processAllDumps]);
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
 };
