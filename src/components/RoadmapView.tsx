@@ -1,12 +1,14 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Map, Play, Loader2, RefreshCw, Check, ChevronDown, ChevronRight,
-  Flag, Circle, Target, Search, Milestone,
+  Flag, Circle, Target, Search, Milestone, Download,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/store/WorkspaceStore";
 import { toast } from "sonner";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 
 const ROADMAP_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-roadmap`;
 
@@ -57,6 +59,7 @@ const RoadmapView = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [expandedPhases, setExpandedPhases] = useState<Set<string>>(new Set());
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
+  const roadmapRef = useRef<HTMLDivElement>(null);
 
   const generate = useCallback(async () => {
     if (!activeSessionId || dumps.length === 0) {
@@ -78,7 +81,6 @@ const RoadmapView = () => {
       const data = await resp.json();
       if (data.error) throw new Error(data.error);
       setRoadmap(data);
-      // Expand all phases by default
       setExpandedPhases(new Set(data.phases.map((p: Phase) => p.id)));
       toast.success("Roadmap generated!");
     } catch (e) {
@@ -88,6 +90,49 @@ const RoadmapView = () => {
       setIsGenerating(false);
     }
   }, [activeSessionId, dumps.length]);
+
+  const downloadPDF = useCallback(async () => {
+    if (!roadmapRef.current) return;
+    toast.info("Generating PDF...");
+    try {
+      // Expand all phases for export
+      if (roadmap) {
+        setExpandedPhases(new Set(roadmap.phases.map((p) => p.id)));
+      }
+      await new Promise((r) => setTimeout(r, 300));
+
+      const canvas = await html2canvas(roadmapRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#0a0a0a",
+      });
+
+      const imgWidth = 210;
+      const pageHeight = 297;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const pdf = new jsPDF("p", "mm", "a4");
+      const imgData = canvas.toDataURL("image/png");
+
+      let heightLeft = imgHeight;
+      let position = 0;
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      pdf.save(`roadmap-${roadmap?.title?.replace(/\s+/g, "-").toLowerCase() || "export"}.pdf`);
+      toast.success("PDF downloaded!");
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to generate PDF");
+    }
+  }, [roadmap]);
 
   const togglePhase = (id: string) => {
     setExpandedPhases((prev) => {
@@ -113,31 +158,48 @@ const RoadmapView = () => {
           <Map className="w-4 h-4 text-muted-foreground" />
           <span className="text-[13px] font-semibold text-foreground">Product Roadmap</span>
         </div>
-        <button
-          onClick={generate}
-          disabled={isGenerating || dumps.length === 0}
-          className={cn(
-            "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all",
-            isGenerating
-              ? "bg-accent text-muted-foreground cursor-not-allowed"
-              : "bg-foreground text-background hover:opacity-90"
+        <div className="flex items-center gap-2">
+          {roadmap && (
+            <button
+              onClick={downloadPDF}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[12px] text-muted-foreground hover:text-foreground border border-border hover:border-ring/50 transition-all"
+            >
+              <Download className="w-3.5 h-3.5" />
+              PDF
+            </button>
           )}
-        >
-          {isGenerating ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-          ) : roadmap ? (
-            <RefreshCw className="w-3.5 h-3.5" />
-          ) : (
-            <Play className="w-3.5 h-3.5" />
-          )}
-          {isGenerating ? "Generating..." : roadmap ? "Regenerate" : "Generate Roadmap"}
-        </button>
+          <button
+            onClick={generate}
+            disabled={isGenerating || dumps.length === 0}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all",
+              isGenerating
+                ? "bg-accent text-muted-foreground cursor-not-allowed"
+                : "bg-foreground text-background hover:opacity-90"
+            )}
+          >
+            {isGenerating ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : roadmap ? (
+              <RefreshCw className="w-3.5 h-3.5" />
+            ) : (
+              <Play className="w-3.5 h-3.5" />
+            )}
+            {isGenerating ? "Generating..." : roadmap ? "Regenerate" : "Generate Roadmap"}
+          </button>
+        </div>
       </div>
 
-      {/* Roadmap content */}
-      <div className="flex-1 overflow-auto cf-scrollbar p-6">
+      {/* Roadmap content with dotted canvas bg */}
+      <div
+        className="flex-1 overflow-auto cf-scrollbar relative"
+        style={{
+          backgroundImage: "radial-gradient(circle, hsl(0 0% 20%) 1px, transparent 1px)",
+          backgroundSize: "20px 20px",
+        }}
+      >
         {roadmap ? (
-          <div className="max-w-3xl mx-auto">
+          <div ref={roadmapRef} className="max-w-3xl mx-auto p-6">
             <motion.h2
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -157,14 +219,13 @@ const RoadmapView = () => {
                     key={phase.id}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: phaseIdx * 0.1 }}
+                    transition={{ delay: phaseIdx * 0.08 }}
                   >
-                    {/* Phase node */}
                     <button
                       onClick={() => togglePhase(phase.id)}
                       className={cn(
-                        "w-full flex items-center gap-3 p-4 rounded-lg border transition-all hover:cf-shadow-md",
-                        phaseColors.bg, phaseColors.border
+                        "w-full flex items-center gap-3 p-4 rounded-lg border transition-all hover:cf-shadow-md bg-card/90 backdrop-blur-sm",
+                        phaseColors.border
                       )}
                     >
                       <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shrink-0", phaseColors.bg)}>
@@ -191,7 +252,6 @@ const RoadmapView = () => {
                       </div>
                     </button>
 
-                    {/* Steps */}
                     <AnimatePresence>
                       {isPhaseExpanded && (
                         <motion.div
@@ -212,29 +272,25 @@ const RoadmapView = () => {
                                   key={step.id}
                                   initial={{ opacity: 0, x: -10 }}
                                   animate={{ opacity: 1, x: 0 }}
-                                  transition={{ delay: stepIdx * 0.05 }}
+                                  transition={{ delay: stepIdx * 0.04 }}
                                 >
                                   <button
                                     onClick={() => hasSubsteps && toggleStep(step.id)}
                                     className={cn(
-                                      "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-md border transition-all text-left",
+                                      "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-md border transition-all text-left bg-card/70 backdrop-blur-sm",
                                       stepColors.border,
                                       hasSubsteps ? "cursor-pointer hover:cf-shadow-sm" : "cursor-default",
                                       step.status === "current" && "ring-1 ring-cf-idea/20"
                                     )}
                                   >
-                                    {/* Connector dot */}
                                     <div className={cn("absolute -left-[21px] w-2.5 h-2.5 rounded-full border-2 border-background", stepColors.dot)} />
-
                                     <StepIcon className={cn("w-3.5 h-3.5 shrink-0", stepColors.text)} />
                                     <div className="flex-1 min-w-0">
                                       <span className={cn("text-[12px] font-medium", step.status === "done" ? "line-through text-muted-foreground" : "text-foreground")}>
                                         {step.title}
                                       </span>
                                       {step.description && (
-                                        <p className="text-[10px] text-muted-foreground/70 mt-0.5 truncate">
-                                          {step.description}
-                                        </p>
+                                        <p className="text-[10px] text-muted-foreground/70 mt-0.5 truncate">{step.description}</p>
                                       )}
                                     </div>
                                     <span className={cn("text-[9px] font-mono px-1.5 py-0.5 rounded shrink-0", stepColors.bg, stepColors.text)}>
@@ -245,7 +301,6 @@ const RoadmapView = () => {
                                     )}
                                   </button>
 
-                                  {/* Substeps */}
                                   <AnimatePresence>
                                     {isStepExpanded && hasSubsteps && (
                                       <motion.div
@@ -276,7 +331,6 @@ const RoadmapView = () => {
                       )}
                     </AnimatePresence>
 
-                    {/* Connector between phases */}
                     {phaseIdx < roadmap.phases.length - 1 && (
                       <div className="flex justify-center py-1">
                         <div className="w-0.5 h-4 bg-border" />

@@ -61,9 +61,11 @@ ${questions.map((q: any) => `- ${q.text}`).join("\n")}
         messages: [
           {
             role: "system",
-            content: `You are a product roadmap generator. Given brainstorming session data, create an interactive roadmap as a JSON array of phases.
+            content: `You are a product roadmap generator. Given brainstorming session data, create a comprehensive interactive roadmap as a JSON object.
 
 Each phase has steps, and each step can have substeps. This creates a tree-like roadmap similar to roadmap.sh.
+
+IMPORTANT: Generate AS MANY phases as needed to fully cover the project scope. Do NOT limit to 3-5 phases. A complex project might need 6-12+ phases. Be thorough and comprehensive. Each phase should have 3-8 steps as appropriate.
 
 Return ONLY valid JSON (no markdown):
 {
@@ -95,7 +97,7 @@ Return ONLY valid JSON (no markdown):
 }
 
 Types: "task", "milestone", "decision", "research"
-Create 3-5 phases with 3-6 steps each. Make it practical and actionable based on the actual session content.`
+Create as many phases as the project naturally requires. Make it practical and actionable based on the actual session content. Cover everything from inception to launch and post-launch.`
           },
           {
             role: "user",
