@@ -1,10 +1,12 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { FileText, Play, Loader2, Copy, Check, RefreshCw } from "lucide-react";
+import { FileText, Play, Loader2, Copy, Check, RefreshCw, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/store/WorkspaceStore";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 
 const DRAFT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-draft`;
 
@@ -13,6 +15,54 @@ const DraftView = () => {
   const [markdown, setMarkdown] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const [autoDownloadPending, setAutoDownloadPending] = useState(false);
+
+  const downloadPDF = useCallback(async () => {
+    if (!previewRef.current) return;
+    toast.info("Generating PDF...");
+    try {
+      const canvas = await html2canvas(previewRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#0a0a0a",
+      });
+
+      const imgWidth = 210;
+      const pageHeight = 297;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const pdf = new jsPDF("p", "mm", "a4");
+      const imgData = canvas.toDataURL("image/png");
+
+      let heightLeft = imgHeight;
+      let position = 0;
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      pdf.save("draft-prd.pdf");
+      toast.success("PDF downloaded!");
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to generate PDF");
+    }
+  }, []);
+
+  // Auto-download after generation completes
+  useEffect(() => {
+    if (autoDownloadPending && !isGenerating && markdown) {
+      setAutoDownloadPending(false);
+      // Small delay to ensure DOM is rendered
+      setTimeout(() => downloadPDF(), 500);
+    }
+  }, [autoDownloadPending, isGenerating, markdown, downloadPDF]);
 
   const generate = useCallback(async () => {
     if (!activeSessionId || dumps.length === 0) {
@@ -21,6 +71,7 @@ const DraftView = () => {
     }
     setIsGenerating(true);
     setMarkdown("");
+    setAutoDownloadPending(true);
 
     try {
       const resp = await fetch(DRAFT_URL, {
@@ -32,9 +83,7 @@ const DraftView = () => {
         body: JSON.stringify({ session_id: activeSessionId }),
       });
 
-      if (!resp.ok || !resp.body) {
-        throw new Error(`Failed: ${resp.status}`);
-      }
+      if (!resp.ok || !resp.body) throw new Error(`Failed: ${resp.status}`);
 
       const reader = resp.body.getReader();
       const decoder = new TextDecoder();
@@ -67,6 +116,7 @@ const DraftView = () => {
     } catch (e) {
       console.error(e);
       toast.error("Failed to generate draft");
+      setAutoDownloadPending(false);
     } finally {
       setIsGenerating(false);
     }
@@ -89,13 +139,22 @@ const DraftView = () => {
         </div>
         <div className="flex items-center gap-2">
           {markdown && (
-            <button
-              onClick={handleCopy}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[12px] text-muted-foreground hover:text-foreground border border-border hover:border-ring/50 transition-all"
-            >
-              {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-              {copied ? "Copied" : "Copy"}
-            </button>
+            <>
+              <button
+                onClick={downloadPDF}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[12px] text-muted-foreground hover:text-foreground border border-border hover:border-ring/50 transition-all"
+              >
+                <Download className="w-3.5 h-3.5" />
+                PDF
+              </button>
+              <button
+                onClick={handleCopy}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[12px] text-muted-foreground hover:text-foreground border border-border hover:border-ring/50 transition-all"
+              >
+                {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied ? "Copied" : "Copy"}
+              </button>
+            </>
           )}
           <button
             onClick={generate}
@@ -152,7 +211,7 @@ const DraftView = () => {
           </div>
           <div className="flex-1 overflow-auto cf-scrollbar">
             {markdown ? (
-              <div className="p-6 draft-preview prose prose-sm prose-invert max-w-none">
+              <div ref={previewRef} className="p-6 draft-preview prose prose-sm prose-invert max-w-none">
                 <ReactMarkdown>{markdown}</ReactMarkdown>
               </div>
             ) : (
