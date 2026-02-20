@@ -309,24 +309,29 @@ const Landing = () => {
     
     {/* Left: Source app nodes */}
     {/* Left: Source message cards — scattered groups */}
-<div className="flex flex-col justify-center gap-12 pr-4">
+{/* Left: Source message cards — scattered tilted groups */}
+<div className="flex flex-col justify-center gap-14 pr-4">
 
   {/* ── Tweet Group ── */}
-  <div style={{ position:"relative", width:300, height:190 }}>
+  <div style={{ position:"relative", width:300, height:200 }}>
     {[
       { name:"Thiruman", handle:"@piratethiru", time:"2m", text:"Just dumped 3 weeks of chaotic product notes into @DumpStashAI — got a full PRD, roadmap + theme clusters back in 30s. This is the future 🤯🔥", reply:"47", rt:"312", like:"2.1k", views:"89k", useAvatar:true },
       { name:"Priya Sharma", handle:"@priya_builds", time:"14m", text:"been using @DumpStashAI for a week. I type messy voice-to-text thoughts, it spits out structured ideas + PRDs. my PM life is changed 💀", reply:"31", rt:"198", like:"1.4k", views:"52k", useAvatar:false, grad:"linear-gradient(135deg,#f59e0b,#ef4444)", initials:"PS" },
-      { name:"Jake Morrow", handle:"@jakemorrow_dev", time:"1h", text:"ok @DumpStashAI just turned my random 2am idea dump into a 12-step roadmap with milestones. I don't even know what to do rn", reply:"89", rt:"441", like:"3.8k", views:"121k", useAvatar:false, grad:"linear-gradient(135deg,#6366f1,#8b5cf6)", initials:"JM" },
+      { name:"Jake Morrow", handle:"@jakemorrow_dev", time:"1h", text:"ok @DumpStashAI just turned my random 2am idea dump into a 12-step roadmap with milestones. I don't even know what to do rn 🫠", reply:"89", rt:"441", like:"3.8k", views:"121k", useAvatar:false, grad:"linear-gradient(135deg,#6366f1,#8b5cf6)", initials:"JM" },
     ].map((t, i) => (
       <motion.div key={i}
-        initial={{ opacity:0, x:-30 }} whileInView={{ opacity:1, x:0 }}
-        viewport={{ once:true }} transition={{ delay:i*0.1, duration:.5 }}
+        initial={{ opacity:0, x:-30 }}
+        whileInView={{ opacity:1, x:0 }}
+        viewport={{ once:true }}
+        transition={{ delay:i*0.1, duration:.5 }}
+        whileHover={{ scale:1.06, rotate:0, y:-8, zIndex:50, boxShadow:"0 20px 50px rgba(0,0,0,0.9)" }}
         style={{
-          position:"absolute",
-          transform:`translateX(${[0,18,-10][i]}px) translateY(${[0,-8,10][i]}px) rotate(${[-1.5,1.2,-0.8][i]}deg)`,
-          width:280, background:"#000", border:"1px solid #2f3336", borderRadius:16,
+          position:"absolute", cursor:"pointer",
+          transform:`translateX(${[0,10,-8][i]}px) translateY(${[0,-6,8][i]}px) rotate(${[-2.5, 1.8, -1.2][i]}deg)`,
+          zIndex:[30,20,10][i],
+          width:282, background:"#000", border:"1px solid #2f3336", borderRadius:16,
           padding:"12px 14px", fontFamily:"-apple-system,'TwitterChirp',sans-serif",
-          boxShadow:"0 4px 20px rgba(0,0,0,0.6)",
+          boxShadow:"0 4px 20px rgba(0,0,0,0.7)", transition:"box-shadow 0.2s",
         }}
       >
         <div style={{ display:"flex", alignItems:"flex-start", gap:10, marginBottom:8 }}>
@@ -351,10 +356,10 @@ const Landing = () => {
         <div style={{ borderTop:"1px solid #2f3336",marginBottom:7 }} />
         <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",color:"#71767b" }}>
           {[
-            [<svg key="r" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>, t.reply, "#1d9bf0"],
-            [<svg key="rt" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>, t.rt, "#00ba7c"],
-            [<svg key="l" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>, t.like, "#f91880"],
-            [<svg key="v" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>, t.views, "#1d9bf0"],
+            [<svg key="r" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>, t.reply, "#1d9bf0"],
+            [<svg key="rt" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>, t.rt, "#00ba7c"],
+            [<svg key="l" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>, t.like, "#f91880"],
+            [<svg key="v" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>, t.views, "#1d9bf0"],
           ].map(([icon,count,hc],j)=>(
             <div key={j} style={{ display:"flex",alignItems:"center",gap:3,fontSize:11,cursor:"default",transition:"color .15s" }}
               onMouseEnter={e=>(e.currentTarget.style.color=hc as string)}
@@ -370,18 +375,22 @@ const Landing = () => {
   <div style={{ position:"relative", width:300, height:160 }}>
     {[
       { workspace:"Product Team", channel:"ideas", emoji:"🧠", grad:"linear-gradient(135deg,#36c5f0,#2eb67d)", user:"Priya M.", time:"9:41 AM", text:"What if we auto-generate the PRD from the brain dump? 🤔 Could save hours per sprint honestly", reactions:[["🔥","12"],["👀","8"],["💡","5"]], unread:3 },
-      { workspace:"Design Sync", channel:"feedback", emoji:"🎨", grad:"linear-gradient(135deg,#ecb22e,#e01e5a)", user:"James K.", time:"10:02 AM", text:"Roadmap from DumpStash is 🔥 — stakeholders actually understood the priorities for once", reactions:[["🚀","9"],["🙌","6"]], unread:0 },
-      { workspace:"Growth", channel:"wins", emoji:"📈", grad:"linear-gradient(135deg,#2eb67d,#36c5f0)", user:"Ritu A.", time:"11:30 AM", text:"used DumpStash to prep for board meeting. dropped messy notes, got back a clean exec summary ✨", reactions:[["💯","15"],["🔥","11"]], unread:1 },
+      { workspace:"Design Sync", channel:"feedback", emoji:"🎨", grad:"linear-gradient(135deg,#ecb22e,#e01e5a)", user:"James K.", time:"10:02 AM", text:"Roadmap from DumpStash is 🔥 — stakeholders actually understood the priorities for once lol", reactions:[["🚀","9"],["🙌","6"]], unread:0 },
+      { workspace:"Growth", channel:"wins", emoji:"📈", grad:"linear-gradient(135deg,#2eb67d,#36c5f0)", user:"Ritu A.", time:"11:30 AM", text:"used DumpStash to prep for board meeting. dropped messy notes, got a clean exec summary ✨", reactions:[["💯","15"],["🔥","11"]], unread:1 },
     ].map((s, i) => (
       <motion.div key={i}
-        initial={{ opacity:0, x:-30 }} whileInView={{ opacity:1, x:0 }}
-        viewport={{ once:true }} transition={{ delay:.15+i*0.1, duration:.5 }}
+        initial={{ opacity:0, x:-30 }}
+        whileInView={{ opacity:1, x:0 }}
+        viewport={{ once:true }}
+        transition={{ delay:.15+i*0.1, duration:.5 }}
+        whileHover={{ scale:1.06, rotate:0, y:-8, zIndex:50, boxShadow:"0 20px 50px rgba(0,0,0,0.9)" }}
         style={{
-          position:"absolute",
-          transform:`translateX(${[0,16,-8][i]}px) translateY(${[0,-6,8][i]}px) rotate(${[1,-1.5,0.7][i]}deg)`,
-          width:280, background:"#1a1d21", border:"1px solid #2d2d2d", borderRadius:12,
+          position:"absolute", cursor:"pointer",
+          transform:`translateX(${[0,12,-8][i]}px) translateY(${[0,-5,7][i]}px) rotate(${[2, -1.8, 1][i]}deg)`,
+          zIndex:[30,20,10][i],
+          width:282, background:"#1a1d21", border:"1px solid #2d2d2d", borderRadius:12,
           overflow:"hidden", fontFamily:"Lato,-apple-system,sans-serif",
-          boxShadow:"0 4px 20px rgba(0,0,0,0.6)",
+          boxShadow:"0 4px 20px rgba(0,0,0,0.7)", transition:"box-shadow 0.2s",
         }}
       >
         <div style={{ background:"#19171d",borderBottom:"1px solid #2d2d2d",padding:"6px 12px",display:"flex",alignItems:"center",gap:7 }}>
@@ -421,14 +430,18 @@ const Landing = () => {
       { server:"PM Community", channel:"🛠-tools", emoji:"🧩", grad:"linear-gradient(135deg,#8b5cf6,#3b82f6)", user:"pmAnna", role:"MOD", rc:"#8b5cf6", time:"2:22 PM", text:"pinning this — DumpStash is the best tool for async brain dumps. our team uses it before every sprint ✅", reactions:[["📌","31"],["💜","22"]], online:203 },
     ].map((d, i) => (
       <motion.div key={i}
-        initial={{ opacity:0, x:-30 }} whileInView={{ opacity:1, x:0 }}
-        viewport={{ once:true }} transition={{ delay:.3+i*0.1, duration:.5 }}
+        initial={{ opacity:0, x:-30 }}
+        whileInView={{ opacity:1, x:0 }}
+        viewport={{ once:true }}
+        transition={{ delay:.3+i*0.1, duration:.5 }}
+        whileHover={{ scale:1.06, rotate:0, y:-8, zIndex:50, boxShadow:"0 20px 50px rgba(0,0,0,0.9)" }}
         style={{
-          position:"absolute",
-          transform:`translateX(${[0,18,-6][i]}px) translateY(${[0,-10,6][i]}px) rotate(${[-1,1.8,-0.6][i]}deg)`,
-          width:280, background:"#313338", border:"1px solid #232428", borderRadius:12,
+          position:"absolute", cursor:"pointer",
+          transform:`translateX(${[0,14,-6][i]}px) translateY(${[0,-8,6][i]}px) rotate(${[-2, 1.5, -0.8][i]}deg)`,
+          zIndex:[30,20,10][i],
+          width:282, background:"#313338", border:"1px solid #232428", borderRadius:12,
           overflow:"hidden", fontFamily:"'gg sans','Noto Sans',sans-serif",
-          boxShadow:"0 4px 20px rgba(0,0,0,0.6)",
+          boxShadow:"0 4px 20px rgba(0,0,0,0.7)", transition:"box-shadow 0.2s",
         }}
       >
         <div style={{ background:"#2b2d31",borderBottom:"1px solid #232428",padding:"6px 12px",display:"flex",alignItems:"center",gap:7 }}>
