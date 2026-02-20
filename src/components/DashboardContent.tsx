@@ -14,6 +14,7 @@ import AISummaryPanel from "@/components/AISummaryPanel";
 import DraftView from "@/components/DraftView";
 import RoadmapView from "@/components/RoadmapView";
 import ThinkingPanel from "@/components/ThinkingPanel";
+import TwitterConnectorPanel from "@/components/TwitterConnectorPanel";
 
 const DashboardContent = () => {
   const {
@@ -49,6 +50,7 @@ const DashboardContent = () => {
         return <TimelineView />;
       case "draft":
       case "roadmap":
+      case "twitter":
         return null;
       case "archive":
         return (
@@ -88,7 +90,7 @@ const DashboardContent = () => {
     }
   };
 
-  const isFullLayout = activeSection === "draft" || activeSection === "roadmap";
+  const isFullLayout = activeSection === "draft" || activeSection === "roadmap" || activeSection === "twitter";
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
@@ -143,7 +145,7 @@ const DashboardContent = () => {
         <div className="flex-1 flex overflow-hidden">
           {isFullLayout ? (
             <div className="flex-1 overflow-hidden">
-              {activeSection === "draft" ? <DraftView /> : <RoadmapView />}
+              {activeSection === "draft" ? <DraftView /> : activeSection === "roadmap" ? <RoadmapView /> : <TwitterConnectorPanel />}
             </div>
           ) : (
             <div className="flex-1 overflow-auto cf-scrollbar">
