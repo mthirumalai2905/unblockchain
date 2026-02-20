@@ -54,7 +54,7 @@ export interface Question {
   sourceDumpIds: string[];
 }
 
-export type ViewSection = "dumps" | "structures" | "actions" | "themes" | "questions" | "timeline" | "archive" | "draft" | "roadmap";
+export type ViewSection = "dumps" | "structures" | "actions" | "themes" | "questions" | "timeline" | "archive" | "draft" | "roadmap" | "twitter";
 
 interface WorkspaceState {
   sessions: Session[];

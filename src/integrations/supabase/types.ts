@@ -253,6 +253,74 @@ export type Database = {
           },
         ]
       }
+      twitter_analyses: {
+        Row: {
+          ai_output_json: Json
+          config_json: Json
+          created_at: string
+          id: string
+          session_id: string | null
+          tweets_json: Json
+          user_id: string
+        }
+        Insert: {
+          ai_output_json?: Json
+          config_json?: Json
+          created_at?: string
+          id?: string
+          session_id?: string | null
+          tweets_json?: Json
+          user_id: string
+        }
+        Update: {
+          ai_output_json?: Json
+          config_json?: Json
+          created_at?: string
+          id?: string
+          session_id?: string | null
+          tweets_json?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "twitter_analyses_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      twitter_connections: {
+        Row: {
+          access_token: string | null
+          connected_username: string | null
+          created_at: string
+          id: string
+          refresh_token: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token?: string | null
+          connected_username?: string | null
+          created_at?: string
+          id?: string
+          refresh_token?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string | null
+          connected_username?: string | null
+          created_at?: string
+          id?: string
+          refresh_token?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

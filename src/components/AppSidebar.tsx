@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap, MessageSquare, Brain, CheckSquare, Lightbulb,
   HelpCircle, Clock, Archive, ChevronDown, Plus, Search,
-  Command, LogOut, FileText, Trash2,
+  Command, LogOut, FileText, Trash2, Twitter,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Map } from "lucide-react";
@@ -10,7 +10,7 @@ import { useWorkspace, ViewSection } from "@/store/WorkspaceStore";
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 
-const navItems: { id: ViewSection; label: string; icon: typeof Brain }[] = [
+const navItems: { id: ViewSection; label: string; icon: typeof Brain; badge?: string }[] = [
   { id: "dumps", label: "Brain Dump", icon: MessageSquare },
   { id: "structures", label: "AI Insights", icon: Brain },
   { id: "actions", label: "Actions", icon: CheckSquare },
@@ -19,6 +19,7 @@ const navItems: { id: ViewSection; label: string; icon: typeof Brain }[] = [
   { id: "timeline", label: "Timeline", icon: Clock },
   { id: "draft", label: "Draft PRD", icon: FileText },
   { id: "roadmap", label: "Roadmap", icon: Map },
+  { id: "twitter", label: "Twitter Intel", icon: Twitter, badge: "NEW" },
   { id: "archive", label: "Archive", icon: Archive },
 ];
 
@@ -87,6 +88,11 @@ const AppSidebar = () => {
             >
               <item.icon className={cn("w-4 h-4 shrink-0", isActive && "text-foreground")} />
               <span>{item.label}</span>
+              {item.badge && !count && (
+                <span className="ml-auto px-1.5 py-0.5 rounded text-[9px] font-bold bg-foreground text-background">
+                  {item.badge}
+                </span>
+              )}
               {count !== undefined && (
                 <span className={cn(
                   "ml-auto text-[11px] font-mono tabular-nums",
