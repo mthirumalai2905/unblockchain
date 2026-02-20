@@ -66,7 +66,7 @@ serve(async (req) => {
 
     // Fetch tweets from Twitter API v2
     const maxResults = Math.min(Math.max(tweetLimit, 10), 100);
-    const twitterUrl = new URL("https://api.x.com/2/tweets/search/recent");
+    const twitterUrl = new URL("https://api.twitter.com/2/tweets/search/recent");
     twitterUrl.searchParams.set("query", query);
     twitterUrl.searchParams.set("max_results", String(maxResults));
     twitterUrl.searchParams.set("tweet.fields", "created_at,author_id,public_metrics,text");
