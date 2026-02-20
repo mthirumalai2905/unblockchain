@@ -298,96 +298,87 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* ═══ Neural Flow Connector Section ═══ */}
-      <section id="flow" className="relative z-10 py-20 px-6">
-        <div className="max-w-6xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
-            className="text-center mb-16"
+      {/* Neural flow container */}
+<div className="relative h-[420px] md:h-[380px]">
+  {/* Canvas with animated neural lines + particles */}
+  <NeuralFlowCanvas />
+
+  {/* Grid layout: left | center | right */}
+  <div className="absolute inset-0 grid grid-cols-3 items-center z-10">
+    
+    {/* Left: Source app nodes */}
+    <div className="flex flex-col justify-center gap-2 pr-4">
+      {connectorApps.map((app, i) => (
+        <motion.div
+          key={app.name}
+          initial={{ opacity: 0, x: -30 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: i * 0.08, duration: 0.4 }}
+          whileHover={{ scale: 1.08, boxShadow: "0 0 20px -3px hsla(142, 71%, 55%, 0.15)" }}
+          className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-border bg-card/80 backdrop-blur-sm cursor-default transition-all"
+        >
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center shrink-0">
+            <app.icon className="w-3.5 h-3.5 text-muted-foreground" />
+          </div>
+          <span className="text-[11px] font-mono text-muted-foreground">{app.name}</span>
+        </motion.div>
+      ))}
+    </div>
+
+    {/* Center: DumpStash hub — always perfectly centered */}
+    <div className="flex items-center justify-center">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        viewport={{ once: true }}
+        transition={{ delay: 0.4, duration: 0.5 }}
+      >
+        <div className="relative">
+          {/* Pulsing rings */}
+          <div className="absolute inset-0 -m-4 rounded-3xl border border-cf-decision/10 animate-pulse" />
+          <div className="absolute inset-0 -m-8 rounded-3xl border border-cf-decision/5" />
+
+          <div className="relative p-8 md:p-10 rounded-2xl border border-border bg-card/90 backdrop-blur-md"
+            style={{ boxShadow: "0 0 60px -10px hsla(142, 71%, 55%, 0.12), 0 0 0 1px hsl(0 0% 20%)" }}
           >
-            <span className="text-[11px] font-mono text-muted-foreground uppercase tracking-widest">Integrations</span>
-            <h2 className="text-3xl md:text-4xl font-bold mt-3 tracking-tight">
-              Capture from <span className="cf-gradient-brand">everywhere</span>
-            </h2>
-          </motion.div>
-
-          {/* Neural flow container */}
-          <div className="relative h-[420px] md:h-[380px]">
-            {/* Canvas with animated neural lines + particles */}
-            <NeuralFlowCanvas />
-
-            {/* Left: Source app nodes */}
-            <div className="absolute left-0 top-0 bottom-0 w-[140px] md:w-[160px] flex flex-col justify-center gap-2 z-10">
-              {connectorApps.map((app, i) => (
-                <motion.div
-                  key={app.name}
-                  initial={{ opacity: 0, x: -30 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.08, duration: 0.4 }}
-                  whileHover={{ scale: 1.08, boxShadow: "0 0 20px -3px hsla(142, 71%, 55%, 0.15)" }}
-                  className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-border bg-card/80 backdrop-blur-sm cursor-default transition-all"
-                >
-                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center shrink-0">
-                    <app.icon className="w-3.5 h-3.5 text-muted-foreground" />
-                  </div>
-                  <span className="text-[11px] font-mono text-muted-foreground">{app.name}</span>
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Center: DumpStash hub */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.4, duration: 0.5 }}
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20"
-            >
-              <div className="relative">
-                {/* Pulsing rings */}
-                <div className="absolute inset-0 -m-4 rounded-3xl border border-cf-decision/10 animate-pulse" />
-                <div className="absolute inset-0 -m-8 rounded-3xl border border-cf-decision/5" />
-
-                <div className="relative p-8 md:p-10 rounded-2xl border border-border bg-card/90 backdrop-blur-md"
-                  style={{ boxShadow: "0 0 60px -10px hsla(142, 71%, 55%, 0.12), 0 0 0 1px hsl(0 0% 20%)" }}
-                >
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-white to-white/60 flex items-center justify-center"
-                      style={{ boxShadow: "0 0 40px -5px hsla(0, 0%, 100%, 0.2)" }}
-                    >
-                      <Zap className="w-7 h-7 text-background" />
-                    </div>
-                    <span className="text-[14px] font-bold">DumpStash AI</span>
-                    <span className="text-[10px] font-mono text-muted-foreground">process → structure → ship</span>
-                  </div>
-                </div>
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-white to-white/60 flex items-center justify-center"
+                style={{ boxShadow: "0 0 40px -5px hsla(0, 0%, 100%, 0.2)" }}
+              >
+                <Zap className="w-7 h-7 text-background" />
               </div>
-            </motion.div>
-
-            {/* Right: Output nodes */}
-            <div className="absolute right-0 top-0 bottom-0 w-[160px] md:w-[180px] flex flex-col justify-center gap-3 z-10">
-              {outputItems.map((out, i) => (
-                <motion.div
-                  key={out.label}
-                  initial={{ opacity: 0, x: 30 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.6 + i * 0.1 }}
-                  whileHover={{ scale: 1.05, boxShadow: "0 0 20px -3px hsla(142, 71%, 55%, 0.12)" }}
-                  className="flex items-center gap-3 px-3 py-3 rounded-xl border border-border bg-card/80 backdrop-blur-sm transition-all"
-                >
-                  <out.icon className="w-4 h-4 text-foreground shrink-0" />
-                  <div>
-                    <p className="text-[12px] font-semibold leading-tight">{out.label}</p>
-                    <p className="text-[9px] font-mono text-muted-foreground">{out.sub}</p>
-                  </div>
-                </motion.div>
-              ))}
+              <span className="text-[14px] font-bold">DumpStash AI</span>
+              <span className="text-[10px] font-mono text-muted-foreground">process → structure → ship</span>
             </div>
           </div>
         </div>
-      </section>
+      </motion.div>
+    </div>
+
+    {/* Right: Output nodes */}
+    <div className="flex flex-col justify-center gap-3 pl-4">
+      {outputItems.map((out, i) => (
+        <motion.div
+          key={out.label}
+          initial={{ opacity: 0, x: 30 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.6 + i * 0.1 }}
+          whileHover={{ scale: 1.05, boxShadow: "0 0 20px -3px hsla(142, 71%, 55%, 0.12)" }}
+          className="flex items-center gap-3 px-3 py-3 rounded-xl border border-border bg-card/80 backdrop-blur-sm transition-all"
+        >
+          <out.icon className="w-4 h-4 text-foreground shrink-0" />
+          <div>
+            <p className="text-[12px] font-semibold leading-tight">{out.label}</p>
+            <p className="text-[9px] font-mono text-muted-foreground">{out.sub}</p>
+          </div>
+        </motion.div>
+      ))}
+    </div>
+
+  </div>
+</div>
 
       {/* Features */}
       <section id="features" className="relative z-10 py-20 px-6">
