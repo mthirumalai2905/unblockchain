@@ -155,7 +155,8 @@ const NeuralFlowCanvas = () => {
         ctx.beginPath();
         ctx.moveTo(p.sx * w, p.sy * h);
         ctx.bezierCurveTo(p.cp1x * w, p.cp1y * h, p.cp2x * w, p.cp2y * h, p.ex * w, p.ey * h);
-        ctx.strokeStyle = "hsla(0, 0%, 25%, 0.3)";
+        ctx.strokeStyle = "hsla(142, 71%, 55%, 0.15)";
+        ctx.lineWidth = 1;
         ctx.stroke();
       });
 
