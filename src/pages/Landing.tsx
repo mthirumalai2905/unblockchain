@@ -308,24 +308,166 @@ const Landing = () => {
   <div className="absolute inset-0 grid grid-cols-3 items-center z-10">
     
     {/* Left: Source app nodes */}
-    <div className="flex flex-col justify-center gap-2 pr-4">
-      {connectorApps.map((app, i) => (
-        <motion.div
-          key={app.name}
-          initial={{ opacity: 0, x: -30 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: i * 0.08, duration: 0.4 }}
-          whileHover={{ scale: 1.08, boxShadow: "0 0 20px -3px hsla(142, 71%, 55%, 0.15)" }}
-          className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-border bg-card/80 backdrop-blur-sm cursor-default transition-all"
-        >
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center shrink-0">
-            <app.icon className="w-3.5 h-3.5 text-muted-foreground" />
+    {/* Left: Source message cards — scattered groups */}
+<div className="flex flex-col justify-center gap-12 pr-4">
+
+  {/* ── Tweet Group ── */}
+  <div style={{ position:"relative", width:300, height:190 }}>
+    {[
+      { name:"Thiruman", handle:"@piratethiru", time:"2m", text:"Just dumped 3 weeks of chaotic product notes into @DumpStashAI — got a full PRD, roadmap + theme clusters back in 30s. This is the future 🤯🔥", reply:"47", rt:"312", like:"2.1k", views:"89k", useAvatar:true },
+      { name:"Priya Sharma", handle:"@priya_builds", time:"14m", text:"been using @DumpStashAI for a week. I type messy voice-to-text thoughts, it spits out structured ideas + PRDs. my PM life is changed 💀", reply:"31", rt:"198", like:"1.4k", views:"52k", useAvatar:false, grad:"linear-gradient(135deg,#f59e0b,#ef4444)", initials:"PS" },
+      { name:"Jake Morrow", handle:"@jakemorrow_dev", time:"1h", text:"ok @DumpStashAI just turned my random 2am idea dump into a 12-step roadmap with milestones. I don't even know what to do rn", reply:"89", rt:"441", like:"3.8k", views:"121k", useAvatar:false, grad:"linear-gradient(135deg,#6366f1,#8b5cf6)", initials:"JM" },
+    ].map((t, i) => (
+      <motion.div key={i}
+        initial={{ opacity:0, x:-30 }} whileInView={{ opacity:1, x:0 }}
+        viewport={{ once:true }} transition={{ delay:i*0.1, duration:.5 }}
+        style={{
+          position:"absolute",
+          transform:`translateX(${[0,18,-10][i]}px) translateY(${[0,-8,10][i]}px) rotate(${[-1.5,1.2,-0.8][i]}deg)`,
+          width:280, background:"#000", border:"1px solid #2f3336", borderRadius:16,
+          padding:"12px 14px", fontFamily:"-apple-system,'TwitterChirp',sans-serif",
+          boxShadow:"0 4px 20px rgba(0,0,0,0.6)",
+        }}
+      >
+        <div style={{ display:"flex", alignItems:"flex-start", gap:10, marginBottom:8 }}>
+          {t.useAvatar
+            ? <img src="https://pbs.twimg.com/profile_images/YOUR_PHOTO_ID/photo.jpg" alt="@piratethiru"
+                onError={(e)=>{(e.target as HTMLImageElement).src="https://abs.twimg.com/sticky/default_profile_images/default_profile_400x400.png"}}
+                style={{ width:36,height:36,borderRadius:"50%",objectFit:"cover",flexShrink:0,background:"#333" }} />
+            : <div style={{ width:36,height:36,borderRadius:"50%",background:(t as any).grad,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:700,fontSize:12 }}>{(t as any).initials}</div>
+          }
+          <div style={{ flex:1,minWidth:0 }}>
+            <div style={{ display:"flex",alignItems:"center",gap:3,marginBottom:1 }}>
+              <span style={{ color:"#fff",fontSize:13,fontWeight:700 }}>{t.name}</span>
+              <svg width="14" height="14" viewBox="0 0 24 24"><path fill="#ffd700" d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91s-2.52-1.27-3.91-.81c-.66-1.31-1.91-2.19-3.34-2.19s-2.67.88-3.33 2.19c-1.4-.46-2.91-.2-3.92.81s-1.26 2.52-.8 3.91C3.38 9.33 2.5 10.57 2.5 12s.88 2.67 2.19 3.34c-.46 1.39-.2 2.9.81 3.91s2.52 1.26 3.91.8c.66 1.31 1.9 2.19 3.33 2.19s2.68-.88 3.34-2.19c1.39.46 2.9.2 3.91-.81s1.26-2.52.81-3.91c1.31-.67 2.19-1.91 2.19-3.34zm-11.71 4.2L6.8 12.46l1.41-1.42 2.26 2.26 4.8-5.23 1.47 1.36-6.2 6.77z"/></svg>
+            </div>
+            <span style={{ color:"#71767b",fontSize:11 }}>{t.handle} · {t.time}</span>
           </div>
-          <span className="text-[11px] font-mono text-muted-foreground">{app.name}</span>
-        </motion.div>
-      ))}
-    </div>
+          <svg width="16" height="16" viewBox="0 0 1200 1227" fill="#71767b"><path d="M714.163 519.284L1160.89 0H1055.03L667.137 450.887L357.328 0H0L468.492 681.821L0 1226.37H105.866L515.491 750.218L842.672 1226.37H1200L714.137 519.284H714.163Z"/></svg>
+        </div>
+        <p style={{ color:"#e7e9ea",fontSize:12,lineHeight:1.55,margin:"0 0 8px",wordBreak:"break-word" }}>
+          {t.text.split("@DumpStashAI").map((p,j,arr)=> j<arr.length-1 ? <span key={j}>{p}<span style={{color:"#1d9bf0"}}>@DumpStashAI</span></span> : <span key={j}>{p}</span>)}
+        </p>
+        <div style={{ borderTop:"1px solid #2f3336",marginBottom:7 }} />
+        <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",color:"#71767b" }}>
+          {[
+            [<svg key="r" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>, t.reply, "#1d9bf0"],
+            [<svg key="rt" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>, t.rt, "#00ba7c"],
+            [<svg key="l" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>, t.like, "#f91880"],
+            [<svg key="v" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>, t.views, "#1d9bf0"],
+          ].map(([icon,count,hc],j)=>(
+            <div key={j} style={{ display:"flex",alignItems:"center",gap:3,fontSize:11,cursor:"default",transition:"color .15s" }}
+              onMouseEnter={e=>(e.currentTarget.style.color=hc as string)}
+              onMouseLeave={e=>(e.currentTarget.style.color="#71767b")}
+            >{icon}<span>{count}</span></div>
+          ))}
+        </div>
+      </motion.div>
+    ))}
+  </div>
+
+  {/* ── Slack Group ── */}
+  <div style={{ position:"relative", width:300, height:160 }}>
+    {[
+      { workspace:"Product Team", channel:"ideas", emoji:"🧠", grad:"linear-gradient(135deg,#36c5f0,#2eb67d)", user:"Priya M.", time:"9:41 AM", text:"What if we auto-generate the PRD from the brain dump? 🤔 Could save hours per sprint honestly", reactions:[["🔥","12"],["👀","8"],["💡","5"]], unread:3 },
+      { workspace:"Design Sync", channel:"feedback", emoji:"🎨", grad:"linear-gradient(135deg,#ecb22e,#e01e5a)", user:"James K.", time:"10:02 AM", text:"Roadmap from DumpStash is 🔥 — stakeholders actually understood the priorities for once", reactions:[["🚀","9"],["🙌","6"]], unread:0 },
+      { workspace:"Growth", channel:"wins", emoji:"📈", grad:"linear-gradient(135deg,#2eb67d,#36c5f0)", user:"Ritu A.", time:"11:30 AM", text:"used DumpStash to prep for board meeting. dropped messy notes, got back a clean exec summary ✨", reactions:[["💯","15"],["🔥","11"]], unread:1 },
+    ].map((s, i) => (
+      <motion.div key={i}
+        initial={{ opacity:0, x:-30 }} whileInView={{ opacity:1, x:0 }}
+        viewport={{ once:true }} transition={{ delay:.15+i*0.1, duration:.5 }}
+        style={{
+          position:"absolute",
+          transform:`translateX(${[0,16,-8][i]}px) translateY(${[0,-6,8][i]}px) rotate(${[1,-1.5,0.7][i]}deg)`,
+          width:280, background:"#1a1d21", border:"1px solid #2d2d2d", borderRadius:12,
+          overflow:"hidden", fontFamily:"Lato,-apple-system,sans-serif",
+          boxShadow:"0 4px 20px rgba(0,0,0,0.6)",
+        }}
+      >
+        <div style={{ background:"#19171d",borderBottom:"1px solid #2d2d2d",padding:"6px 12px",display:"flex",alignItems:"center",gap:7 }}>
+          <div style={{ width:18,height:18,borderRadius:4,background:"linear-gradient(135deg,#e01e5a,#ecb22e)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
+            <svg width="11" height="11" viewBox="0 0 54 54" fill="white"><path d="M19.712.133a5.381 5.381 0 0 0-5.376 5.387 5.381 5.381 0 0 0 5.376 5.386h5.376V5.52A5.381 5.381 0 0 0 19.712.133m0 14.365H5.376A5.381 5.381 0 0 0 0 19.884a5.381 5.381 0 0 0 5.376 5.387h14.336a5.381 5.381 0 0 0 5.376-5.387 5.381 5.381 0 0 0-5.376-5.386"/><path d="M53.76 19.884a5.381 5.381 0 0 0-5.376-5.386 5.381 5.381 0 0 0-5.376 5.386v5.387h5.376a5.381 5.381 0 0 0 5.376-5.387m-14.336 0V5.52A5.381 5.381 0 0 0 34.048.133a5.381 5.381 0 0 0-5.376 5.387v14.364a5.381 5.381 0 0 0 5.376 5.387 5.381 5.381 0 0 0 5.376-5.387"/><path d="M34.048 54a5.381 5.381 0 0 0 5.376-5.387 5.381 5.381 0 0 0-5.376-5.386h-5.376v5.386A5.381 5.381 0 0 0 34.048 54m0-14.365h14.336a5.381 5.381 0 0 0 5.376-5.386 5.381 5.381 0 0 0-5.376-5.387H34.048a5.381 5.381 0 0 0-5.376 5.387 5.381 5.381 0 0 0 5.376 5.386"/><path d="M0 34.249a5.381 5.381 0 0 0 5.376 5.386 5.381 5.381 0 0 0 5.376-5.386v-5.387H5.376A5.381 5.381 0 0 0 0 34.249m14.336 0v14.364A5.381 5.381 0 0 0 19.712 54a5.381 5.381 0 0 0 5.376-5.387V34.249a5.381 5.381 0 0 0-5.376-5.387 5.381 5.381 0 0 0-5.376 5.387"/></svg>
+          </div>
+          <span style={{ color:"#fff",fontSize:11,fontWeight:700 }}>{s.workspace}</span>
+          <span style={{ color:"#97a0af",fontSize:10 }}>· #{s.channel}</span>
+          {s.unread>0 && <div style={{ marginLeft:"auto",background:"#e01e5a",borderRadius:10,padding:"1px 6px",fontSize:9,color:"#fff",fontWeight:700 }}>{s.unread}</div>}
+        </div>
+        <div style={{ padding:"9px 12px",display:"flex",gap:8 }}>
+          <div style={{ width:34,height:34,borderRadius:6,background:s.grad,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15 }}>{s.emoji}</div>
+          <div style={{ flex:1,minWidth:0 }}>
+            <div style={{ display:"flex",alignItems:"baseline",gap:6,marginBottom:3 }}>
+              <span style={{ color:"#fff",fontSize:12,fontWeight:700 }}>{s.user}</span>
+              <span style={{ color:"#97a0af",fontSize:10 }}>Today {s.time}</span>
+            </div>
+            <p style={{ color:"#d1d2d3",fontSize:11,lineHeight:1.5,margin:"0 0 6px" }}>{s.text}</p>
+            <div style={{ display:"flex",gap:4 }}>
+              {s.reactions.map(([e,c])=>(
+                <div key={e} style={{ background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:20,padding:"1px 7px",fontSize:10,color:"#d1d2d3",display:"flex",alignItems:"center",gap:3 }}>
+                  <span>{e}</span><span style={{ color:"#97a0af" }}>{c}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    ))}
+  </div>
+
+  {/* ── Discord Group ── */}
+  <div style={{ position:"relative", width:300, height:160 }}>
+    {[
+      { server:"BuildInPublic", channel:"🚀-launches", emoji:"👾", grad:"linear-gradient(135deg,#5865f2,#eb459e)", user:"n0mad_dev", role:"DEV", rc:"#5865f2", time:"11:15 AM", text:"Just shipped v0.3 — AI tagging for notes. Retention went up 40% 📈 Let's go 🔥", reactions:[["🔥","24"],["🚀","18"],["👏","11"]], online:142 },
+      { server:"Indie Hackers", channel:"💡-ideas", emoji:"🦄", grad:"linear-gradient(135deg,#f59e0b,#10b981)", user:"solofounder", role:"MAKER", rc:"#10b981", time:"12:04 PM", text:"DumpStash turned my scattered Notion pages into an actual product roadmap in under a minute. how is this real", reactions:[["😭","19"],["🙏","14"]], online:87 },
+      { server:"PM Community", channel:"🛠-tools", emoji:"🧩", grad:"linear-gradient(135deg,#8b5cf6,#3b82f6)", user:"pmAnna", role:"MOD", rc:"#8b5cf6", time:"2:22 PM", text:"pinning this — DumpStash is the best tool for async brain dumps. our team uses it before every sprint ✅", reactions:[["📌","31"],["💜","22"]], online:203 },
+    ].map((d, i) => (
+      <motion.div key={i}
+        initial={{ opacity:0, x:-30 }} whileInView={{ opacity:1, x:0 }}
+        viewport={{ once:true }} transition={{ delay:.3+i*0.1, duration:.5 }}
+        style={{
+          position:"absolute",
+          transform:`translateX(${[0,18,-6][i]}px) translateY(${[0,-10,6][i]}px) rotate(${[-1,1.8,-0.6][i]}deg)`,
+          width:280, background:"#313338", border:"1px solid #232428", borderRadius:12,
+          overflow:"hidden", fontFamily:"'gg sans','Noto Sans',sans-serif",
+          boxShadow:"0 4px 20px rgba(0,0,0,0.6)",
+        }}
+      >
+        <div style={{ background:"#2b2d31",borderBottom:"1px solid #232428",padding:"6px 12px",display:"flex",alignItems:"center",gap:7 }}>
+          <div style={{ width:18,height:18,borderRadius:"50%",background:"#5865f2",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="white"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.1.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+          </div>
+          <span style={{ color:"#fff",fontSize:11,fontWeight:700 }}>{d.server}</span>
+          <span style={{ color:"#949ba4",fontSize:10 }}># {d.channel}</span>
+          <div style={{ marginLeft:"auto",display:"flex",alignItems:"center",gap:3 }}>
+            <div style={{ width:6,height:6,borderRadius:"50%",background:"#23a559" }} />
+            <span style={{ color:"#949ba4",fontSize:10 }}>{d.online}</span>
+          </div>
+        </div>
+        <div style={{ padding:"9px 12px",display:"flex",gap:9 }}>
+          <div style={{ position:"relative",flexShrink:0 }}>
+            <div style={{ width:36,height:36,borderRadius:"50%",background:d.grad,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16 }}>{d.emoji}</div>
+            <div style={{ position:"absolute",bottom:0,right:0,width:9,height:9,borderRadius:"50%",background:"#23a559",border:"2px solid #313338" }} />
+          </div>
+          <div style={{ flex:1,minWidth:0 }}>
+            <div style={{ display:"flex",alignItems:"center",gap:5,marginBottom:3 }}>
+              <span style={{ color:"#c9cdfb",fontSize:12,fontWeight:600 }}>{d.user}</span>
+              <span style={{ background:d.rc,color:"#fff",fontSize:8,borderRadius:4,padding:"1px 4px",fontWeight:700 }}>{d.role}</span>
+              <span style={{ color:"#949ba4",fontSize:10 }}>{d.time}</span>
+            </div>
+            <p style={{ color:"#dbdee1",fontSize:11,lineHeight:1.5,margin:"0 0 7px" }}>{d.text}</p>
+            <div style={{ display:"flex",gap:4,flexWrap:"wrap" }}>
+              {d.reactions.map(([e,c])=>(
+                <div key={e} style={{ background:"rgba(88,101,242,0.15)",border:"1px solid rgba(88,101,242,0.3)",borderRadius:20,padding:"2px 7px",fontSize:11,color:"#dbdee1",display:"flex",alignItems:"center",gap:3 }}>
+                  <span>{e}</span><span style={{ fontSize:10,color:"#c9cdfb",fontWeight:600 }}>{c}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    ))}
+  </div>
+
+</div>
 
     {/* Center: DumpStash hub — always perfectly centered */}
     <div className="flex items-center justify-center">
