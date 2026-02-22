@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/store/WorkspaceStore";
 
 const AIStructuredView = () => {
-  const { themes, actions, questions, risks, docs, selectTheme, setActiveSection } = useWorkspace();
+  const { themes, actions, questions, selectTheme, setActiveSection } = useWorkspace();
 
   return (
     <div className="space-y-8 max-w-3xl">
@@ -73,42 +73,6 @@ const AIStructuredView = () => {
         ))}
       </Section>
 
-      {/* Risks */}
-      <Section title="Risks" count={risks.length}>
-        {risks.map((risk) => (
-          <div key={risk.id} className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border">
-            <span className={cn(
-              "px-1.5 py-[1px] text-[10px] font-semibold uppercase rounded font-mono",
-              risk.severity === "high" ? "bg-cf-blocker/10 text-cf-blocker" : "bg-cf-question/10 text-cf-question"
-            )}>
-              {risk.severity}
-            </span>
-            <span className="text-[13px] text-foreground/80 flex-1">{risk.text}</span>
-            <button className="text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
-              onClick={() => {}}>
-              <ArrowUpRight className="w-3 h-3" />
-              {risk.sourceDumpIds.length}
-            </button>
-          </div>
-        ))}
-      </Section>
-
-      {/* Docs */}
-      <Section title="Generated Documents" count={docs.length}>
-        {docs.map((doc) => (
-          <div key={doc.id} className="flex items-center gap-3 p-3.5 rounded-lg bg-card border border-border hover:border-ring/30 transition-all cursor-pointer group hover:cf-shadow-md">
-            <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
-            <div className="flex-1 min-w-0">
-              <div className="text-[13px] font-medium text-foreground">{doc.title}</div>
-              <div className="text-[11px] text-muted-foreground font-mono">{doc.lastUpdated} · {doc.sourceDumpIds.length} sources</div>
-            </div>
-            <span className="px-2 py-[2px] text-[10px] font-mono rounded bg-cf-question/10 text-cf-question uppercase">
-              {doc.status}
-            </span>
-            <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-          </div>
-        ))}
-      </Section>
     </div>
   );
 };

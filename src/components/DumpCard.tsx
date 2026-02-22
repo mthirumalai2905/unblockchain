@@ -55,7 +55,7 @@ const DumpCard = ({ dump, index }: DumpCardProps) => {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[13px] font-medium text-foreground">{dump.author}</span>
-            <span className="text-[11px] text-muted-foreground font-mono">{dump.timestamp}</span>
+            <span className="text-[11px] text-muted-foreground font-mono">{new Date(dump.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
             <span className={cn("inline-flex items-center gap-1 px-1.5 py-[1px] rounded text-[10px] font-medium", config.bgClass, config.textClass)}>
               {config.label}
             </span>
@@ -83,11 +83,9 @@ const DumpCard = ({ dump, index }: DumpCardProps) => {
           <div className="flex items-center gap-3 mt-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
             <button className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors">
               <ThumbsUp className="w-3 h-3" />
-              {dump.reactions}
             </button>
             <button className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors">
               <Reply className="w-3 h-3" />
-              {dump.replies}
             </button>
           </div>
         </div>

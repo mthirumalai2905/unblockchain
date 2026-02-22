@@ -2,38 +2,49 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap, MessageSquare, Brain, CheckSquare, Lightbulb,
   HelpCircle, Clock, Archive, ChevronDown, Plus, Search,
-  Command,
+  Command, LogOut, FileText, Trash2, Twitter,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Map } from "lucide-react";
 import { useWorkspace, ViewSection } from "@/store/WorkspaceStore";
+import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 
-const navItems: { id: ViewSection; label: string; icon: typeof Brain }[] = [
+const navItems: { id: ViewSection; label: string; icon: typeof Brain; badge?: string }[] = [
   { id: "dumps", label: "Brain Dump", icon: MessageSquare },
   { id: "structures", label: "AI Insights", icon: Brain },
   { id: "actions", label: "Actions", icon: CheckSquare },
   { id: "themes", label: "Themes", icon: Lightbulb },
   { id: "questions", label: "Questions", icon: HelpCircle },
   { id: "timeline", label: "Timeline", icon: Clock },
+  { id: "draft", label: "Draft PRD", icon: FileText },
+  { id: "roadmap", label: "Roadmap", icon: Map },
+  { id: "twitter", label: "Twitter Intel", icon: Twitter, badge: "NEW" },
   { id: "archive", label: "Archive", icon: Archive },
 ];
 
-const sessions = [
-  { id: "1", name: "Q2 Pricing Strategy", dumps: 10, active: true },
-  { id: "2", name: "Product Roadmap Review", dumps: 8 },
-  { id: "3", name: "Design System Sprint", dumps: 15 },
-  { id: "4", name: "Onboarding Flow Ideas", dumps: 6 },
-];
-
 const AppSidebar = () => {
-  const { activeSection, setActiveSection, actions, questions, themes, dumps } = useWorkspace();
+  const { activeSection, setActiveSection, actions, questions, themes, dumps, sessions, activeSessionId, switchSession, createSession, deleteSession } = useWorkspace();
+  const { signOut, user } = useAuth();
   const [sessionsOpen, setSessionsOpen] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
+  const [newSessionName, setNewSessionName] = useState("");
 
   const counts: Partial<Record<ViewSection, number>> = {
     dumps: dumps.length,
     actions: actions.filter((a) => !a.done).length,
     themes: themes.length,
     questions: questions.filter((q) => !q.answered).length,
+  };
+
+  const handleCreateSession = () => {
+    if (isCreating && newSessionName.trim()) {
+      createSession(newSessionName.trim());
+      setNewSessionName("");
+      setIsCreating(false);
+    } else {
+      setIsCreating(true);
+    }
   };
 
   return (
@@ -44,7 +55,7 @@ const AppSidebar = () => {
           <Zap className="w-3.5 h-3.5 text-background" />
         </div>
         <span className="text-sm font-semibold text-sidebar-primary tracking-tight">
-          ClarityFlow
+          Dumpify
         </span>
       </div>
 
@@ -77,6 +88,11 @@ const AppSidebar = () => {
             >
               <item.icon className={cn("w-4 h-4 shrink-0", isActive && "text-foreground")} />
               <span>{item.label}</span>
+              {item.badge && !count && (
+                <span className="ml-auto px-1.5 py-0.5 rounded text-[9px] font-bold bg-foreground text-background">
+                  {item.badge}
+                </span>
+              )}
               {count !== undefined && (
                 <span className={cn(
                   "ml-auto text-[11px] font-mono tabular-nums",
@@ -100,6 +116,7 @@ const AppSidebar = () => {
         >
           <ChevronDown className={cn("w-3 h-3 transition-transform duration-200", !sessionsOpen && "-rotate-90")} />
           Sessions
+          <span className="ml-auto text-[10px] font-mono">{sessions.length}</span>
         </button>
         <AnimatePresence>
           {sessionsOpen && (
@@ -110,40 +127,78 @@ const AppSidebar = () => {
               transition={{ duration: 0.15 }}
               className="overflow-hidden space-y-px"
             >
-              {sessions.map((session) => (
-                <button
-                  key={session.id}
-                  className={cn(
-                    "w-full text-left px-2.5 py-2 rounded-md transition-colors group",
-                    session.active
-                      ? "bg-sidebar-accent"
-                      : "hover:bg-sidebar-accent/50"
-                  )}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className={cn(
-                      "text-[13px] truncate",
-                      session.active ? "text-sidebar-accent-foreground font-medium" : "text-sidebar-foreground"
-                    )}>
-                      {session.name}
-                    </span>
-                    {session.active && (
-                      <div className="w-1.5 h-1.5 rounded-full bg-cf-decision shrink-0" />
+              {sessions.map((session) => {
+                const isActive = session.id === activeSessionId;
+                return (
+                  <div
+                    key={session.id}
+                    className={cn(
+                      "flex items-center rounded-md transition-colors group",
+                      isActive ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"
                     )}
+                  >
+                    <button
+                      onClick={() => switchSession(session.id)}
+                      className="flex-1 text-left px-2.5 py-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className={cn(
+                          "text-[13px] truncate",
+                          isActive ? "text-sidebar-accent-foreground font-medium" : "text-sidebar-foreground"
+                        )}>
+                          {session.name}
+                        </span>
+                        {isActive && (
+                          <div className="w-1.5 h-1.5 rounded-full bg-cf-decision shrink-0" />
+                        )}
+                      </div>
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); deleteSession(session.id); }}
+                      className="p-1.5 mr-1 rounded text-muted-foreground/30 hover:text-destructive opacity-0 group-hover:opacity-100 transition-all"
+                      title="Delete session"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
                   </div>
-                  <span className="text-[11px] text-sidebar-muted">{session.dumps} dumps</span>
-                </button>
-              ))}
+                );
+              })}
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
       {/* New Session */}
-      <div className="p-3 border-t border-sidebar-border">
-        <button className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-[13px] font-medium rounded-md bg-foreground text-background hover:opacity-90 transition-opacity">
+      <div className="p-3 space-y-2 border-t border-sidebar-border">
+        <AnimatePresence>
+          {isCreating && (
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
+              <input
+                autoFocus
+                value={newSessionName}
+                onChange={(e) => setNewSessionName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") handleCreateSession(); if (e.key === "Escape") setIsCreating(false); }}
+                placeholder="Session name..."
+                className="w-full px-3 py-2 text-[13px] rounded-md bg-background border border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-ring/50 transition-colors mb-2"
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <button
+          onClick={handleCreateSession}
+          className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-[13px] font-medium rounded-md bg-foreground text-background hover:opacity-90 transition-opacity"
+        >
           <Plus className="w-3.5 h-3.5" />
-          New Session
+          {isCreating ? "Create" : "New Session"}
+        </button>
+
+        {/* Sign out */}
+        <button
+          onClick={signOut}
+          className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <LogOut className="w-3 h-3" />
+          Sign out
         </button>
       </div>
     </aside>

@@ -1,23 +1,34 @@
-import React, { createContext, useContext, useState, useCallback, useMemo } from "react";
+import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
+import type { ThinkingStep } from "@/components/ThinkingPanel";
 
 // ─── Types ──────────────────────────────────────────────
 
 export type DumpType = "idea" | "decision" | "question" | "blocker" | "action" | "note";
 
+export interface Session {
+  id: string;
+  name: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Dump {
   id: string;
+  session_id: string;
   content: string;
+  type: DumpType;
+  created_at: string;
   author: string;
   avatar: string;
-  timestamp: string;
-  type: DumpType;
-  themeIds: string[];
-  reactions: number;
-  replies: number;
 }
 
 export interface Theme {
   id: string;
+  session_id: string;
   title: string;
   tags: string[];
   confidence: number;
@@ -26,6 +37,7 @@ export interface Theme {
 
 export interface ActionItem {
   id: string;
+  session_id: string;
   text: string;
   owner: string;
   priority: "high" | "medium" | "low";
@@ -35,46 +47,39 @@ export interface ActionItem {
 
 export interface Question {
   id: string;
+  session_id: string;
   text: string;
   votes: number;
   answered: boolean;
   sourceDumpIds: string[];
 }
 
-export interface Risk {
-  id: string;
-  text: string;
-  severity: "high" | "medium" | "low";
-  sourceDumpIds: string[];
-}
-
-export interface GeneratedDoc {
-  id: string;
-  title: string;
-  status: "draft" | "reviewed" | "published";
-  lastUpdated: string;
-  sourceDumpIds: string[];
-  content: string;
-}
-
-export type ViewSection = "dumps" | "structures" | "actions" | "themes" | "questions" | "timeline" | "archive";
+export type ViewSection = "dumps" | "structures" | "actions" | "themes" | "questions" | "timeline" | "archive" | "draft" | "roadmap" | "twitter";
 
 interface WorkspaceState {
+  sessions: Session[];
+  activeSessionId: string | null;
   dumps: Dump[];
   themes: Theme[];
   actions: ActionItem[];
   questions: Question[];
-  risks: Risk[];
-  docs: GeneratedDoc[];
   activeSection: ViewSection;
   selectedThemeId: string | null;
   selectedDumpId: string | null;
   isProcessing: boolean;
   showAIPanel: boolean;
+  loading: boolean;
+  sidebarCollapsed: boolean;
+  thinkingSteps: ThinkingStep[];
+  showThinking: boolean;
 }
 
 interface WorkspaceActions {
   addDump: (content: string) => void;
+  createSession: (name: string) => void;
+  deleteSession: (id: string) => void;
+  switchSession: (id: string) => void;
+  renameSession: (id: string, name: string) => void;
   setActiveSection: (section: ViewSection) => void;
   selectTheme: (id: string | null) => void;
   selectDump: (id: string | null) => void;
@@ -84,6 +89,10 @@ interface WorkspaceActions {
   getDumpsForTheme: (themeId: string) => Dump[];
   getDumpsForAction: (actionId: string) => Dump[];
   getThemesForDump: (dumpId: string) => Theme[];
+  refreshSessionData: () => void;
+  processAllDumps: () => void;
+  toggleSidebar: () => void;
+  closeThinking: () => void;
 }
 
 const WorkspaceContext = createContext<(WorkspaceState & WorkspaceActions) | null>(null);
@@ -94,101 +103,348 @@ export const useWorkspace = () => {
   return ctx;
 };
 
-// ─── Initial Data ───────────────────────────────────────
-
-const initialDumps: Dump[] = [
-  { id: "d1", content: "We need to figure out pricing for enterprise tier. Current thinking is somewhere between $50-100/user/month based on the value we deliver.", author: "Marcus Chen", avatar: "MC", timestamp: "2 min ago", type: "idea", themeIds: ["t1", "t3"], reactions: 3, replies: 2 },
-  { id: "d2", content: "Sarah mentioned competitors charge $50/user/month but their AI capabilities are way behind ours. We have a genuine differentiator here.", author: "Alex Rivera", avatar: "AR", timestamp: "5 min ago", type: "note", themeIds: ["t1"], reactions: 1, replies: 0 },
-  { id: "d3", content: "Our costs are higher because of AI processing — roughly $12/user/month in compute. Need to factor this into any pricing model.", author: "Jordan Lee", avatar: "JL", timestamp: "7 min ago", type: "blocker", themeIds: ["t1"], reactions: 2, replies: 1 },
-  { id: "d4", content: "Maybe start at $75 and see feedback? We can always adjust. Let's not overthink this — ship and iterate.", author: "Sarah Kim", avatar: "SK", timestamp: "10 min ago", type: "decision", themeIds: ["t1"], reactions: 5, replies: 3 },
-  { id: "d5", content: "Need to check with finance team first before we commit to any pricing. They had concerns about margin targets last quarter.", author: "Marcus Chen", avatar: "MC", timestamp: "12 min ago", type: "action", themeIds: ["t1"], reactions: 0, replies: 0 },
-  { id: "d6", content: "Launch target: end of Q2. That gives us about 10 weeks to finalize everything including billing integration.", author: "Alex Rivera", avatar: "AR", timestamp: "14 min ago", type: "note", themeIds: ["t2"], reactions: 0, replies: 0 },
-  { id: "d7", content: "Worry: $75 might be too expensive for startups. Should we consider a startup-specific tier? Maybe $30/user with limited AI features?", author: "Jordan Lee", avatar: "JL", timestamp: "16 min ago", type: "question", themeIds: ["t1", "t3"], reactions: 4, replies: 2 },
-  { id: "d8", content: "What if we do usage-based pricing for the AI features? Pay per dump processed rather than flat rate. More fair for smaller teams.", author: "Sarah Kim", avatar: "SK", timestamp: "18 min ago", type: "idea", themeIds: ["t1", "t3"], reactions: 2, replies: 0 },
-  { id: "d9", content: "We should benchmark against Linear and Notion pricing. Both charge per seat but offer volume discounts. That model works well for teams.", author: "Marcus Chen", avatar: "MC", timestamp: "22 min ago", type: "idea", themeIds: ["t1"], reactions: 1, replies: 1 },
-  { id: "d10", content: "The billing integration with Stripe should take about 2 weeks. We've done it before. No blockers on the eng side.", author: "Alex Rivera", avatar: "AR", timestamp: "25 min ago", type: "note", themeIds: ["t2"], reactions: 0, replies: 0 },
-];
-
-const initialThemes: Theme[] = [
-  { id: "t1", title: "Enterprise Pricing Strategy", tags: ["pricing", "enterprise", "competitors"], confidence: 94, dumpIds: ["d1", "d2", "d3", "d4", "d5", "d7", "d8", "d9"] },
-  { id: "t2", title: "Q2 Launch Timeline", tags: ["timeline", "launch", "engineering"], confidence: 88, dumpIds: ["d6", "d10"] },
-  { id: "t3", title: "Startup Market Accessibility", tags: ["startups", "pricing tiers", "growth"], confidence: 79, dumpIds: ["d1", "d7", "d8"] },
-];
-
-const initialActions: ActionItem[] = [
-  { id: "a1", text: "Validate pricing with finance team", owner: "Marcus", priority: "high", done: false, sourceDumpIds: ["d5"] },
-  { id: "a2", text: "Prepare competitive analysis deck", owner: "Sarah", priority: "medium", done: false, sourceDumpIds: ["d2", "d9"] },
-  { id: "a3", text: "Set up Stripe billing integration", owner: "Alex", priority: "medium", done: false, sourceDumpIds: ["d10"] },
-  { id: "a4", text: "Draft startup tier proposal", owner: "Jordan", priority: "low", done: false, sourceDumpIds: ["d7", "d8"] },
-  { id: "a5", text: "Schedule stakeholder pricing review", owner: "Unassigned", priority: "high", done: false, sourceDumpIds: ["d1", "d4"] },
-];
-
-const initialQuestions: Question[] = [
-  { id: "q1", text: "Will $75/user/month price out startup customers?", votes: 4, answered: false, sourceDumpIds: ["d7"] },
-  { id: "q2", text: "Should we offer annual billing discounts?", votes: 2, answered: false, sourceDumpIds: ["d9"] },
-  { id: "q3", text: "What's our exact cost per user for AI processing?", votes: 3, answered: false, sourceDumpIds: ["d3"] },
-  { id: "q4", text: "Is usage-based pricing feasible for our infrastructure?", votes: 1, answered: false, sourceDumpIds: ["d8"] },
-];
-
-const initialRisks: Risk[] = [
-  { id: "r1", text: "Pricing may exclude startup market segment", severity: "medium", sourceDumpIds: ["d7"] },
-  { id: "r2", text: "AI processing costs could increase with scale", severity: "high", sourceDumpIds: ["d3"] },
-  { id: "r3", text: "Finance team may push back on margin targets", severity: "medium", sourceDumpIds: ["d5"] },
-];
-
-const initialDocs: GeneratedDoc[] = [
-  { id: "doc1", title: "Enterprise Pricing Strategy Brief", status: "draft", lastUpdated: "2 min ago", sourceDumpIds: ["d1", "d2", "d3", "d4", "d5", "d7", "d8", "d9"], content: "## Proposed Pricing\n$75/user/month for enterprise tier\n\n## Rationale\n- Competitor benchmark: $50/user/month\n- Our AI costs: ~$12/user/month\n- Genuine differentiator in AI capabilities\n\n## Open Questions\n- Startup tier pricing?\n- Usage-based vs flat rate?\n\n## Next Steps\n- [ ] Validate with finance team\n- [ ] Competitive analysis\n- Timeline: End of Q2" },
-  { id: "doc2", title: "Q2 Launch Checklist", status: "draft", lastUpdated: "5 min ago", sourceDumpIds: ["d6", "d10"], content: "## Timeline\n10 weeks until end of Q2\n\n## Engineering\n- Stripe billing integration (~2 weeks)\n- No blockers identified\n\n## Dependencies\n- Finance team sign-off on pricing\n- Competitive analysis complete" },
-];
-
 // ─── Provider ───────────────────────────────────────────
 
 export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) => {
-  const [dumps, setDumps] = useState<Dump[]>(initialDumps);
-  const [themes] = useState<Theme[]>(initialThemes);
-  const [actions, setActions] = useState<ActionItem[]>(initialActions);
-  const [questions, setQuestions] = useState<Question[]>(initialQuestions);
-  const [risks] = useState<Risk[]>(initialRisks);
-  const [docs] = useState<GeneratedDoc[]>(initialDocs);
+  const { user } = useAuth();
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [dumps, setDumps] = useState<Dump[]>([]);
+  const [themes, setThemes] = useState<Theme[]>([]);
+  const [actions, setActions] = useState<ActionItem[]>([]);
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [activeSection, setActiveSection] = useState<ViewSection>("dumps");
   const [selectedThemeId, selectTheme] = useState<string | null>(null);
   const [selectedDumpId, selectDump] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showAIPanel, setShowAIPanel] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [thinkingSteps, setThinkingSteps] = useState<ThinkingStep[]>([]);
+  const [showThinking, setShowThinking] = useState(false);
 
-  const addDump = useCallback((content: string) => {
+  // Load sessions
+  useEffect(() => {
+    if (!user) return;
+    const loadSessions = async () => {
+      const { data, error } = await supabase
+        .from("sessions")
+        .select("*")
+        .order("updated_at", { ascending: false });
+      if (error) { console.error(error); return; }
+      if (data && data.length > 0) {
+        setSessions(data as Session[]);
+        setActiveSessionId(data[0].id);
+      } else {
+        // Create default session
+        const { data: newSession, error: createErr } = await supabase
+          .from("sessions")
+          .insert({ user_id: user.id, name: "My First Session" })
+          .select()
+          .single();
+        if (!createErr && newSession) {
+          setSessions([newSession as Session]);
+          setActiveSessionId(newSession.id);
+        }
+      }
+      setLoading(false);
+    };
+    loadSessions();
+  }, [user]);
+
+  // Load session data when active session changes
+  useEffect(() => {
+    if (!activeSessionId || !user) return;
+    const loadSessionData = async () => {
+      const [dumpsRes, themesRes, actionsRes, questionsRes] = await Promise.all([
+        supabase.from("dumps").select("*").eq("session_id", activeSessionId).order("created_at", { ascending: false }),
+        supabase.from("themes").select("*").eq("session_id", activeSessionId),
+        supabase.from("actions").select("*").eq("session_id", activeSessionId),
+        supabase.from("questions").select("*").eq("session_id", activeSessionId),
+      ]);
+
+      if (dumpsRes.data) {
+        // Get profiles for authors
+        const userIds = [...new Set(dumpsRes.data.map((d: any) => d.user_id))];
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("user_id, display_name, avatar_initials")
+          .in("user_id", userIds);
+        const profileMap = new Map(profiles?.map((p: any) => [p.user_id, p]) || []);
+
+        setDumps(dumpsRes.data.map((d: any) => {
+          const profile = profileMap.get(d.user_id) as any;
+          return {
+            id: d.id,
+            session_id: d.session_id,
+            content: d.content,
+            type: d.type as DumpType,
+            created_at: d.created_at,
+            author: profile?.display_name || "Unknown",
+            avatar: profile?.avatar_initials || "??",
+          };
+        }));
+      }
+
+      if (themesRes.data) {
+        // Load dump-theme relations
+        const themeIds = themesRes.data.map((t: any) => t.id);
+        const { data: relations } = themeIds.length > 0
+          ? await supabase.from("dump_themes").select("*").in("theme_id", themeIds)
+          : { data: [] };
+
+        setThemes(themesRes.data.map((t: any) => ({
+          id: t.id,
+          session_id: t.session_id,
+          title: t.title,
+          tags: t.tags || [],
+          confidence: t.confidence || 0,
+          dumpIds: (relations || []).filter((r: any) => r.theme_id === t.id).map((r: any) => r.dump_id),
+        })));
+      }
+
+      if (actionsRes.data) {
+        setActions(actionsRes.data.map((a: any) => ({
+          id: a.id,
+          session_id: a.session_id,
+          text: a.text,
+          owner: a.owner || "Unassigned",
+          priority: a.priority as "high" | "medium" | "low",
+          done: a.done,
+          sourceDumpIds: a.source_dump_ids || [],
+        })));
+      }
+
+      if (questionsRes.data) {
+        setQuestions(questionsRes.data.map((q: any) => ({
+          id: q.id,
+          session_id: q.session_id,
+          text: q.text,
+          votes: q.votes,
+          answered: q.answered,
+          sourceDumpIds: q.source_dump_ids || [],
+        })));
+      }
+    };
+    loadSessionData();
+  }, [activeSessionId, user]);
+
+  const addDump = useCallback(async (content: string) => {
+    if (!user || !activeSessionId) return;
+    setIsProcessing(true);
+    const { data, error } = await supabase
+      .from("dumps")
+      .insert({ session_id: activeSessionId, user_id: user.id, content, type: "note" })
+      .select()
+      .single();
+
+    if (error) { toast.error("Failed to save dump"); setIsProcessing(false); return; }
+
+    // Get profile
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("display_name, avatar_initials")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
     const newDump: Dump = {
-      id: `d${Date.now()}`,
-      content,
-      author: "You",
-      avatar: "YO",
-      timestamp: "Just now",
-      type: "note",
-      themeIds: [],
-      reactions: 0,
-      replies: 0,
+      id: data.id,
+      session_id: data.session_id,
+      content: data.content,
+      type: data.type as DumpType,
+      created_at: data.created_at,
+      author: profile?.display_name || "You",
+      avatar: profile?.avatar_initials || "YO",
     };
     setDumps((prev) => [newDump, ...prev]);
+
+    // Update session timestamp
+    await supabase.from("sessions").update({ updated_at: new Date().toISOString() }).eq("id", activeSessionId);
+    setIsProcessing(false);
+  }, [user, activeSessionId]);
+
+
+  const createSession = useCallback(async (name: string) => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from("sessions")
+      .insert({ user_id: user.id, name })
+      .select()
+      .single();
+    if (error) { toast.error("Failed to create session"); return; }
+    setSessions((prev) => [data as Session, ...prev]);
+    setActiveSessionId(data.id);
+    setDumps([]);
+    setThemes([]);
+    setActions([]);
+    setQuestions([]);
+    toast.success("Session created!");
+  }, [user]);
+
+  const switchSession = useCallback((id: string) => {
+    setActiveSessionId(id);
+    setActiveSection("dumps");
+    selectTheme(null);
+    selectDump(null);
+  }, []);
+
+  const renameSession = useCallback(async (id: string, name: string) => {
+    const { error } = await supabase.from("sessions").update({ name }).eq("id", id);
+    if (!error) {
+      setSessions((prev) => prev.map((s) => s.id === id ? { ...s, name } : s));
+    }
+  }, []);
+
+  const deleteSession = useCallback(async (id: string) => {
+    // Delete related data first
+    await Promise.all([
+      supabase.from("dumps").delete().eq("session_id", id),
+      supabase.from("themes").delete().eq("session_id", id),
+      supabase.from("actions").delete().eq("session_id", id),
+      supabase.from("questions").delete().eq("session_id", id),
+    ]);
+    const { error } = await supabase.from("sessions").delete().eq("id", id);
+    if (error) { toast.error("Failed to delete session"); return; }
+    setSessions((prev) => {
+      const remaining = prev.filter((s) => s.id !== id);
+      if (id === activeSessionId && remaining.length > 0) {
+        setActiveSessionId(remaining[0].id);
+      } else if (remaining.length === 0) {
+        setActiveSessionId(null);
+      }
+      return remaining;
+    });
+    toast.success("Session deleted");
+  }, [activeSessionId]);
+
+  const refreshSessionData = useCallback(async () => {
+    if (!activeSessionId || !user) return;
+    const [dumpsRes, themesRes, actionsRes, questionsRes] = await Promise.all([
+      supabase.from("dumps").select("*").eq("session_id", activeSessionId).order("created_at", { ascending: false }),
+      supabase.from("themes").select("*").eq("session_id", activeSessionId),
+      supabase.from("actions").select("*").eq("session_id", activeSessionId),
+      supabase.from("questions").select("*").eq("session_id", activeSessionId),
+    ]);
+    if (dumpsRes.data) {
+      const userIds = [...new Set(dumpsRes.data.map((d: any) => d.user_id))];
+      const { data: profiles } = await supabase.from("profiles").select("user_id, display_name, avatar_initials").in("user_id", userIds);
+      const profileMap = new Map(profiles?.map((p: any) => [p.user_id, p]) || []);
+      setDumps(dumpsRes.data.map((d: any) => {
+        const profile = profileMap.get(d.user_id) as any;
+        return { id: d.id, session_id: d.session_id, content: d.content, type: d.type as DumpType, created_at: d.created_at, author: profile?.display_name || "Unknown", avatar: profile?.avatar_initials || "??" };
+      }));
+    }
+    if (themesRes.data) {
+      const themeIds = themesRes.data.map((t: any) => t.id);
+      const { data: relations } = themeIds.length > 0 ? await supabase.from("dump_themes").select("*").in("theme_id", themeIds) : { data: [] };
+      setThemes(themesRes.data.map((t: any) => ({ id: t.id, session_id: t.session_id, title: t.title, tags: t.tags || [], confidence: t.confidence || 0, dumpIds: (relations || []).filter((r: any) => r.theme_id === t.id).map((r: any) => r.dump_id) })));
+    }
+    if (actionsRes.data) {
+      setActions(actionsRes.data.map((a: any) => ({ id: a.id, session_id: a.session_id, text: a.text, owner: a.owner || "Unassigned", priority: a.priority as "high" | "medium" | "low", done: a.done, sourceDumpIds: a.source_dump_ids || [] })));
+    }
+    if (questionsRes.data) {
+      setQuestions(questionsRes.data.map((q: any) => ({ id: q.id, session_id: q.session_id, text: q.text, votes: q.votes, answered: q.answered, sourceDumpIds: q.source_dump_ids || [] })));
+    }
+  }, [activeSessionId, user]);
+
+  const processAllDumps = useCallback(async () => {
+    if (!user || !activeSessionId) return;
     setIsProcessing(true);
-    setTimeout(() => {
-      setDumps((prev) =>
-        prev.map((d) =>
-          d.id === newDump.id ? { ...d, type: "idea", themeIds: ["t1"] } : d
-        )
-      );
-      setIsProcessing(false);
-    }, 2500);
-  }, []);
+    const unprocessed = dumps.filter((d) => d.type === "note");
+    const toProcess = unprocessed.length > 0 ? unprocessed : dumps;
 
-  const toggleAction = useCallback((id: string) => {
-    setActions((prev) => prev.map((a) => a.id === id ? { ...a, done: !a.done } : a));
-  }, []);
+    // Initialize thinking steps
+    const initialSteps: ThinkingStep[] = toProcess.map((d) => ({
+      dumpId: d.id,
+      dumpContent: d.content,
+      status: "pending" as const,
+      reasoning: [],
+    }));
+    setThinkingSteps(initialSteps);
+    setShowThinking(true);
 
-  const voteQuestion = useCallback((id: string) => {
-    setQuestions((prev) => prev.map((q) => q.id === id ? { ...q, votes: q.votes + 1 } : q));
-  }, []);
+    try {
+      for (let i = 0; i < toProcess.length; i++) {
+        const dump = toProcess[i];
+        // Mark current as processing
+        setThinkingSteps((prev) =>
+          prev.map((s, idx) => idx === i ? { ...s, status: "processing" as const } : s)
+        );
+
+        try {
+          const resp = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/process-dump`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+              },
+              body: JSON.stringify({ dump_id: dump.id, session_id: activeSessionId, user_id: user.id }),
+            }
+          );
+          const data = await resp.json();
+
+          if (data.success && data.result) {
+            const r = data.result;
+            setThinkingSteps((prev) =>
+              prev.map((s, idx) =>
+                idx === i
+                  ? {
+                      ...s,
+                      status: "done" as const,
+                      reasoning: r.reasoning || ["Analysis complete"],
+                      result: {
+                        type: r.type || "note",
+                        actionsCount: r.actions?.length || 0,
+                        questionsCount: r.questions?.length || 0,
+                        themesCount: r.themes?.length || 0,
+                      },
+                    }
+                  : s
+              )
+            );
+          } else {
+            setThinkingSteps((prev) =>
+              prev.map((s, idx) => idx === i ? { ...s, status: "error" as const, reasoning: [data.error || "Failed"] } : s)
+            );
+          }
+        } catch {
+          setThinkingSteps((prev) =>
+            prev.map((s, idx) => idx === i ? { ...s, status: "error" as const, reasoning: ["Network error"] } : s)
+          );
+        }
+      }
+      await refreshSessionData();
+      toast.success(`Processed ${toProcess.length} dumps with AI`);
+    } catch (e) {
+      console.error("AI processing failed:", e);
+      toast.error("AI processing failed");
+    }
+    setIsProcessing(false);
+  }, [user, activeSessionId, dumps, refreshSessionData]);
+
+  const toggleAction = useCallback(async (id: string) => {
+    const action = actions.find((a) => a.id === id);
+    if (!action) return;
+    const { error } = await supabase.from("actions").update({ done: !action.done }).eq("id", id);
+    if (!error) {
+      setActions((prev) => prev.map((a) => a.id === id ? { ...a, done: !a.done } : a));
+    }
+  }, [actions]);
+
+  const voteQuestion = useCallback(async (id: string) => {
+    const q = questions.find((q) => q.id === id);
+    if (!q) return;
+    const { error } = await supabase.from("questions").update({ votes: q.votes + 1 }).eq("id", id);
+    if (!error) {
+      setQuestions((prev) => prev.map((q) => q.id === id ? { ...q, votes: q.votes + 1 } : q));
+    }
+  }, [questions]);
 
   const toggleAIPanel = useCallback(() => setShowAIPanel((p) => !p), []);
+  const toggleSidebar = useCallback(() => setSidebarCollapsed((p) => !p), []);
+  const closeThinking = useCallback(() => setShowThinking(false), []);
 
   const getDumpsForTheme = useCallback((themeId: string) => {
     const theme = themes.find((t) => t.id === themeId);
@@ -207,12 +463,14 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   }, [themes]);
 
   const value = useMemo(() => ({
-    dumps, themes, actions, questions, risks, docs,
-    activeSection, selectedThemeId, selectedDumpId, isProcessing, showAIPanel,
-    addDump, setActiveSection, selectTheme, selectDump,
-    toggleAction, voteQuestion, toggleAIPanel,
-    getDumpsForTheme, getDumpsForAction, getThemesForDump,
-  }), [dumps, themes, actions, questions, risks, docs, activeSection, selectedThemeId, selectedDumpId, isProcessing, showAIPanel, addDump, toggleAction, voteQuestion, toggleAIPanel, getDumpsForTheme, getDumpsForAction, getThemesForDump]);
+    sessions, activeSessionId, dumps, themes, actions, questions,
+    activeSection, selectedThemeId, selectedDumpId, isProcessing, showAIPanel, loading,
+    sidebarCollapsed, thinkingSteps, showThinking,
+    addDump, createSession, deleteSession, switchSession, renameSession,
+    setActiveSection, selectTheme, selectDump,
+    toggleAction, voteQuestion, toggleAIPanel, toggleSidebar, closeThinking,
+    getDumpsForTheme, getDumpsForAction, getThemesForDump, refreshSessionData, processAllDumps,
+  }), [sessions, activeSessionId, dumps, themes, actions, questions, activeSection, selectedThemeId, selectedDumpId, isProcessing, showAIPanel, loading, sidebarCollapsed, thinkingSteps, showThinking, addDump, createSession, deleteSession, switchSession, renameSession, toggleAction, voteQuestion, toggleAIPanel, toggleSidebar, closeThinking, getDumpsForTheme, getDumpsForAction, getThemesForDump, refreshSessionData, processAllDumps]);
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
 };

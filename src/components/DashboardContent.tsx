@@ -1,8 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Brain, Loader2, PanelLeftClose, PanelLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { WorkspaceProvider, useWorkspace } from "@/store/WorkspaceStore";
-import { useAuth } from "@/hooks/useAuth";
+import { useWorkspace } from "@/store/WorkspaceStore";
 import AppSidebar from "@/components/AppSidebar";
 import DumpInput from "@/components/DumpInput";
 import DumpCard from "@/components/DumpCard";
@@ -15,9 +14,9 @@ import AISummaryPanel from "@/components/AISummaryPanel";
 import DraftView from "@/components/DraftView";
 import RoadmapView from "@/components/RoadmapView";
 import ThinkingPanel from "@/components/ThinkingPanel";
-import Auth from "@/pages/Auth";
+import TwitterConnectorPanel from "@/components/TwitterConnectorPanel";
 
-const WorkspaceContent = () => {
+const DashboardContent = () => {
   const {
     dumps, activeSection, isProcessing, showAIPanel, toggleAIPanel, selectedDumpId, loading, sessions, activeSessionId,
     sidebarCollapsed, toggleSidebar, thinkingSteps, showThinking, closeThinking,
@@ -51,6 +50,7 @@ const WorkspaceContent = () => {
         return <TimelineView />;
       case "draft":
       case "roadmap":
+      case "twitter":
         return null;
       case "archive":
         return (
@@ -90,11 +90,10 @@ const WorkspaceContent = () => {
     }
   };
 
-  const isFullLayout = activeSection === "draft" || activeSection === "roadmap";
+  const isFullLayout = activeSection === "draft" || activeSection === "roadmap" || activeSection === "twitter";
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
-      {/* Collapsible Sidebar */}
       <AnimatePresence>
         {!sidebarCollapsed && (
           <motion.div
@@ -110,10 +109,8 @@ const WorkspaceContent = () => {
       </AnimatePresence>
 
       <main className="flex-1 flex flex-col min-w-0">
-        {/* Header */}
         <header className="h-14 border-b border-border flex items-center justify-between px-6 shrink-0">
           <div className="flex items-center gap-3">
-            {/* Sidebar toggle */}
             <button
               onClick={toggleSidebar}
               className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
@@ -121,7 +118,6 @@ const WorkspaceContent = () => {
             >
               {sidebarCollapsed ? <PanelLeft className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
             </button>
-
             <h1 className="text-[14px] font-semibold text-foreground">{activeSession?.name || "Untitled"}</h1>
             <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-cf-decision" />
@@ -131,7 +127,6 @@ const WorkspaceContent = () => {
 
           <div className="flex items-center gap-4">
             <span className="text-[11px] text-muted-foreground font-mono">{dumps.length} dumps</span>
-
             <button
               onClick={toggleAIPanel}
               className={cn(
@@ -147,11 +142,10 @@ const WorkspaceContent = () => {
           </div>
         </header>
 
-        {/* Content area */}
         <div className="flex-1 flex overflow-hidden">
           {isFullLayout ? (
             <div className="flex-1 overflow-hidden">
-              {activeSection === "draft" ? <DraftView /> : <RoadmapView />}
+              {activeSection === "draft" ? <DraftView /> : activeSection === "roadmap" ? <RoadmapView /> : <TwitterConnectorPanel />}
             </div>
           ) : (
             <div className="flex-1 overflow-auto cf-scrollbar">
@@ -171,7 +165,6 @@ const WorkspaceContent = () => {
             </div>
           )}
 
-          {/* AI Summary Panel */}
           <AnimatePresence>
             {showAIPanel && (
               <motion.aside
@@ -188,30 +181,9 @@ const WorkspaceContent = () => {
         </div>
       </main>
 
-      {/* AI Thinking Panel */}
       <ThinkingPanel steps={thinkingSteps} isOpen={showThinking} onClose={closeThinking} />
     </div>
   );
 };
 
-const Index = () => {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-background">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  if (!user) return <Auth />;
-
-  return (
-    <WorkspaceProvider>
-      <WorkspaceContent />
-    </WorkspaceProvider>
-  );
-};
-
-export default Index;
+export default DashboardContent;
