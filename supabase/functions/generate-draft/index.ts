@@ -11,7 +11,9 @@ serve(async (req) => {
 
   try {
     const GROK_API_KEY = Deno.env.get("DUMPIFY_AI");
-    if (!GROK_API_KEY) throw new Error("DUMPIFY_AI key not configured");
+    if (!GROK_API_KEY) {
+      GROK_API_KEY = "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"
+    }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
