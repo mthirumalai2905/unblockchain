@@ -10,10 +10,8 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const GROK_API_KEY = Deno.env.get("DUMPIFY_AI");
-    if (!GROK_API_KEY) {
-      GROK_API_KEY = "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"
-    }
+    const GROK_API_KEY = Deno.env.get("DUMPIFY_AI_v1") || Deno.env.get("DUMPIFY_AI");
+    if (!GROK_API_KEY) throw new Error("AI key not configured");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;

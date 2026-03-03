@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { FileText, Play, Loader2, Copy, Check, RefreshCw, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -12,7 +12,10 @@ const DRAFT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-dr
 
 const DraftView = () => {
   const { activeSessionId, dumps } = useWorkspace();
-  const [markdown, setMarkdown] = useState("");
+  const [markdown, setMarkdown] = useState(() => {
+    const cached = sessionStorage.getItem(`draft-prd-${activeSessionId}`);
+    return cached || "";
+  });
   const [isGenerating, setIsGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
@@ -55,11 +58,17 @@ const DraftView = () => {
     }
   }, []);
 
+  // Persist markdown to sessionStorage
+  useEffect(() => {
+    if (markdown && activeSessionId) {
+      sessionStorage.setItem(`draft-prd-${activeSessionId}`, markdown);
+    }
+  }, [markdown, activeSessionId]);
+
   // Auto-download after generation completes
   useEffect(() => {
     if (autoDownloadPending && !isGenerating && markdown) {
       setAutoDownloadPending(false);
-      // Small delay to ensure DOM is rendered
       setTimeout(() => downloadPDF(), 500);
     }
   }, [autoDownloadPending, isGenerating, markdown, downloadPDF]);
