@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Map, Play, Loader2, RefreshCw, Check, ChevronDown, ChevronRight,
@@ -55,11 +55,28 @@ const typeIcons: Record<string, typeof Flag> = {
 
 const RoadmapView = () => {
   const { activeSessionId, dumps } = useWorkspace();
-  const [roadmap, setRoadmap] = useState<Roadmap | null>(null);
+  const [roadmap, setRoadmap] = useState<Roadmap | null>(() => {
+    const cached = sessionStorage.getItem(`roadmap-${activeSessionId}`);
+    return cached ? JSON.parse(cached) : null;
+  });
   const [isGenerating, setIsGenerating] = useState(false);
-  const [expandedPhases, setExpandedPhases] = useState<Set<string>>(new Set());
+  const [expandedPhases, setExpandedPhases] = useState<Set<string>>(() => {
+    const cached = sessionStorage.getItem(`roadmap-${activeSessionId}`);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      return new Set(parsed.phases?.map((p: Phase) => p.id) || []);
+    }
+    return new Set();
+  });
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
   const roadmapRef = useRef<HTMLDivElement>(null);
+
+  // Persist roadmap to sessionStorage
+  useEffect(() => {
+    if (roadmap && activeSessionId) {
+      sessionStorage.setItem(`roadmap-${activeSessionId}`, JSON.stringify(roadmap));
+    }
+  }, [roadmap, activeSessionId]);
 
   const generate = useCallback(async () => {
     if (!activeSessionId || dumps.length === 0) {

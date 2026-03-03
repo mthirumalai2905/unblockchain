@@ -11,7 +11,7 @@ serve(async (req) => {
 
   try {
     const BEARER_TOKEN = Deno.env.get("TWITTER_BEARER_TOKEN");
-    const GROQ_API_KEY = Deno.env.get("DUMPIFY_AI");
+    const GROQ_API_KEY = Deno.env.get("DUMPIFY_AI_v1") || Deno.env.get("DUMPIFY_AI");
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
