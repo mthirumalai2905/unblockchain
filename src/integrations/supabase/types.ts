@@ -336,6 +336,12 @@ export type Database = {
         | "blocker"
         | "action"
         | "note"
+        | "todo"
+        | "insight"
+        | "feedback"
+        | "reference"
+        | "rant"
+        | "goal"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -463,7 +469,20 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      dump_type: ["idea", "decision", "question", "blocker", "action", "note"],
+      dump_type: [
+        "idea",
+        "decision",
+        "question",
+        "blocker",
+        "action",
+        "note",
+        "todo",
+        "insight",
+        "feedback",
+        "reference",
+        "rant",
+        "goal",
+      ],
     },
   },
 } as const

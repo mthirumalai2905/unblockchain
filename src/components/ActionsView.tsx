@@ -10,7 +10,7 @@ const ActionsView = () => {
   const completed = actions.filter((a) => a.done);
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="w-full space-y-6">
       {/* Stats */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-6 px-0.5">
         <div>

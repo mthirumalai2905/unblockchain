@@ -15,7 +15,7 @@ const TimelineView = () => {
   const { dumps, getThemesForDump, selectDump, selectTheme, setActiveSection } = useWorkspace();
 
   return (
-    <div className="max-w-3xl">
+    <div className="w-full">
       <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground mb-4 px-0.5">
         Timeline
       </div>

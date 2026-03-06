@@ -45,7 +45,7 @@ const ThinkingPanel = ({ steps, isOpen, onClose }: ThinkingPanelProps) => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 20 }}
-        className="fixed bottom-4 right-4 w-[420px] max-h-[70vh] rounded-xl border border-border bg-card cf-shadow-lg z-50 flex flex-col overflow-hidden"
+        className="fixed bottom-4 right-4 left-4 sm:left-auto w-auto sm:w-[420px] max-h-[70vh] rounded-xl border border-border bg-card cf-shadow-lg z-50 flex flex-col overflow-hidden"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-accent/30">
@@ -53,7 +53,7 @@ const ThinkingPanel = ({ steps, isOpen, onClose }: ThinkingPanelProps) => {
             <div className="w-6 h-6 rounded-md bg-cf-action/20 flex items-center justify-center">
               <Brain className="w-3.5 h-3.5 text-cf-action" />
             </div>
-            <span className="text-[13px] font-semibold text-foreground">AI Thinking</span>
+            <span className="text-[13px] font-semibold text-foreground">DumpStash AI</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-mono text-muted-foreground">

@@ -11,7 +11,7 @@ const AIStructuredView = () => {
   const { themes, actions, questions, selectTheme, setActiveSection } = useWorkspace();
 
   return (
-    <div className="space-y-8 max-w-3xl">
+    <div className="space-y-8 w-full">
       {/* Status Bar */}
       <motion.div
         initial={{ opacity: 0, y: 6 }}

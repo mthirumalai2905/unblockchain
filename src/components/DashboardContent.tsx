@@ -1,7 +1,9 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Brain, Loader2, PanelLeftClose, PanelLeft } from "lucide-react";
+import { Brain, Loader2, PanelLeftClose, PanelLeft, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/store/WorkspaceStore";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useState } from "react";
 import AppSidebar from "@/components/AppSidebar";
 import DumpInput from "@/components/DumpInput";
 import DumpCard from "@/components/DumpCard";
@@ -15,12 +17,15 @@ import DraftView from "@/components/DraftView";
 import RoadmapView from "@/components/RoadmapView";
 import ThinkingPanel from "@/components/ThinkingPanel";
 import TwitterConnectorPanel from "@/components/TwitterConnectorPanel";
+import ArchiveView from "@/components/ArchiveView";
 
 const DashboardContent = () => {
   const {
     dumps, activeSection, isProcessing, showAIPanel, toggleAIPanel, selectedDumpId, loading, sessions, activeSessionId,
     sidebarCollapsed, toggleSidebar, thinkingSteps, showThinking, closeThinking,
   } = useWorkspace();
+  const isMobile = useIsMobile();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const activeSession = sessions.find((s) => s.id === activeSessionId);
 
@@ -53,11 +58,7 @@ const DashboardContent = () => {
       case "twitter":
         return null;
       case "archive":
-        return (
-          <div className="flex items-center justify-center h-64 text-muted-foreground text-[13px]">
-            No archived sessions yet
-          </div>
-        );
+        return <ArchiveView />;
       case "dumps":
       default:
         return (
@@ -94,50 +95,68 @@ const DashboardContent = () => {
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
-      <AnimatePresence>
-        {!sidebarCollapsed && (
+      {/* Desktop sidebar */}
+      {!isMobile && (
+        <AnimatePresence>
+          {!sidebarCollapsed && (
+            <motion.div
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: 240, opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+              className="shrink-0 overflow-hidden"
+            >
+              <AppSidebar />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
+
+      {/* Mobile sidebar overlay */}
+      {isMobile && mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 flex">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setMobileMenuOpen(false)} />
           <motion.div
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 240, opacity: 1 }}
-            exit={{ width: 0, opacity: 0 }}
-            transition={{ duration: 0.2, ease: "easeInOut" }}
-            className="shrink-0 overflow-hidden"
+            initial={{ x: -240 }}
+            animate={{ x: 0 }}
+            exit={{ x: -240 }}
+            className="relative z-10"
           >
             <AppSidebar />
           </motion.div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
 
       <main className="flex-1 flex flex-col min-w-0">
-        <header className="h-14 border-b border-border flex items-center justify-between px-6 shrink-0">
-          <div className="flex items-center gap-3">
+        <header className="h-12 sm:h-14 border-b border-border flex items-center justify-between px-3 sm:px-6 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button
-              onClick={toggleSidebar}
+              onClick={() => isMobile ? setMobileMenuOpen(!mobileMenuOpen) : toggleSidebar()}
               className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-              title={sidebarCollapsed ? "Open sidebar" : "Close sidebar"}
+              title={isMobile ? "Menu" : sidebarCollapsed ? "Open sidebar" : "Close sidebar"}
             >
-              {sidebarCollapsed ? <PanelLeft className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
+              {isMobile ? <Menu className="w-4 h-4" /> : sidebarCollapsed ? <PanelLeft className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
             </button>
-            <h1 className="text-[14px] font-semibold text-foreground">{activeSession?.name || "Untitled"}</h1>
-            <div className="flex items-center gap-1.5">
+            <h1 className="text-[13px] sm:text-[14px] font-semibold text-foreground truncate">{activeSession?.name || "Untitled"}</h1>
+            <div className="hidden sm:flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-cf-decision" />
               <span className="text-[11px] font-mono text-muted-foreground">active</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <span className="text-[11px] text-muted-foreground font-mono">{dumps.length} dumps</span>
+          <div className="flex items-center gap-2 sm:gap-4">
+            <span className="text-[11px] text-muted-foreground font-mono hidden sm:inline">{dumps.length} dumps</span>
             <button
               onClick={toggleAIPanel}
               className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium border transition-all duration-150",
+                "flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-md text-[11px] sm:text-[12px] font-medium border transition-all duration-150",
                 showAIPanel
                   ? "bg-foreground text-background border-foreground"
                   : "bg-transparent text-muted-foreground border-border hover:border-ring/50 hover:text-foreground"
               )}
             >
               <Brain className="w-3.5 h-3.5" />
-              {showAIPanel ? "AI On" : "AI Off"}
+              <span className="hidden sm:inline">{showAIPanel ? "AI On" : "AI Off"}</span>
             </button>
           </div>
         </header>
@@ -149,7 +168,7 @@ const DashboardContent = () => {
             </div>
           ) : (
             <div className="flex-1 overflow-auto cf-scrollbar">
-              <div className="p-6">
+              <div className="p-3 sm:p-6">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeSection + (showAIPanel ? "-ai" : "") + activeSessionId}
@@ -166,7 +185,7 @@ const DashboardContent = () => {
           )}
 
           <AnimatePresence>
-            {showAIPanel && (
+            {showAIPanel && !isMobile && (
               <motion.aside
                 initial={{ width: 0, opacity: 0 }}
                 animate={{ width: 300, opacity: 1 }}

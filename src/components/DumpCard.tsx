@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import {
   Lightbulb, CheckCircle2, HelpCircle, AlertTriangle,
   ListTodo, MessageSquare, MoreHorizontal,
-  ArrowUpRight,
+  ArrowUpRight, Target, MessageCircle, BookOpen, Flame, Flag,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace, Dump, DumpType } from "@/store/WorkspaceStore";
@@ -14,6 +14,12 @@ const typeConfig: Record<DumpType, { icon: typeof Lightbulb; label: string; dotC
   blocker: { icon: AlertTriangle, label: "Blocker", dotColor: "bg-cf-blocker", bgClass: "bg-cf-blocker/10", textClass: "text-cf-blocker" },
   action: { icon: ListTodo, label: "Action", dotColor: "bg-cf-action", bgClass: "bg-cf-action/10", textClass: "text-cf-action" },
   note: { icon: MessageSquare, label: "Note", dotColor: "bg-cf-note", bgClass: "bg-cf-note/10", textClass: "text-cf-note" },
+  todo: { icon: Target, label: "To-Do", dotColor: "bg-cf-todo", bgClass: "bg-cf-todo/10", textClass: "text-cf-todo" },
+  insight: { icon: Lightbulb, label: "Insight", dotColor: "bg-cf-insight", bgClass: "bg-cf-insight/10", textClass: "text-cf-insight" },
+  feedback: { icon: MessageCircle, label: "Feedback", dotColor: "bg-cf-feedback", bgClass: "bg-cf-feedback/10", textClass: "text-cf-feedback" },
+  reference: { icon: BookOpen, label: "Reference", dotColor: "bg-cf-reference", bgClass: "bg-cf-reference/10", textClass: "text-cf-reference" },
+  rant: { icon: Flame, label: "Rant", dotColor: "bg-cf-rant", bgClass: "bg-cf-rant/10", textClass: "text-cf-rant" },
+  goal: { icon: Flag, label: "Goal", dotColor: "bg-cf-goal", bgClass: "bg-cf-goal/10", textClass: "text-cf-goal" },
 };
 
 interface DumpCardProps {
@@ -23,7 +29,7 @@ interface DumpCardProps {
 
 const DumpCard = ({ dump, index }: DumpCardProps) => {
   const { getThemesForDump, selectTheme, setActiveSection, selectDump } = useWorkspace();
-  const config = typeConfig[dump.type];
+  const config = typeConfig[dump.type] || typeConfig.note;
   const themes = getThemesForDump(dump.id);
 
   const handleThemeClick = (themeId: string) => {
@@ -41,19 +47,17 @@ const DumpCard = ({ dump, index }: DumpCardProps) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.03, duration: 0.2 }}
       onClick={handleCardClick}
-      className="group relative p-4 rounded-lg bg-card border border-border hover:border-ring/30 transition-all duration-150 cursor-pointer hover:cf-shadow-md"
+      className="group relative p-3 sm:p-4 rounded-lg bg-card border border-border hover:border-ring/30 transition-all duration-150 cursor-pointer hover:cf-shadow-md"
     >
-      {/* Type indicator line */}
       <div className={cn("absolute left-0 top-3 bottom-3 w-[2px] rounded-full", config.dotColor)} />
 
-      <div className="flex items-start gap-3 pl-2">
-        {/* Avatar */}
-        <div className="w-7 h-7 rounded-full bg-accent flex items-center justify-center text-[10px] font-semibold text-muted-foreground shrink-0 mt-0.5">
+      <div className="flex items-start gap-2 sm:gap-3 pl-2">
+        <div className="w-7 h-7 rounded-full bg-accent flex items-center justify-center text-[10px] font-semibold text-muted-foreground shrink-0 mt-0.5 hidden sm:flex">
           {dump.avatar}
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-1.5 sm:gap-2 mb-1 flex-wrap">
             <span className="text-[13px] font-medium text-foreground">{dump.author}</span>
             <span className="text-[11px] text-muted-foreground font-mono">{new Date(dump.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })} · {new Date(dump.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
             <span className={cn("inline-flex items-center gap-1 px-1.5 py-[1px] rounded text-[10px] font-medium", config.bgClass, config.textClass)}>
@@ -63,7 +67,6 @@ const DumpCard = ({ dump, index }: DumpCardProps) => {
 
           <p className="text-[13px] text-foreground/80 leading-[1.6]">{dump.content}</p>
 
-          {/* Connected Themes */}
           {themes.length > 0 && (
             <div className="flex items-center gap-1.5 mt-2.5 flex-wrap">
               {themes.map((theme) => (
@@ -78,7 +81,6 @@ const DumpCard = ({ dump, index }: DumpCardProps) => {
               ))}
             </div>
           )}
-
         </div>
 
         <button className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-accent text-muted-foreground">

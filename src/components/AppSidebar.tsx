@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap, MessageSquare, Brain, CheckSquare, Lightbulb,
   HelpCircle, Clock, Archive, ChevronDown, Plus, Search,
-  Command, LogOut, FileText, Trash2, Twitter,
+  Command, LogOut, FileText, Trash2, Twitter, ArchiveRestore,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Map } from "lucide-react";
@@ -24,17 +24,20 @@ const navItems: { id: ViewSection; label: string; icon: typeof Brain; badge?: st
 ];
 
 const AppSidebar = () => {
-  const { activeSection, setActiveSection, actions, questions, themes, dumps, sessions, activeSessionId, switchSession, createSession, deleteSession } = useWorkspace();
+  const { activeSection, setActiveSection, actions, questions, themes, dumps, sessions, activeSessionId, switchSession, createSession, deleteSession, archiveSession } = useWorkspace();
   const { signOut, user } = useAuth();
   const [sessionsOpen, setSessionsOpen] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [newSessionName, setNewSessionName] = useState("");
+
+  const activeSessions = sessions.filter((s) => s.is_active);
 
   const counts: Partial<Record<ViewSection, number>> = {
     dumps: dumps.length,
     actions: actions.filter((a) => !a.done).length,
     themes: themes.length,
     questions: questions.filter((q) => !q.answered).length,
+    archive: sessions.filter((s) => !s.is_active).length,
   };
 
   const handleCreateSession = () => {
@@ -55,7 +58,7 @@ const AppSidebar = () => {
           <Zap className="w-3.5 h-3.5 text-background" />
         </div>
         <span className="text-sm font-semibold text-sidebar-primary tracking-tight">
-          Dumpify
+          DumpStash
         </span>
       </div>
 
@@ -87,13 +90,13 @@ const AppSidebar = () => {
               )}
             >
               <item.icon className={cn("w-4 h-4 shrink-0", isActive && "text-foreground")} />
-              <span>{item.label}</span>
+              <span className="truncate">{item.label}</span>
               {item.badge && !count && (
                 <span className="ml-auto px-1.5 py-0.5 rounded text-[9px] font-bold bg-foreground text-background">
                   {item.badge}
                 </span>
               )}
-              {count !== undefined && (
+              {count !== undefined && count > 0 && (
                 <span className={cn(
                   "ml-auto text-[11px] font-mono tabular-nums",
                   isActive ? "text-sidebar-accent-foreground/60" : "text-sidebar-muted"
@@ -116,7 +119,7 @@ const AppSidebar = () => {
         >
           <ChevronDown className={cn("w-3 h-3 transition-transform duration-200", !sessionsOpen && "-rotate-90")} />
           Sessions
-          <span className="ml-auto text-[10px] font-mono">{sessions.length}</span>
+          <span className="ml-auto text-[10px] font-mono">{activeSessions.length}</span>
         </button>
         <AnimatePresence>
           {sessionsOpen && (
@@ -127,7 +130,7 @@ const AppSidebar = () => {
               transition={{ duration: 0.15 }}
               className="overflow-hidden space-y-px"
             >
-              {sessions.map((session) => {
+              {activeSessions.map((session) => {
                 const isActive = session.id === activeSessionId;
                 return (
                   <div
@@ -139,7 +142,7 @@ const AppSidebar = () => {
                   >
                     <button
                       onClick={() => switchSession(session.id)}
-                      className="flex-1 text-left px-2.5 py-2"
+                      className="flex-1 text-left px-2.5 py-2 min-w-0"
                     >
                       <div className="flex items-center justify-between">
                         <span className={cn(
@@ -149,17 +152,26 @@ const AppSidebar = () => {
                           {session.name}
                         </span>
                         {isActive && (
-                          <div className="w-1.5 h-1.5 rounded-full bg-cf-decision shrink-0" />
+                          <div className="w-1.5 h-1.5 rounded-full bg-cf-decision shrink-0 ml-1" />
                         )}
                       </div>
                     </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); deleteSession(session.id); }}
-                      className="p-1.5 mr-1 rounded text-muted-foreground/30 hover:text-destructive opacity-0 group-hover:opacity-100 transition-all"
-                      title="Delete session"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
+                    <div className="flex items-center opacity-0 group-hover:opacity-100 transition-all mr-1">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); archiveSession(session.id); }}
+                        className="p-1 rounded text-muted-foreground/30 hover:text-cf-question transition-colors"
+                        title="Archive session"
+                      >
+                        <Archive className="w-3 h-3" />
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); deleteSession(session.id); }}
+                        className="p-1 rounded text-muted-foreground/30 hover:text-destructive transition-colors"
+                        title="Delete session"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -192,7 +204,6 @@ const AppSidebar = () => {
           {isCreating ? "Create" : "New Session"}
         </button>
 
-        {/* Sign out */}
         <button
           onClick={signOut}
           className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors"

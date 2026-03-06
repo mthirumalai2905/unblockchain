@@ -9,7 +9,6 @@ const AISummaryPanel = () => {
   const pendingActions = actions.filter((a) => !a.done).length;
   const openQuestions = questions.filter((q) => !q.answered).length;
 
-  // Compute type distribution
   const typeCounts = dumps.reduce((acc, d) => {
     acc[d.type] = (acc[d.type] || 0) + 1;
     return acc;
@@ -22,6 +21,12 @@ const AISummaryPanel = () => {
     { type: "blocker", label: "Blockers", color: "bg-cf-blocker", count: typeCounts.blocker || 0 },
     { type: "action", label: "Actions", color: "bg-cf-action", count: typeCounts.action || 0 },
     { type: "note", label: "Notes", color: "bg-cf-note", count: typeCounts.note || 0 },
+    { type: "todo", label: "To-Dos", color: "bg-cf-todo", count: typeCounts.todo || 0 },
+    { type: "insight", label: "Insights", color: "bg-cf-insight", count: typeCounts.insight || 0 },
+    { type: "feedback", label: "Feedback", color: "bg-cf-feedback", count: typeCounts.feedback || 0 },
+    { type: "reference", label: "References", color: "bg-cf-reference", count: typeCounts.reference || 0 },
+    { type: "rant", label: "Rants", color: "bg-cf-rant", count: typeCounts.rant || 0 },
+    { type: "goal", label: "Goals", color: "bg-cf-goal", count: typeCounts.goal || 0 },
   ].filter((t) => t.count > 0);
 
   const total = dumps.length;
@@ -33,14 +38,13 @@ const AISummaryPanel = () => {
           <Brain className="w-5 h-5 text-muted-foreground" />
         </div>
         <p className="text-[13px] text-muted-foreground">Start dumping your thoughts.</p>
-        <p className="text-[11px] text-muted-foreground/50 mt-1">AI insights will appear here.</p>
+        <p className="text-[11px] text-muted-foreground/50 mt-1">DumpStash AI insights will appear here.</p>
       </div>
     );
   }
 
   return (
     <div className="h-full overflow-auto cf-scrollbar p-4 space-y-4">
-      {/* Header */}
       <div className="flex items-center gap-2">
         <div className="w-6 h-6 rounded-md bg-foreground flex items-center justify-center">
           <Sparkles className="w-3.5 h-3.5 text-background" />
@@ -48,7 +52,6 @@ const AISummaryPanel = () => {
         <span className="text-[13px] font-semibold text-foreground">Session Summary</span>
       </div>
 
-      {/* Stats grid */}
       <div className="grid grid-cols-2 gap-2">
         {[
           { label: "Dumps", value: total, icon: Zap, color: "text-foreground" },
@@ -71,7 +74,6 @@ const AISummaryPanel = () => {
         ))}
       </div>
 
-      {/* Type distribution */}
       <div className="p-3 rounded-lg bg-card border border-border space-y-2.5">
         <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Content Mix</div>
         <div className="flex gap-0.5 h-2 rounded-full overflow-hidden bg-accent">
@@ -95,7 +97,6 @@ const AISummaryPanel = () => {
         </div>
       </div>
 
-      {/* Top themes */}
       {themes.length > 0 && (
         <div className="p-3 rounded-lg bg-card border border-border space-y-2">
           <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground flex items-center gap-1.5">
@@ -111,7 +112,6 @@ const AISummaryPanel = () => {
         </div>
       )}
 
-      {/* Pending actions preview */}
       {pendingActions > 0 && (
         <div className="p-3 rounded-lg bg-card border border-border space-y-2">
           <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground flex items-center gap-1.5">
