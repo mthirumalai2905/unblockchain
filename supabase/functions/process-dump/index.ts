@@ -10,8 +10,8 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const GROK_API_KEY = Deno.env.get("DUMPIFY_AI_v1") || Deno.env.get("DUMPIFY_AI");
-    if (!GROK_API_KEY) throw new Error("AI key not configured");
+    const AI_KEY = Deno.env.get("DUMPIFY_AI_v1") || Deno.env.get("DUMPIFY_AI");
+    if (!AI_KEY) throw new Error("AI key not configured");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -36,10 +36,10 @@ serve(async (req) => {
 
     const context = (existingDumps || []).map((d: any) => `[${d.type}] ${d.content}`).join("\n");
 
-    const grokResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${GROK_API_KEY}`,
+        "Authorization": `Bearer ${AI_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -47,24 +47,38 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are an AI assistant that analyzes brain dumps. Given a new dump and session context, you must:
-1. Classify the dump type as one of: idea, decision, question, blocker, action, note
+            content: `You are DumpStash AI, an assistant that analyzes brain dumps. Given a new dump and session context, you must:
+1. Classify the dump type as one of: idea, decision, question, blocker, action, note, todo, insight, feedback, reference, rant, goal
 2. Extract any action items (tasks to do)
 3. Extract any questions raised
 4. Identify themes/topics
 
-IMPORTANT: Include a "reasoning" field that shows your step-by-step thinking process. This will be displayed to the user so they can see your thought process. Write it as a series of clear, concise thoughts.
+CLASSIFICATION GUIDE - pick the MOST specific type:
+- "todo": Explicit tasks, to-do items, things the user needs to do. Contains phrases like "need to", "have to", "should do", "must", "remember to", "don't forget"
+- "idea": Creative suggestions, new concepts, brainstorming, possibilities. Contains "what if", "we could", "imagine", "concept"
+- "decision": Choices made, conclusions reached. Contains "decided", "going with", "we'll use", "final answer"
+- "question": Direct questions or uncertainties. Contains "?", "wondering", "not sure", "how do we"
+- "blocker": Problems stopping progress, dependencies, obstacles. Contains "stuck", "can't", "blocked by", "waiting on", "preventing"
+- "action": Specific actionable steps with clear next moves. Contains "let's", "will do", "next step", "action item"
+- "insight": Realizations, aha moments, learnings. Contains "realized", "learned", "turns out", "interesting that"
+- "feedback": Opinions on existing work, reviews, critiques. Contains "I think the X is", "feels like", "the problem with", "love/hate"
+- "reference": Links, resources, citations, external references. Contains URLs, "check out", "see also", "reference", "source"
+- "rant": Frustrations, venting, emotional expressions. Contains strong emotional language, complaints, "so annoying", "frustrated"
+- "goal": Objectives, milestones, targets. Contains "goal is", "aim to", "target", "by end of", "milestone"
+- "note": General notes that don't fit other categories (use as last resort)
+
+IMPORTANT: Include a "reasoning" field that shows your step-by-step thinking process.
 
 Respond with a JSON object (no markdown):
 {
   "reasoning": [
     "Step 1: Reading the dump content...",
     "Step 2: This appears to be about X because...",
-    "Step 3: Classifying as 'idea' because...",
+    "Step 3: Classifying as 'todo' because it contains explicit task language...",
     "Step 4: Found actionable items: ...",
     "Step 5: Identified themes related to..."
   ],
-  "type": "idea|decision|question|blocker|action|note",
+  "type": "idea|decision|question|blocker|action|note|todo|insight|feedback|reference|rant|goal",
   "actions": [{"text": "...", "priority": "high|medium|low"}],
   "questions": [{"text": "..."}],
   "themes": [{"title": "...", "tags": ["tag1"], "confidence": 80}]
@@ -79,29 +93,28 @@ Respond with a JSON object (no markdown):
       }),
     });
 
-    if (!grokResponse.ok) {
-      const errText = await grokResponse.text();
-      console.error("Groq API error:", grokResponse.status, errText);
-      throw new Error(`Groq API error: ${grokResponse.status}`);
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error("AI API error:", response.status, errText);
+      throw new Error(`AI API error: ${response.status}`);
     }
 
-    const grokData = await grokResponse.json();
+    const aiData = await response.json();
     let result;
     try {
-      const raw = grokData.choices[0].message.content.trim();
+      const raw = aiData.choices[0].message.content.trim();
       const cleaned = raw.replace(/^```json?\n?/, "").replace(/\n?```$/, "");
       result = JSON.parse(cleaned);
     } catch (e) {
-      console.error("Failed to parse Groq response:", grokData.choices?.[0]?.message?.content);
+      console.error("Failed to parse AI response:", aiData.choices?.[0]?.message?.content);
       throw new Error("Failed to parse AI response");
     }
 
-    // Update dump type
-    if (result.type && ["idea", "decision", "question", "blocker", "action", "note"].includes(result.type)) {
+    const validTypes = ["idea", "decision", "question", "blocker", "action", "note", "todo", "insight", "feedback", "reference", "rant", "goal"];
+    if (result.type && validTypes.includes(result.type)) {
       await supabase.from("dumps").update({ type: result.type }).eq("id", dump_id);
     }
 
-    // Insert action items
     if (result.actions?.length > 0) {
       const actionsToInsert = result.actions.map((a: any) => ({
         session_id,
@@ -113,7 +126,6 @@ Respond with a JSON object (no markdown):
       await supabase.from("actions").insert(actionsToInsert);
     }
 
-    // Insert questions
     if (result.questions?.length > 0) {
       const questionsToInsert = result.questions.map((q: any) => ({
         session_id,
@@ -124,7 +136,6 @@ Respond with a JSON object (no markdown):
       await supabase.from("questions").insert(questionsToInsert);
     }
 
-    // Insert themes
     if (result.themes?.length > 0) {
       const { data: existingThemes } = await supabase
         .from("themes")

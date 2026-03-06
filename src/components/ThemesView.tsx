@@ -13,7 +13,7 @@ const ThemesView = () => {
     const relatedDumps = getDumpsForTheme(selectedThemeId);
 
     return (
-      <div className="max-w-3xl space-y-4">
+      <div className="w-full space-y-4">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <button
             onClick={() => selectTheme(null)}
@@ -52,7 +52,7 @@ const ThemesView = () => {
   }
 
   return (
-    <div className="max-w-3xl space-y-4">
+    <div className="w-full space-y-4">
       <div className="flex items-center gap-2 px-0.5 mb-2">
         <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">All Themes</h3>
         <span className="text-[11px] font-mono text-muted-foreground/50">{themes.length}</span>

@@ -6,7 +6,7 @@ import type { ThinkingStep } from "@/components/ThinkingPanel";
 
 // ─── Types ──────────────────────────────────────────────
 
-export type DumpType = "idea" | "decision" | "question" | "blocker" | "action" | "note";
+export type DumpType = "idea" | "decision" | "question" | "blocker" | "action" | "note" | "todo" | "insight" | "feedback" | "reference" | "rant" | "goal";
 
 export interface Session {
   id: string;
@@ -56,6 +56,11 @@ export interface Question {
 
 export type ViewSection = "dumps" | "structures" | "actions" | "themes" | "questions" | "timeline" | "archive" | "draft" | "roadmap" | "twitter";
 
+// Archive helpers
+export interface ArchivedSession extends Session {
+  is_active: false;
+}
+
 interface WorkspaceState {
   sessions: Session[];
   activeSessionId: string | null;
@@ -80,6 +85,8 @@ interface WorkspaceActions {
   deleteSession: (id: string) => void;
   switchSession: (id: string) => void;
   renameSession: (id: string, name: string) => void;
+  archiveSession: (id: string) => void;
+  restoreSession: (id: string) => void;
   setActiveSection: (section: ViewSection) => void;
   selectTheme: (id: string | null) => void;
   selectDump: (id: string | null) => void;
@@ -304,7 +311,6 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   }, []);
 
   const deleteSession = useCallback(async (id: string) => {
-    // Delete related data first
     await Promise.all([
       supabase.from("dumps").delete().eq("session_id", id),
       supabase.from("themes").delete().eq("session_id", id),
@@ -324,6 +330,28 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     });
     toast.success("Session deleted");
   }, [activeSessionId]);
+
+  const archiveSession = useCallback(async (id: string) => {
+    const { error } = await supabase.from("sessions").update({ is_active: false }).eq("id", id);
+    if (error) { toast.error("Failed to archive session"); return; }
+    setSessions((prev) => {
+      const updated = prev.map((s) => s.id === id ? { ...s, is_active: false } : s);
+      if (id === activeSessionId) {
+        const nextActive = updated.find((s) => s.is_active && s.id !== id);
+        setActiveSessionId(nextActive?.id || null);
+      }
+      return updated;
+    });
+    toast.success("Session archived");
+  }, [activeSessionId]);
+
+  const restoreSession = useCallback(async (id: string) => {
+    const { error } = await supabase.from("sessions").update({ is_active: true }).eq("id", id);
+    if (error) { toast.error("Failed to restore session"); return; }
+    setSessions((prev) => prev.map((s) => s.id === id ? { ...s, is_active: true } : s));
+    setActiveSessionId(id);
+    toast.success("Session restored");
+  }, []);
 
   const refreshSessionData = useCallback(async () => {
     if (!activeSessionId || !user) return;
@@ -474,11 +502,11 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     sessions, activeSessionId, dumps, themes, actions, questions,
     activeSection, selectedThemeId, selectedDumpId, isProcessing, showAIPanel, loading,
     sidebarCollapsed, thinkingSteps, showThinking,
-    addDump, createSession, deleteSession, switchSession, renameSession,
+    addDump, createSession, deleteSession, switchSession, renameSession, archiveSession, restoreSession,
     setActiveSection, selectTheme, selectDump,
     toggleAction, voteQuestion, toggleAIPanel, toggleSidebar, closeThinking,
     getDumpsForTheme, getDumpsForAction, getThemesForDump, refreshSessionData, processAllDumps,
-  }), [sessions, activeSessionId, dumps, themes, actions, questions, activeSection, selectedThemeId, selectedDumpId, isProcessing, showAIPanel, loading, sidebarCollapsed, thinkingSteps, showThinking, addDump, createSession, deleteSession, switchSession, renameSession, toggleAction, voteQuestion, toggleAIPanel, toggleSidebar, closeThinking, getDumpsForTheme, getDumpsForAction, getThemesForDump, refreshSessionData, processAllDumps]);
+  }), [sessions, activeSessionId, dumps, themes, actions, questions, activeSection, selectedThemeId, selectedDumpId, isProcessing, showAIPanel, loading, sidebarCollapsed, thinkingSteps, showThinking, addDump, createSession, deleteSession, switchSession, renameSession, archiveSession, restoreSession, toggleAction, voteQuestion, toggleAIPanel, toggleSidebar, closeThinking, getDumpsForTheme, getDumpsForAction, getThemesForDump, refreshSessionData, processAllDumps]);
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
 };

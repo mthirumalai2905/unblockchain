@@ -43,6 +43,12 @@
     --cf-blocker: 0 72% 55%;
     --cf-action: 262 83% 58%;
     --cf-note: 0 0% 45%;
+    --cf-todo: 200 80% 55%;
+    --cf-insight: 280 70% 60%;
+    --cf-feedback: 30 85% 55%;
+    --cf-reference: 170 60% 45%;
+    --cf-rant: 15 90% 55%;
+    --cf-goal: 330 70% 55%;
 
     /* Surfaces */
     --cf-surface-0: 0 0% 4%;

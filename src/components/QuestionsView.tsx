@@ -8,7 +8,7 @@ const QuestionsView = () => {
   const sorted = [...questions].sort((a, b) => b.votes - a.votes);
 
   return (
-    <div className="max-w-3xl space-y-4">
+    <div className="w-full space-y-4">
       <div className="flex items-center gap-2 px-0.5 mb-2">
         <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Open Questions</h3>
         <span className="text-[11px] font-mono text-muted-foreground/50">{questions.length}</span>
