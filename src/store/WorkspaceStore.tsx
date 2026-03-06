@@ -125,29 +125,33 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
 
   // Load sessions
   useEffect(() => {
-    if (!user) return;
+    if (!user) { setLoading(false); return; }
     const loadSessions = async () => {
-      const { data, error } = await supabase
-        .from("sessions")
-        .select("*")
-        .order("updated_at", { ascending: false });
-      if (error) { console.error(error); return; }
-      if (data && data.length > 0) {
-        setSessions(data as Session[]);
-        setActiveSessionId(data[0].id);
-      } else {
-        // Create default session
-        const { data: newSession, error: createErr } = await supabase
+      try {
+        const { data, error } = await supabase
           .from("sessions")
-          .insert({ user_id: user.id, name: "My First Session" })
-          .select()
-          .single();
-        if (!createErr && newSession) {
-          setSessions([newSession as Session]);
-          setActiveSessionId(newSession.id);
+          .select("*")
+          .order("updated_at", { ascending: false });
+        if (error) { console.error(error); setLoading(false); return; }
+        if (data && data.length > 0) {
+          setSessions(data as Session[]);
+          setActiveSessionId(data[0].id);
+        } else {
+          const { data: newSession, error: createErr } = await supabase
+            .from("sessions")
+            .insert({ user_id: user.id, name: "My First Session" })
+            .select()
+            .single();
+          if (!createErr && newSession) {
+            setSessions([newSession as Session]);
+            setActiveSessionId(newSession.id);
+          }
         }
+      } catch (e) {
+        console.error("Failed to load sessions:", e);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     loadSessions();
   }, [user]);
@@ -156,6 +160,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   useEffect(() => {
     if (!activeSessionId || !user) return;
     const loadSessionData = async () => {
+      try {
       const [dumpsRes, themesRes, actionsRes, questionsRes] = await Promise.all([
         supabase.from("dumps").select("*").eq("session_id", activeSessionId).order("created_at", { ascending: false }),
         supabase.from("themes").select("*").eq("session_id", activeSessionId),
@@ -224,6 +229,9 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
           answered: q.answered,
           sourceDumpIds: q.source_dump_ids || [],
         })));
+      }
+      } catch (e) {
+        console.error("Failed to load session data:", e);
       }
     };
     loadSessionData();

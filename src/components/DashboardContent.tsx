@@ -149,7 +149,7 @@ const DashboardContent = () => {
             </div>
           ) : (
             <div className="flex-1 overflow-auto cf-scrollbar">
-              <div className="p-6 max-w-3xl">
+              <div className="p-6">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeSection + (showAIPanel ? "-ai" : "") + activeSessionId}
