@@ -88,6 +88,51 @@ export type Database = {
           },
         ]
       }
+      dump_threads: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_ai_generated: boolean
+          parent_dump_id: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_ai_generated?: boolean
+          parent_dump_id: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_ai_generated?: boolean
+          parent_dump_id?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dump_threads_parent_dump_id_fkey"
+            columns: ["parent_dump_id"]
+            isOneToOne: false
+            referencedRelation: "dumps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dump_threads_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dumps: {
         Row: {
           content: string
