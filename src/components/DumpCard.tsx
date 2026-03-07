@@ -1,11 +1,14 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Lightbulb, CheckCircle2, HelpCircle, AlertTriangle,
   ListTodo, MessageSquare, MoreHorizontal,
-  ArrowUpRight, Target, MessageCircle, BookOpen, Flame, Flag,
+  ArrowUpRight, Target, MessageCircle, BookOpen, Flame, Flag, Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace, Dump, DumpType } from "@/store/WorkspaceStore";
+import { supabase } from "@/integrations/supabase/client";
+import ThreadPanel from "@/components/ThreadPanel";
 
 const typeConfig: Record<DumpType, { icon: typeof Lightbulb; label: string; dotColor: string; bgClass: string; textClass: string }> = {
   idea: { icon: Lightbulb, label: "Idea", dotColor: "bg-cf-idea", bgClass: "bg-cf-idea/10", textClass: "text-cf-idea" },
@@ -31,6 +34,19 @@ const DumpCard = ({ dump, index }: DumpCardProps) => {
   const { getThemesForDump, selectTheme, setActiveSection, selectDump } = useWorkspace();
   const config = typeConfig[dump.type] || typeConfig.note;
   const themes = getThemesForDump(dump.id);
+  const [threadOpen, setThreadOpen] = useState(false);
+  const [threadCount, setThreadCount] = useState(0);
+
+  // Load thread count on mount
+  useEffect(() => {
+    supabase
+      .from("dump_threads")
+      .select("id", { count: "exact", head: true })
+      .eq("parent_dump_id", dump.id)
+      .then(({ count }) => {
+        if (count !== null) setThreadCount(count);
+      });
+  }, [dump.id]);
 
   const handleThemeClick = (themeId: string) => {
     selectTheme(themeId);
@@ -42,34 +58,34 @@ const DumpCard = ({ dump, index }: DumpCardProps) => {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.03, duration: 0.2 }}
-      onClick={handleCardClick}
-      className="group relative p-3 sm:p-4 rounded-lg bg-card border border-border hover:border-ring/30 transition-all duration-150 cursor-pointer hover:cf-shadow-md"
-    >
-      <div className={cn("absolute left-0 top-3 bottom-3 w-[2px] rounded-full", config.dotColor)} />
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.03, duration: 0.2 }}
+        onClick={handleCardClick}
+        className="group relative p-3 sm:p-4 rounded-lg bg-card border border-border hover:border-ring/30 transition-all duration-150 cursor-pointer hover:cf-shadow-md"
+      >
+        <div className={cn("absolute left-0 top-3 bottom-3 w-[2px] rounded-full", config.dotColor)} />
 
-      <div className="flex items-start gap-2 sm:gap-3 pl-2">
-        <div className="w-7 h-7 rounded-full bg-accent flex items-center justify-center text-[10px] font-semibold text-muted-foreground shrink-0 mt-0.5 hidden sm:flex">
-          {dump.avatar}
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 sm:gap-2 mb-1 flex-wrap">
-            <span className="text-[13px] font-medium text-foreground">{dump.author}</span>
-            <span className="text-[11px] text-muted-foreground font-mono">{new Date(dump.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })} · {new Date(dump.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-            <span className={cn("inline-flex items-center gap-1 px-1.5 py-[1px] rounded text-[10px] font-medium", config.bgClass, config.textClass)}>
-              {config.label}
-            </span>
+        <div className="flex items-start gap-2 sm:gap-3 pl-2">
+          <div className="w-7 h-7 rounded-full bg-accent flex items-center justify-center text-[10px] font-semibold text-muted-foreground shrink-0 mt-0.5 hidden sm:flex">
+            {dump.avatar}
           </div>
 
-          <p className="text-[13px] text-foreground/80 leading-[1.6]">{dump.content}</p>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 sm:gap-2 mb-1 flex-wrap">
+              <span className="text-[13px] font-medium text-foreground">{dump.author}</span>
+              <span className="text-[11px] text-muted-foreground font-mono">{new Date(dump.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })} · {new Date(dump.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+              <span className={cn("inline-flex items-center gap-1 px-1.5 py-[1px] rounded text-[10px] font-medium", config.bgClass, config.textClass)}>
+                {config.label}
+              </span>
+            </div>
 
-          {themes.length > 0 && (
-            <div className="flex items-center gap-1.5 mt-2.5 flex-wrap">
-              {themes.map((theme) => (
+            <p className="text-[13px] text-foreground/80 leading-[1.6]">{dump.content}</p>
+
+            <div className="flex items-center gap-3 mt-2.5 flex-wrap">
+              {themes.length > 0 && themes.map((theme) => (
                 <button
                   key={theme.id}
                   onClick={(e) => { e.stopPropagation(); handleThemeClick(theme.id); }}
@@ -79,15 +95,42 @@ const DumpCard = ({ dump, index }: DumpCardProps) => {
                   {theme.title}
                 </button>
               ))}
-            </div>
-          )}
-        </div>
 
-        <button className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-accent text-muted-foreground">
-          <MoreHorizontal className="w-3.5 h-3.5" />
-        </button>
-      </div>
-    </motion.div>
+              {/* Thread button */}
+              <button
+                onClick={(e) => { e.stopPropagation(); setThreadOpen(true); }}
+                className="inline-flex items-center gap-1 px-2 py-[2px] rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-accent/80 transition-colors"
+              >
+                <MessageCircle className="w-2.5 h-2.5" />
+                {threadCount > 0 ? `${threadCount} replies` : "Reply"}
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <button
+              onClick={(e) => { e.stopPropagation(); setThreadOpen(true); }}
+              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-accent text-cf-idea"
+              title="AI Thread"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+            </button>
+            <button className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-accent text-muted-foreground">
+              <MoreHorizontal className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      </motion.div>
+
+      <ThreadPanel
+        dumpId={dump.id}
+        dumpContent={dump.content}
+        sessionId={dump.session_id}
+        isOpen={threadOpen}
+        onClose={() => setThreadOpen(false)}
+        onThreadCountChange={setThreadCount}
+      />
+    </>
   );
 };
 

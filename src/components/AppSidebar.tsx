@@ -9,6 +9,7 @@ import { Map } from "lucide-react";
 import { useWorkspace, ViewSection } from "@/store/WorkspaceStore";
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const navItems: { id: ViewSection; label: string; icon: typeof Brain; badge?: string }[] = [
   { id: "dumps", label: "Brain Dump", icon: MessageSquare },
@@ -23,7 +24,11 @@ const navItems: { id: ViewSection; label: string; icon: typeof Brain; badge?: st
   { id: "archive", label: "Archive", icon: Archive },
 ];
 
-const AppSidebar = () => {
+interface AppSidebarProps {
+  onSearchOpen?: () => void;
+}
+
+const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
   const { activeSection, setActiveSection, actions, questions, themes, dumps, sessions, activeSessionId, switchSession, createSession, deleteSession, archiveSession } = useWorkspace();
   const { signOut, user } = useAuth();
   const [sessionsOpen, setSessionsOpen] = useState(true);
@@ -60,11 +65,17 @@ const AppSidebar = () => {
         <span className="text-sm font-semibold text-sidebar-primary tracking-tight">
           DumpStash
         </span>
+        <div className="ml-auto">
+          <ThemeToggle />
+        </div>
       </div>
 
       {/* Search */}
       <div className="px-3 pt-3 pb-1">
-        <button className="w-full flex items-center gap-2 px-2.5 py-[7px] text-[13px] text-sidebar-muted rounded-md border border-sidebar-border hover:border-sidebar-muted/30 transition-colors bg-sidebar-accent/50">
+        <button
+          onClick={onSearchOpen}
+          className="w-full flex items-center gap-2 px-2.5 py-[7px] text-[13px] text-sidebar-muted rounded-md border border-sidebar-border hover:border-sidebar-muted/30 transition-colors bg-sidebar-accent/50"
+        >
           <Search className="w-3.5 h-3.5" />
           <span>Search...</span>
           <div className="ml-auto flex items-center gap-0.5 text-[10px] font-mono text-sidebar-muted">

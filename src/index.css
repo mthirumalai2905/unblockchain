@@ -5,7 +5,8 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
+  :root,
+  .dark {
     --background: 0 0% 4%;
     --foreground: 0 0% 93%;
 
@@ -68,6 +69,68 @@
     --sidebar-ring: 0 0% 30%;
     --sidebar-muted: 0 0% 35%;
   }
+
+  .light {
+    --background: 0 0% 98%;
+    --foreground: 0 0% 9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 9%;
+
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 94%;
+    --secondary-foreground: 0 0% 9%;
+
+    --muted: 0 0% 94%;
+    --muted-foreground: 0 0% 40%;
+
+    --accent: 0 0% 94%;
+    --accent-foreground: 0 0% 9%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 88%;
+    --input: 0 0% 88%;
+    --ring: 0 0% 65%;
+
+    /* ClarityFlow semantic colors - slightly adjusted for light */
+    --cf-idea: 217 91% 50%;
+    --cf-decision: 142 71% 38%;
+    --cf-question: 45 93% 45%;
+    --cf-blocker: 0 72% 48%;
+    --cf-action: 262 83% 50%;
+    --cf-note: 0 0% 40%;
+    --cf-todo: 200 80% 45%;
+    --cf-insight: 280 70% 50%;
+    --cf-feedback: 30 85% 45%;
+    --cf-reference: 170 60% 38%;
+    --cf-rant: 15 90% 45%;
+    --cf-goal: 330 70% 45%;
+
+    /* Surfaces */
+    --cf-surface-0: 0 0% 98%;
+    --cf-surface-1: 0 0% 100%;
+    --cf-surface-2: 0 0% 96%;
+    --cf-surface-3: 0 0% 94%;
+    --cf-surface-hover: 0 0% 92%;
+
+    /* Sidebar */
+    --sidebar-background: 0 0% 97%;
+    --sidebar-foreground: 0 0% 40%;
+    --sidebar-primary: 0 0% 9%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 93%;
+    --sidebar-accent-foreground: 0 0% 9%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 0 0% 65%;
+    --sidebar-muted: 0 0% 55%;
+  }
 }
 
 @layer base {
@@ -88,30 +151,30 @@
 
 @layer utilities {
   .cf-gradient-brand {
-    background: linear-gradient(135deg, hsl(0 0% 100%), hsl(0 0% 70%));
+    background: linear-gradient(135deg, hsl(var(--foreground)), hsl(var(--muted-foreground)));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .cf-border-glow {
-    box-shadow: 0 0 0 1px hsl(0 0% 20%), 0 0 20px -5px hsl(0 0% 30% / 0.3);
+    box-shadow: 0 0 0 1px hsl(var(--border)), 0 0 20px -5px hsl(var(--ring) / 0.3);
   }
 
   .cf-shadow-sm {
-    box-shadow: 0 1px 2px 0 hsl(0 0% 0% / 0.3);
+    box-shadow: 0 1px 2px 0 hsl(0 0% 0% / 0.1);
   }
 
   .cf-shadow-md {
-    box-shadow: 0 2px 8px -2px hsl(0 0% 0% / 0.4), 0 0 0 1px hsl(0 0% 14%);
+    box-shadow: 0 2px 8px -2px hsl(0 0% 0% / 0.15), 0 0 0 1px hsl(var(--border));
   }
 
   .cf-shadow-lg {
-    box-shadow: 0 8px 30px -4px hsl(0 0% 0% / 0.5), 0 0 0 1px hsl(0 0% 14%);
+    box-shadow: 0 8px 30px -4px hsl(0 0% 0% / 0.2), 0 0 0 1px hsl(var(--border));
   }
 
   .cf-dot-pattern {
-    background-image: radial-gradient(circle, hsl(0 0% 18%) 1px, transparent 1px);
+    background-image: radial-gradient(circle, hsl(var(--border)) 1px, transparent 1px);
     background-size: 24px 24px;
   }
 
@@ -123,43 +186,43 @@
     background: transparent;
   }
   .cf-scrollbar::-webkit-scrollbar-thumb {
-    background: hsl(0 0% 20%);
+    background: hsl(var(--muted-foreground) / 0.3);
     border-radius: 3px;
   }
   .cf-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: hsl(0 0% 28%);
+    background: hsl(var(--muted-foreground) / 0.5);
   }
 }
 
 /* Draft preview prose overrides */
 .draft-preview {
-  color: hsl(0 0% 85%);
+  color: hsl(var(--foreground) / 0.85);
 }
 .draft-preview h1 {
-  color: hsl(0 0% 95%);
+  color: hsl(var(--foreground) / 0.95);
   font-size: 1.75rem;
   font-weight: 700;
   margin-top: 2rem;
   margin-bottom: 1rem;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid hsl(0 0% 18%);
+  border-bottom: 1px solid hsl(var(--border));
 }
 .draft-preview h2 {
-  color: hsl(0 0% 92%);
+  color: hsl(var(--foreground) / 0.92);
   font-size: 1.35rem;
   font-weight: 600;
   margin-top: 1.75rem;
   margin-bottom: 0.75rem;
 }
 .draft-preview h3 {
-  color: hsl(0 0% 88%);
+  color: hsl(var(--foreground) / 0.88);
   font-size: 1.1rem;
   font-weight: 600;
   margin-top: 1.5rem;
   margin-bottom: 0.5rem;
 }
 .draft-preview p {
-  color: hsl(0 0% 75%);
+  color: hsl(var(--foreground) / 0.75);
   line-height: 1.75;
   margin-bottom: 1rem;
 }
@@ -168,7 +231,7 @@
   padding-left: 1.5rem;
 }
 .draft-preview li {
-  color: hsl(0 0% 75%);
+  color: hsl(var(--foreground) / 0.75);
   line-height: 1.7;
   margin-bottom: 0.35rem;
 }
@@ -179,24 +242,24 @@
   list-style-type: decimal;
 }
 .draft-preview strong {
-  color: hsl(0 0% 95%);
+  color: hsl(var(--foreground) / 0.95);
   font-weight: 600;
 }
 .draft-preview em {
-  color: hsl(0 0% 80%);
+  color: hsl(var(--foreground) / 0.8);
   font-style: italic;
 }
 .draft-preview code {
-  background: hsl(0 0% 12%);
-  color: hsl(217 91% 70%);
+  background: hsl(var(--accent));
+  color: hsl(var(--cf-idea));
   padding: 0.15rem 0.4rem;
   border-radius: 0.25rem;
   font-size: 0.85em;
   font-family: 'JetBrains Mono', monospace;
 }
 .draft-preview pre {
-  background: hsl(0 0% 8%);
-  border: 1px solid hsl(0 0% 16%);
+  background: hsl(var(--secondary));
+  border: 1px solid hsl(var(--border));
   border-radius: 0.5rem;
   padding: 1rem;
   margin-bottom: 1rem;
@@ -205,22 +268,22 @@
 .draft-preview pre code {
   background: none;
   padding: 0;
-  color: hsl(0 0% 80%);
+  color: hsl(var(--foreground) / 0.8);
 }
 .draft-preview blockquote {
-  border-left: 3px solid hsl(262 83% 58%);
+  border-left: 3px solid hsl(var(--cf-action));
   padding-left: 1rem;
   margin-left: 0;
   margin-bottom: 1rem;
-  color: hsl(0 0% 65%);
+  color: hsl(var(--foreground) / 0.65);
   font-style: italic;
 }
 .draft-preview hr {
-  border-color: hsl(0 0% 18%);
+  border-color: hsl(var(--border));
   margin: 2rem 0;
 }
 .draft-preview a {
-  color: hsl(217 91% 65%);
+  color: hsl(var(--cf-idea));
   text-decoration: underline;
 }
 .draft-preview table {
@@ -229,12 +292,12 @@
   margin-bottom: 1rem;
 }
 .draft-preview th, .draft-preview td {
-  border: 1px solid hsl(0 0% 18%);
+  border: 1px solid hsl(var(--border));
   padding: 0.5rem 0.75rem;
   text-align: left;
 }
 .draft-preview th {
-  background: hsl(0 0% 10%);
-  color: hsl(0 0% 90%);
+  background: hsl(var(--secondary));
+  color: hsl(var(--foreground) / 0.9);
   font-weight: 600;
 }

@@ -1,9 +1,9 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Brain, Loader2, PanelLeftClose, PanelLeft, Menu, X } from "lucide-react";
+import { Brain, Loader2, PanelLeftClose, PanelLeft, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/store/WorkspaceStore";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import AppSidebar from "@/components/AppSidebar";
 import DumpInput from "@/components/DumpInput";
 import DumpCard from "@/components/DumpCard";
@@ -18,6 +18,7 @@ import RoadmapView from "@/components/RoadmapView";
 import ThinkingPanel from "@/components/ThinkingPanel";
 import TwitterConnectorPanel from "@/components/TwitterConnectorPanel";
 import ArchiveView from "@/components/ArchiveView";
+import SearchDialog from "@/components/SearchDialog";
 
 const DashboardContent = () => {
   const {
@@ -26,12 +27,27 @@ const DashboardContent = () => {
   } = useWorkspace();
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const activeSession = sessions.find((s) => s.id === activeSessionId);
 
   const filteredDumps = selectedDumpId
     ? dumps.filter((d) => d.id === selectedDumpId)
     : dumps;
+
+  // Global Cmd+K shortcut
+  const handleSearchToggle = useCallback(() => setSearchOpen(p => !p), []);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        handleSearchToggle();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [handleSearchToggle]);
 
   if (loading) {
     return (
@@ -43,28 +59,20 @@ const DashboardContent = () => {
 
   const renderContent = () => {
     switch (activeSection) {
-      case "structures":
-        return <AIStructuredView />;
-      case "themes":
-        return <ThemesView />;
-      case "actions":
-        return <ActionsView />;
-      case "questions":
-        return <QuestionsView />;
-      case "timeline":
-        return <TimelineView />;
+      case "structures": return <AIStructuredView />;
+      case "themes": return <ThemesView />;
+      case "actions": return <ActionsView />;
+      case "questions": return <QuestionsView />;
+      case "timeline": return <TimelineView />;
       case "draft":
       case "roadmap":
-      case "twitter":
-        return null;
-      case "archive":
-        return <ArchiveView />;
+      case "twitter": return null;
+      case "archive": return <ArchiveView />;
       case "dumps":
       default:
         return (
           <div className="space-y-3">
             <DumpInput />
-
             {isProcessing && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
@@ -75,7 +83,6 @@ const DashboardContent = () => {
                 <span className="text-[12px] text-muted-foreground font-mono">Processing dump...</span>
               </motion.div>
             )}
-
             <div className="space-y-1.5">
               {filteredDumps.map((dump, i) => (
                 <DumpCard key={dump.id} dump={dump} index={i} />
@@ -95,7 +102,6 @@ const DashboardContent = () => {
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
-      {/* Desktop sidebar */}
       {!isMobile && (
         <AnimatePresence>
           {!sidebarCollapsed && (
@@ -106,23 +112,17 @@ const DashboardContent = () => {
               transition={{ duration: 0.2, ease: "easeInOut" }}
               className="shrink-0 overflow-hidden"
             >
-              <AppSidebar />
+              <AppSidebar onSearchOpen={handleSearchToggle} />
             </motion.div>
           )}
         </AnimatePresence>
       )}
 
-      {/* Mobile sidebar overlay */}
       {isMobile && mobileMenuOpen && (
         <div className="fixed inset-0 z-50 flex">
           <div className="absolute inset-0 bg-black/60" onClick={() => setMobileMenuOpen(false)} />
-          <motion.div
-            initial={{ x: -240 }}
-            animate={{ x: 0 }}
-            exit={{ x: -240 }}
-            className="relative z-10"
-          >
-            <AppSidebar />
+          <motion.div initial={{ x: -240 }} animate={{ x: 0 }} exit={{ x: -240 }} className="relative z-10">
+            <AppSidebar onSearchOpen={() => { setMobileMenuOpen(false); handleSearchToggle(); }} />
           </motion.div>
         </div>
       )}
@@ -201,6 +201,7 @@ const DashboardContent = () => {
       </main>
 
       <ThinkingPanel steps={thinkingSteps} isOpen={showThinking} onClose={closeThinking} />
+      <SearchDialog isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>
   );
 };
