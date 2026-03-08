@@ -174,13 +174,67 @@ const SubGroupView = () => {
     });
   }, [activeSubGroupId, user]);
 
+  const loadMembers = useCallback(async () => {
+    if (!activeSubGroupId) return;
+    const { data: memberLinks } = await supabase
+      .from("sub_group_members")
+      .select("user_id")
+      .eq("sub_group_id", activeSubGroupId);
+    if (memberLinks && memberLinks.length > 0) {
+      const userIds = memberLinks.map((m: any) => m.user_id);
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, display_name, avatar_initials")
+        .in("user_id", userIds);
+      setMembers((profiles || []) as MemberInfo[]);
+    } else {
+      setMembers([]);
+    }
+  }, [activeSubGroupId]);
+
+  const searchUsers = useCallback(async (query: string) => {
+    if (!query.trim()) { setSearchResults([]); return; }
+    const { data } = await supabase
+      .from("profiles")
+      .select("user_id, display_name, avatar_initials")
+      .ilike("display_name", `%${query}%`)
+      .limit(5);
+    // Filter out existing members
+    const memberIds = new Set(members.map((m) => m.user_id));
+    setSearchResults(((data || []) as MemberInfo[]).filter((p) => !memberIds.has(p.user_id)));
+  }, [members]);
+
+  const addMember = async (userId: string) => {
+    if (!activeSubGroupId || !subGroup) return;
+    setAddingMember(true);
+    // First ensure they're a group member too
+    const { error: gmErr } = await supabase
+      .from("group_members")
+      .upsert({ group_id: subGroup.group_id, user_id: userId }, { onConflict: "group_id,user_id" });
+    if (gmErr) console.warn("group_members upsert:", gmErr.message);
+
+    const { error } = await supabase
+      .from("sub_group_members")
+      .upsert({ sub_group_id: activeSubGroupId, user_id: userId }, { onConflict: "sub_group_id,user_id" });
+    if (error) {
+      toast.error("Failed to add member");
+    } else {
+      toast.success("Member added!");
+      setSearchQuery("");
+      setSearchResults([]);
+      await Promise.all([loadMembers(), loadSubGroup()]);
+    }
+    setAddingMember(false);
+  };
+
   useEffect(() => {
     loadSubGroup();
     loadMessages();
     loadDrafts();
     loadRoadmaps();
     loadDeleteVotes();
-  }, [loadSubGroup, loadMessages, loadDrafts, loadRoadmaps, loadDeleteVotes]);
+    loadMembers();
+  }, [loadSubGroup, loadMessages, loadDrafts, loadRoadmaps, loadDeleteVotes, loadMembers]);
 
   // Realtime chat subscription
   useEffect(() => {
