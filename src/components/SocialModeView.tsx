@@ -278,8 +278,7 @@ const SocialModeView = () => {
   useEffect(() => {
     loadSocialDumps();
     loadGroups();
-    loadThemeGroups();
-  }, [loadSocialDumps, loadGroups, loadThemeGroups]);
+  }, [loadSocialDumps, loadGroups]);
 
   // Load sub-groups when a group is expanded
   useEffect(() => {
@@ -327,7 +326,6 @@ const SocialModeView = () => {
         // Refresh data if actions were performed
         if (data.actions_performed > 0) {
           await loadGroups();
-          await loadThemeGroups();
         }
       }
     } catch {
