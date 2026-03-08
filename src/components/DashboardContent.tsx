@@ -16,7 +16,7 @@ import AISummaryPanel from "@/components/AISummaryPanel";
 import DraftView from "@/components/DraftView";
 import RoadmapView from "@/components/RoadmapView";
 import ThinkingPanel from "@/components/ThinkingPanel";
-import TwitterConnectorPanel from "@/components/TwitterConnectorPanel";
+
 import ArchiveView from "@/components/ArchiveView";
 import SearchDialog from "@/components/SearchDialog";
 import SocialModeView from "@/components/SocialModeView";
