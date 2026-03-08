@@ -176,6 +176,7 @@ If the user just wants to chat or ask questions, respond normally without tool c
             description: args.description || null,
             user_id,
             session_id: session_id || null,
+            is_ai_created: true,
           })
           .select()
           .single();
