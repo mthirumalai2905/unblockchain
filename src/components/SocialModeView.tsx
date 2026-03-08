@@ -481,6 +481,29 @@ const SocialModeView = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Profile Card */}
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 p-3 rounded-xl border border-border bg-card">
+        <input type="file" ref={fileInputRef} accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploadingAvatar}
+          className="relative w-10 h-10 rounded-full bg-accent flex items-center justify-center shrink-0 overflow-hidden group hover:ring-2 hover:ring-primary/30 transition-all"
+        >
+          {userProfile?.avatar_url ? (
+            <img src={userProfile.avatar_url} alt="avatar" className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-[13px] font-semibold text-muted-foreground">{userProfile?.avatar_initials || "??"}</span>
+          )}
+          <div className="absolute inset-0 bg-background/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            {uploadingAvatar ? <Loader2 className="w-4 h-4 animate-spin text-foreground" /> : <Camera className="w-4 h-4 text-foreground" />}
+          </div>
+        </button>
+        <div className="flex-1 min-w-0">
+          <p className="text-[13px] font-semibold text-foreground truncate">{userProfile?.display_name || "User"}</p>
+          <p className="text-[10px] text-muted-foreground">Click avatar to change profile picture</p>
+        </div>
+      </motion.div>
+
       {/* Social dump input */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
