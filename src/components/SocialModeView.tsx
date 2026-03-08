@@ -1102,11 +1102,14 @@ const SocialModeView = () => {
             className="fixed bottom-6 right-6 z-50 w-[400px] max-h-[540px] rounded-xl border border-border bg-card shadow-2xl flex flex-col overflow-hidden"
           >
             <div className="flex items-center gap-3 p-3 border-b border-border bg-accent/30">
-              <img src={dumpstashBot} alt="DumpStash AI" className="w-8 h-8 rounded-full" />
-              <div>
-                <h4 className="text-[13px] font-semibold text-foreground">DumpStash AI</h4>
-                <p className="text-[10px] text-muted-foreground">Ask me to create groups, sub-groups & more</p>
+              <img src={dumpstashBot} alt="Chrome AI" className="w-8 h-8 rounded-full" />
+              <div className="flex-1">
+                <h4 className="text-[13px] font-semibold text-foreground">Chrome</h4>
+                <p className="text-[10px] text-muted-foreground">DumpStash AI assistant — groups, sub-groups & more</p>
               </div>
+              <button onClick={toggleChromeChat} className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
+                <X className="w-4 h-4" />
+              </button>
             </div>
             <div className="flex-1 overflow-y-auto p-3 space-y-3 min-h-[200px] max-h-[340px]">
               {aiMessages.length === 0 && (
