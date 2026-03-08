@@ -492,47 +492,50 @@ const SubGroupView = () => {
               exit={{ opacity: 0 }}
               className="flex flex-col h-full"
             >
-              <div className="flex-1 overflow-y-auto p-4 space-y-2" style={{ minHeight: 0 }}>
-                {messages.length === 0 && (
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <Users className="w-8 h-8 text-muted-foreground/30 mb-2" />
-                    <p className="text-[13px] text-muted-foreground">No messages yet. Start the conversation!</p>
-                  </div>
-                )}
-                {messages.map((msg) => {
-                  const isOwn = msg.user_id === user?.id;
-                  const isAI = msg.user_id === DUMPSTASH_AI_ID;
-                  return (
-                    <div key={msg.id} className={cn("flex gap-2", isOwn && "flex-row-reverse", isAI && "justify-center")}>
-                      {isAI ? (
-                        <div className="max-w-[85%] rounded-lg px-3 py-2 bg-primary/10 border border-primary/20 text-center">
-                          <p className="text-[10px] font-semibold text-primary mb-0.5">🤖 Chrome</p>
-                          <p className="text-[12px] leading-relaxed text-foreground/80">{msg.content}</p>
-                          <p className="text-[9px] mt-1 opacity-50">
-                            {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                          </p>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-[9px] font-semibold text-muted-foreground shrink-0">
-                            {msg.avatar}
-                          </div>
-                          <div className={cn(
-                            "max-w-[75%] rounded-lg px-3 py-2",
-                            isOwn ? "bg-foreground text-background" : "bg-accent"
-                          )}>
-                            {!isOwn && <p className="text-[10px] font-medium mb-0.5 opacity-70">{msg.author}</p>}
-                            <p className="text-[12px] leading-relaxed">{msg.content}</p>
-                            <p className={cn("text-[9px] mt-1 opacity-50", isOwn ? "text-right" : "")}>
+              <div className="flex-1 overflow-y-auto p-4 flex flex-col" style={{ minHeight: 0 }}>
+                <div className="flex-1" />
+                <div className="space-y-2">
+                  {messages.length === 0 && (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <Users className="w-8 h-8 text-muted-foreground/30 mb-2" />
+                      <p className="text-[13px] text-muted-foreground">No messages yet. Start the conversation!</p>
+                    </div>
+                  )}
+                  {messages.map((msg) => {
+                    const isOwn = msg.user_id === user?.id;
+                    const isAI = msg.user_id === DUMPSTASH_AI_ID;
+                    return (
+                      <div key={msg.id} className={cn("flex gap-2", isOwn && "flex-row-reverse", isAI && "justify-center")}>
+                        {isAI ? (
+                          <div className="max-w-[85%] rounded-lg px-3 py-2 bg-primary/10 border border-primary/20 text-center">
+                            <p className="text-[10px] font-semibold text-primary mb-0.5">🤖 Chrome</p>
+                            <p className="text-[12px] leading-relaxed text-foreground/80">{msg.content}</p>
+                            <p className="text-[9px] mt-1 opacity-50">
                               {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                             </p>
                           </div>
-                        </>
-                      )}
-                    </div>
-                  );
-                })}
-                <div ref={chatEndRef} />
+                        ) : (
+                          <>
+                            <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-[9px] font-semibold text-muted-foreground shrink-0">
+                              {msg.avatar}
+                            </div>
+                            <div className={cn(
+                              "max-w-[75%] rounded-lg px-3 py-2",
+                              isOwn ? "bg-foreground text-background" : "bg-accent"
+                            )}>
+                              {!isOwn && <p className="text-[10px] font-medium mb-0.5 opacity-70">{msg.author}</p>}
+                              <p className="text-[12px] leading-relaxed">{msg.content}</p>
+                              <p className={cn("text-[9px] mt-1 opacity-50", isOwn ? "text-right" : "")}>
+                                {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                              </p>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
+                  <div ref={chatEndRef} />
+                </div>
               </div>
               <div className="shrink-0 border-t border-border p-3 space-y-2">
                 <div className="flex gap-2">
