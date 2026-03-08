@@ -63,11 +63,13 @@ STEP 3 - GROUP (only if enough context): Group similar dumps together. Each grou
 - A dump can belong to multiple groups
 - Create groups only when 2+ dumps share a meaningful connection
 
-Respond via the tool call.`
+Respond via the tool call.
+
+IMPORTANT: When creating groups, check if any existing groups already cover the same topic. Only create NEW groups for topics not already covered. Do NOT recreate groups that already exist.`
           },
           {
             role: "user",
-            content: `Analyze these ${socialDumps.length} social dumps:\n${dumpsText}`
+            content: `Analyze these ${socialDumps.length} social dumps:\n${dumpsText}\n\nExisting groups (do NOT recreate these): ${existingGroupTitles.join(", ") || "none"}`
           }
         ],
         temperature: 0.3,
