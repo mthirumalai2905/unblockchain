@@ -92,7 +92,7 @@ const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
 
       {/* Navigation */}
       <nav className="px-2 py-2 space-y-px">
-        {navItems.map((item) => {
+        {(socialMode ? socialNavItems : normalNavItems).map((item) => {
           const isActive = activeSection === item.id;
           const count = counts[item.id];
           return (
