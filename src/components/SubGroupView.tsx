@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, MessageCircle, Clock, FileText, Send,
   Loader2, Sparkles, Users, ChevronRight, Map as MapIcon,
+  Trash2, AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/store/WorkspaceStore";
@@ -10,6 +11,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
+
+const DUMPSTASH_AI_ID = "00000000-0000-0000-0000-000000000001";
 
 type SubTab = "chat" | "timeline" | "draft" | "roadmap";
 
@@ -63,6 +66,8 @@ const SubGroupView = () => {
   const [roadmaps, setRoadmaps] = useState<Roadmap[]>([]);
   const [msgInput, setMsgInput] = useState("");
   const [generating, setGenerating] = useState(false);
+  const [deleteVotes, setDeleteVotes] = useState<{ votes: number; total: number; hasVoted: boolean }>({ votes: 0, total: 0, hasVoted: false });
+  const [votingInProgress, setVotingInProgress] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const loadSubGroup = useCallback(async () => {
@@ -145,12 +150,27 @@ const SubGroupView = () => {
     setRoadmaps((data || []) as unknown as Roadmap[]);
   }, [activeSubGroupId]);
 
+  const loadDeleteVotes = useCallback(async () => {
+    if (!activeSubGroupId || !user) return;
+    const [votesRes, membersRes] = await Promise.all([
+      supabase.from("sub_group_delete_votes").select("*").eq("sub_group_id", activeSubGroupId),
+      supabase.from("sub_group_members").select("*", { count: "exact", head: true }).eq("sub_group_id", activeSubGroupId),
+    ]);
+    const votes = (votesRes.data || []).filter((v: any) => v.vote === true);
+    setDeleteVotes({
+      votes: votes.length,
+      total: membersRes.count || 0,
+      hasVoted: votes.some((v: any) => v.user_id === user.id),
+    });
+  }, [activeSubGroupId, user]);
+
   useEffect(() => {
     loadSubGroup();
     loadMessages();
     loadDrafts();
     loadRoadmaps();
-  }, [loadSubGroup, loadMessages, loadDrafts, loadRoadmaps]);
+    loadDeleteVotes();
+  }, [loadSubGroup, loadMessages, loadDrafts, loadRoadmaps, loadDeleteVotes]);
 
   // Realtime chat subscription
   useEffect(() => {
@@ -243,6 +263,57 @@ const SubGroupView = () => {
     setGenerating(false);
   };
 
+  const voteToDelete = async () => {
+    if (!user || !activeSubGroupId) return;
+    setVotingInProgress(true);
+    try {
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-sub-group-delete`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ action: "vote_delete", sub_group_id: activeSubGroupId, user_id: user.id }),
+        }
+      );
+      const data = await resp.json();
+      if (data.deleted) {
+        toast.success("Sub-group deleted by consensus");
+        setActiveSubGroupId(null);
+      } else {
+        toast.info(`Vote recorded. ${data.votes}/${data.total} votes (${data.percentage}%)`);
+        await loadDeleteVotes();
+        await loadMessages();
+      }
+    } catch {
+      toast.error("Failed to vote");
+    }
+    setVotingInProgress(false);
+  };
+
+  const cancelVote = async () => {
+    if (!user || !activeSubGroupId) return;
+    try {
+      await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-sub-group-delete`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ action: "cancel_vote", sub_group_id: activeSubGroupId, user_id: user.id }),
+        }
+      );
+      toast.info("Vote cancelled");
+      await loadDeleteVotes();
+    } catch {
+      toast.error("Failed to cancel vote");
+    }
+  };
+
   if (!subGroup) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -269,11 +340,37 @@ const SubGroupView = () => {
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <h2 className="text-[14px] font-semibold text-foreground truncate">{subGroup.title}</h2>
             <p className="text-[11px] text-muted-foreground font-mono">
               {subGroup.parent_title} · {subGroup.member_count} members
             </p>
+          </div>
+          {/* Delete vote button */}
+          <div className="flex items-center gap-1.5">
+            {deleteVotes.votes > 0 && (
+              <span className="text-[9px] font-mono text-destructive">
+                {deleteVotes.votes}/{deleteVotes.total} votes
+              </span>
+            )}
+            {deleteVotes.hasVoted ? (
+              <button
+                onClick={cancelVote}
+                className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 transition-colors"
+              >
+                <Trash2 className="w-3 h-3" />
+                Voted
+              </button>
+            ) : (
+              <button
+                onClick={voteToDelete}
+                disabled={votingInProgress}
+                className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-muted-foreground border border-border hover:text-destructive hover:border-destructive/30 hover:bg-destructive/5 transition-colors disabled:opacity-40"
+              >
+                {votingInProgress ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                Vote Delete
+              </button>
+            )}
           </div>
         </div>
         {subGroup.description && (
@@ -319,21 +416,34 @@ const SubGroupView = () => {
                 )}
                 {messages.map((msg) => {
                   const isOwn = msg.user_id === user?.id;
+                  const isAI = msg.user_id === DUMPSTASH_AI_ID;
                   return (
-                    <div key={msg.id} className={cn("flex gap-2", isOwn && "flex-row-reverse")}>
-                      <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-[9px] font-semibold text-muted-foreground shrink-0">
-                        {msg.avatar}
-                      </div>
-                      <div className={cn(
-                        "max-w-[75%] rounded-lg px-3 py-2",
-                        isOwn ? "bg-foreground text-background" : "bg-accent"
-                      )}>
-                        {!isOwn && <p className="text-[10px] font-medium mb-0.5 opacity-70">{msg.author}</p>}
-                        <p className="text-[12px] leading-relaxed">{msg.content}</p>
-                        <p className={cn("text-[9px] mt-1 opacity-50", isOwn ? "text-right" : "")}>
-                          {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                        </p>
-                      </div>
+                    <div key={msg.id} className={cn("flex gap-2", isOwn && "flex-row-reverse", isAI && "justify-center")}>
+                      {isAI ? (
+                        <div className="max-w-[85%] rounded-lg px-3 py-2 bg-primary/10 border border-primary/20 text-center">
+                          <p className="text-[10px] font-semibold text-primary mb-0.5">🤖 DumpStash AI</p>
+                          <p className="text-[12px] leading-relaxed text-foreground/80">{msg.content}</p>
+                          <p className="text-[9px] mt-1 opacity-50">
+                            {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-[9px] font-semibold text-muted-foreground shrink-0">
+                            {msg.avatar}
+                          </div>
+                          <div className={cn(
+                            "max-w-[75%] rounded-lg px-3 py-2",
+                            isOwn ? "bg-foreground text-background" : "bg-accent"
+                          )}>
+                            {!isOwn && <p className="text-[10px] font-medium mb-0.5 opacity-70">{msg.author}</p>}
+                            <p className="text-[12px] leading-relaxed">{msg.content}</p>
+                            <p className={cn("text-[9px] mt-1 opacity-50", isOwn ? "text-right" : "")}>
+                              {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                            </p>
+                          </div>
+                        </>
+                      )}
                     </div>
                   );
                 })}

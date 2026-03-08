@@ -1,1 +1,4 @@
 project_id = "jcusmlqwdlngishdtxhj"
+
+[functions.manage-sub-group-delete]
+verify_jwt = false
