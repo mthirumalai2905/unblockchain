@@ -263,6 +263,57 @@ const SubGroupView = () => {
     setGenerating(false);
   };
 
+  const voteToDelete = async () => {
+    if (!user || !activeSubGroupId) return;
+    setVotingInProgress(true);
+    try {
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-sub-group-delete`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ action: "vote_delete", sub_group_id: activeSubGroupId, user_id: user.id }),
+        }
+      );
+      const data = await resp.json();
+      if (data.deleted) {
+        toast.success("Sub-group deleted by consensus");
+        setActiveSubGroupId(null);
+      } else {
+        toast.info(`Vote recorded. ${data.votes}/${data.total} votes (${data.percentage}%)`);
+        await loadDeleteVotes();
+        await loadMessages();
+      }
+    } catch {
+      toast.error("Failed to vote");
+    }
+    setVotingInProgress(false);
+  };
+
+  const cancelVote = async () => {
+    if (!user || !activeSubGroupId) return;
+    try {
+      await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-sub-group-delete`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ action: "cancel_vote", sub_group_id: activeSubGroupId, user_id: user.id }),
+        }
+      );
+      toast.info("Vote cancelled");
+      await loadDeleteVotes();
+    } catch {
+      toast.error("Failed to cancel vote");
+    }
+  };
+
   if (!subGroup) {
     return (
       <div className="flex items-center justify-center py-20">
