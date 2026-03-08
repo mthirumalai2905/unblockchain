@@ -302,6 +302,7 @@ If the user just wants to chat or ask questions, respond normally without tool c
               .upsert({ sub_group_id: targetSubGroupId, user_id: memberId }, { onConflict: "sub_group_id,user_id" });
           }
           actions.push(`✅ Added **${name}** to ${targetSubGroupId ? "sub-group" : "group"}`);
+        }
       }
 
       if (toolCall.function.name === "create_theme_group") {
