@@ -416,21 +416,34 @@ const SubGroupView = () => {
                 )}
                 {messages.map((msg) => {
                   const isOwn = msg.user_id === user?.id;
+                  const isAI = msg.user_id === DUMPSTASH_AI_ID;
                   return (
-                    <div key={msg.id} className={cn("flex gap-2", isOwn && "flex-row-reverse")}>
-                      <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-[9px] font-semibold text-muted-foreground shrink-0">
-                        {msg.avatar}
-                      </div>
-                      <div className={cn(
-                        "max-w-[75%] rounded-lg px-3 py-2",
-                        isOwn ? "bg-foreground text-background" : "bg-accent"
-                      )}>
-                        {!isOwn && <p className="text-[10px] font-medium mb-0.5 opacity-70">{msg.author}</p>}
-                        <p className="text-[12px] leading-relaxed">{msg.content}</p>
-                        <p className={cn("text-[9px] mt-1 opacity-50", isOwn ? "text-right" : "")}>
-                          {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                        </p>
-                      </div>
+                    <div key={msg.id} className={cn("flex gap-2", isOwn && "flex-row-reverse", isAI && "justify-center")}>
+                      {isAI ? (
+                        <div className="max-w-[85%] rounded-lg px-3 py-2 bg-primary/10 border border-primary/20 text-center">
+                          <p className="text-[10px] font-semibold text-primary mb-0.5">🤖 DumpStash AI</p>
+                          <p className="text-[12px] leading-relaxed text-foreground/80">{msg.content}</p>
+                          <p className="text-[9px] mt-1 opacity-50">
+                            {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-[9px] font-semibold text-muted-foreground shrink-0">
+                            {msg.avatar}
+                          </div>
+                          <div className={cn(
+                            "max-w-[75%] rounded-lg px-3 py-2",
+                            isOwn ? "bg-foreground text-background" : "bg-accent"
+                          )}>
+                            {!isOwn && <p className="text-[10px] font-medium mb-0.5 opacity-70">{msg.author}</p>}
+                            <p className="text-[12px] leading-relaxed">{msg.content}</p>
+                            <p className={cn("text-[9px] mt-1 opacity-50", isOwn ? "text-right" : "")}>
+                              {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                            </p>
+                          </div>
+                        </>
+                      )}
                     </div>
                   );
                 })}
