@@ -59,7 +59,7 @@ interface SubGroup {
 }
 
 const SocialModeView = () => {
-  const { activeSessionId, setActiveSubGroupId } = useWorkspace();
+  const { activeSessionId, setActiveSubGroupId, showChromeChat, toggleChromeChat } = useWorkspace();
   const { user } = useAuth();
   const [value, setValue] = useState("");
   const [socialDumps, setSocialDumps] = useState<SocialDump[]>([]);
@@ -83,7 +83,7 @@ const SocialModeView = () => {
   const [showAddMember, setShowAddMember] = useState<string | null>(null);
   const [memberSearch, setMemberSearch] = useState("");
   const [memberResults, setMemberResults] = useState<{ user_id: string; display_name: string; avatar_initials: string }[]>([]);
-  const [showAIChat, setShowAIChat] = useState(false);
+  
   const [aiMessages, setAiMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
   const [aiInput, setAiInput] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
