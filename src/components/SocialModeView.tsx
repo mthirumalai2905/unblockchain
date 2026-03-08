@@ -34,6 +34,7 @@ interface IdeaGroup {
   hasVoted: boolean;
   comments: GroupComment[];
   is_ai_created: boolean;
+  created_at: string;
 }
 
 interface GroupComment {
