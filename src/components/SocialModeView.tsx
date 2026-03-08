@@ -663,6 +663,9 @@ const SocialModeView = () => {
               <p className="text-[12px] text-muted-foreground">No groups yet. Create one manually or use AI grouping!</p>
             </div>
           )}
+          </>
+        )}
+        </AnimatePresence>
         </div>
 
       {/* Social dumps feed */}
