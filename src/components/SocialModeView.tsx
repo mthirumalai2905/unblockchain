@@ -1114,8 +1114,8 @@ const SocialModeView = () => {
             <div className="flex-1 overflow-y-auto p-3 space-y-3 min-h-[200px] max-h-[340px]">
               {aiMessages.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <img src={dumpstashBot} alt="DumpStash AI" className="w-16 h-16 mb-3 opacity-60" />
-                  <p className="text-[12px] text-muted-foreground">Hey! I'm DumpStash AI 🤖</p>
+                  <img src={dumpstashBot} alt="Chrome" className="w-16 h-16 mb-3 opacity-60" />
+                  <p className="text-[12px] text-muted-foreground">Hey! I'm Chrome 🤖</p>
                   <p className="text-[11px] text-muted-foreground/70 mt-1 max-w-[260px]">
                     Try: "Create a group called Web3 Gaming with Minato and thiru, and add a sub-group called Token Design"
                   </p>
@@ -1155,7 +1155,7 @@ const SocialModeView = () => {
                 value={aiInput}
                 onChange={(e) => setAiInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendAIMessage(); } }}
-                placeholder="Ask DumpStash AI..."
+                placeholder="Ask Chrome..."
                 className="flex-1 text-[12px] px-3 py-2 rounded-lg bg-background border border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-ring/50"
               />
               <button
