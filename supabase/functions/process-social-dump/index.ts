@@ -29,6 +29,13 @@ serve(async (req) => {
       throw new Error("No social dumps found");
     }
 
+    // Get existing groups to avoid recreating them
+    const { data: existingGroups } = await supabase
+      .from("idea_groups")
+      .select("id, title")
+      .order("created_at", { ascending: false });
+    const existingGroupTitles = (existingGroups || []).map((g: any) => g.title);
+
     const dumpsText = socialDumps.map((d: any, i: number) => `[${i + 1}] ${d.content}`).join("\n");
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
