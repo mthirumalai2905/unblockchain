@@ -66,6 +66,8 @@ const SubGroupView = () => {
   const [roadmaps, setRoadmaps] = useState<Roadmap[]>([]);
   const [msgInput, setMsgInput] = useState("");
   const [generating, setGenerating] = useState(false);
+  const [deleteVotes, setDeleteVotes] = useState<{ votes: number; total: number; hasVoted: boolean }>({ votes: 0, total: 0, hasVoted: false });
+  const [votingInProgress, setVotingInProgress] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const loadSubGroup = useCallback(async () => {
