@@ -47,8 +47,15 @@ interface ContextGuidance {
   suggestions: string[];
 }
 
+interface SubGroup {
+  id: string;
+  title: string;
+  description: string | null;
+  member_count: number;
+}
+
 const SocialModeView = () => {
-  const { activeSessionId } = useWorkspace();
+  const { activeSessionId, setActiveSubGroupId } = useWorkspace();
   const { user } = useAuth();
   const [value, setValue] = useState("");
   const [socialDumps, setSocialDumps] = useState<SocialDump[]>([]);
@@ -58,6 +65,9 @@ const SocialModeView = () => {
   const [commentText, setCommentText] = useState<Record<string, string>>({});
   const [contextGuidance, setContextGuidance] = useState<ContextGuidance | null>(null);
   const [showGuidance, setShowGuidance] = useState(false);
+  const [subGroups, setSubGroups] = useState<Record<string, SubGroup[]>>({});
+  const [subGroupInput, setSubGroupInput] = useState<Record<string, string>>({});
+  const [creatingSubGroup, setCreatingSubGroup] = useState<string | null>(null);
 
   // Load ALL social dumps globally (not session-scoped)
   const loadSocialDumps = useCallback(async () => {
