@@ -289,7 +289,47 @@ const SocialModeView = () => {
     loadSocialDumps();
   };
 
-  const handleProcess = async () => {
+  // AI Assistant chat
+  const sendAIMessage = async () => {
+    if (!aiInput.trim() || !user || aiLoading) return;
+    const userMsg = aiInput.trim();
+    setAiInput("");
+    setAiMessages((prev) => [...prev, { role: "user", content: userMsg }]);
+    setAiLoading(true);
+
+    try {
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-assistant`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ message: userMsg, user_id: user.id, session_id: activeSessionId }),
+        }
+      );
+      const data = await resp.json();
+      if (!resp.ok) {
+        toast.error(data.error || "AI request failed");
+        setAiMessages((prev) => [...prev, { role: "assistant", content: `❌ ${data.error || "Something went wrong"}` }]);
+      } else {
+        setAiMessages((prev) => [...prev, { role: "assistant", content: data.response }]);
+        // Refresh data if actions were performed
+        if (data.actions_performed > 0) {
+          await loadGroups();
+        }
+      }
+    } catch {
+      setAiMessages((prev) => [...prev, { role: "assistant", content: "❌ Network error, please try again." }]);
+    }
+    setAiLoading(false);
+  };
+
+  useEffect(() => {
+    aiChatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [aiMessages]);
+
     if (!user || socialDumps.length === 0) return;
     setIsProcessing(true);
     try {
