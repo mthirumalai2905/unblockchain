@@ -386,13 +386,30 @@ const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
           </>
         )}
 
-        <button
-          onClick={signOut}
-          className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <LogOut className="w-3 h-3" />
-          Sign out
-        </button>
+        {/* Profile */}
+        <input type="file" ref={fileInputRef} accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadingAvatar}
+            className="relative w-8 h-8 rounded-full shrink-0 overflow-hidden group hover:ring-2 hover:ring-primary/30 transition-all"
+          >
+            <UserAvatar avatarUrl={userProfile?.avatar_url} initials={userProfile?.avatar_initials || "??"} size="md" className="w-8 h-8" />
+            <div className="absolute inset-0 bg-background/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              {uploadingAvatar ? <Loader2 className="w-3 h-3 animate-spin text-foreground" /> : <Camera className="w-3 h-3 text-foreground" />}
+            </div>
+          </button>
+          <div className="flex-1 min-w-0">
+            <p className="text-[12px] font-medium text-sidebar-foreground truncate">{userProfile?.display_name || "User"}</p>
+          </div>
+          <button
+            onClick={signOut}
+            className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors"
+            title="Sign out"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
     </aside>
   );
