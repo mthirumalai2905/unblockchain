@@ -78,6 +78,7 @@ interface WorkspaceState {
   thinkingSteps: ThinkingStep[];
   showThinking: boolean;
   socialMode: boolean;
+  activeSubGroupId: string | null;
 }
 
 interface WorkspaceActions {
@@ -102,6 +103,7 @@ interface WorkspaceActions {
   toggleSidebar: () => void;
   closeThinking: () => void;
   toggleSocialMode: () => void;
+  setActiveSubGroupId: (id: string | null) => void;
 }
 
 const WorkspaceContext = createContext<(WorkspaceState & WorkspaceActions) | null>(null);
@@ -132,6 +134,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const [thinkingSteps, setThinkingSteps] = useState<ThinkingStep[]>([]);
   const [showThinking, setShowThinking] = useState(false);
   const [socialMode, setSocialMode] = useState(false);
+  const [activeSubGroupId, setActiveSubGroupId] = useState<string | null>(null);
 
   // Load sessions
   useEffect(() => {
@@ -505,12 +508,13 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const value = useMemo(() => ({
     sessions, activeSessionId, dumps, themes, actions, questions,
     activeSection, selectedThemeId, selectedDumpId, isProcessing, showAIPanel, loading,
-    sidebarCollapsed, thinkingSteps, showThinking, socialMode,
+    sidebarCollapsed, thinkingSteps, showThinking, socialMode, activeSubGroupId,
     addDump, createSession, deleteSession, switchSession, renameSession, archiveSession, restoreSession,
     setActiveSection, selectTheme, selectDump,
     toggleAction, voteQuestion, toggleAIPanel, toggleSidebar, closeThinking, toggleSocialMode,
     getDumpsForTheme, getDumpsForAction, getThemesForDump, refreshSessionData, processAllDumps,
-  }), [sessions, activeSessionId, dumps, themes, actions, questions, activeSection, selectedThemeId, selectedDumpId, isProcessing, showAIPanel, loading, sidebarCollapsed, thinkingSteps, showThinking, socialMode, addDump, createSession, deleteSession, switchSession, renameSession, archiveSession, restoreSession, toggleAction, voteQuestion, toggleAIPanel, toggleSidebar, closeThinking, toggleSocialMode, getDumpsForTheme, getDumpsForAction, getThemesForDump, refreshSessionData, processAllDumps]);
+    setActiveSubGroupId,
+  }), [sessions, activeSessionId, dumps, themes, actions, questions, activeSection, selectedThemeId, selectedDumpId, isProcessing, showAIPanel, loading, sidebarCollapsed, thinkingSteps, showThinking, socialMode, activeSubGroupId, addDump, createSession, deleteSession, switchSession, renameSession, archiveSession, restoreSession, toggleAction, voteQuestion, toggleAIPanel, toggleSidebar, closeThinking, toggleSocialMode, getDumpsForTheme, getDumpsForAction, getThemesForDump, refreshSessionData, processAllDumps, setActiveSubGroupId]);
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
 };

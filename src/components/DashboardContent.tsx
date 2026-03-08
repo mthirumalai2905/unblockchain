@@ -20,11 +20,12 @@ import ThinkingPanel from "@/components/ThinkingPanel";
 import ArchiveView from "@/components/ArchiveView";
 import SearchDialog from "@/components/SearchDialog";
 import SocialModeView from "@/components/SocialModeView";
+import SubGroupView from "@/components/SubGroupView";
 
 const DashboardContent = () => {
   const {
     dumps, activeSection, isProcessing, showAIPanel, toggleAIPanel, selectedDumpId, loading, sessions, activeSessionId,
-    sidebarCollapsed, toggleSidebar, thinkingSteps, showThinking, closeThinking, socialMode, toggleSocialMode,
+    sidebarCollapsed, toggleSidebar, thinkingSteps, showThinking, closeThinking, socialMode, toggleSocialMode, activeSubGroupId,
   } = useWorkspace();
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -189,7 +190,7 @@ const DashboardContent = () => {
                     exit={{ opacity: 0, y: -8 }}
                     transition={{ duration: 0.15 }}
                   >
-                    {showAIPanel && activeSection === "dumps" ? <AIStructuredView /> : socialMode && activeSection === "dumps" ? <SocialModeView /> : renderContent()}
+                    {socialMode && activeSubGroupId ? <SubGroupView /> : showAIPanel && activeSection === "dumps" ? <AIStructuredView /> : socialMode && activeSection === "dumps" ? <SocialModeView /> : renderContent()}
                   </motion.div>
                 </AnimatePresence>
               </div>

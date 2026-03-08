@@ -392,6 +392,175 @@ export type Database = {
         }
         Relationships: []
       }
+      sub_group_drafts: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          sub_group_id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          id?: string
+          sub_group_id: string
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          sub_group_id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sub_group_drafts_sub_group_id_fkey"
+            columns: ["sub_group_id"]
+            isOneToOne: false
+            referencedRelation: "sub_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sub_group_members: {
+        Row: {
+          joined_at: string
+          sub_group_id: string
+          user_id: string
+        }
+        Insert: {
+          joined_at?: string
+          sub_group_id: string
+          user_id: string
+        }
+        Update: {
+          joined_at?: string
+          sub_group_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sub_group_members_sub_group_id_fkey"
+            columns: ["sub_group_id"]
+            isOneToOne: false
+            referencedRelation: "sub_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sub_group_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          sub_group_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          sub_group_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          sub_group_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sub_group_messages_sub_group_id_fkey"
+            columns: ["sub_group_id"]
+            isOneToOne: false
+            referencedRelation: "sub_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sub_group_roadmaps: {
+        Row: {
+          created_at: string
+          id: string
+          phases_json: Json
+          sub_group_id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          phases_json?: Json
+          sub_group_id: string
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          phases_json?: Json
+          sub_group_id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sub_group_roadmaps_sub_group_id_fkey"
+            columns: ["sub_group_id"]
+            isOneToOne: false
+            referencedRelation: "sub_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sub_groups: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          group_id: string
+          id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          group_id: string
+          id?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          group_id?: string
+          id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sub_groups_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "idea_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       themes: {
         Row: {
           confidence: number | null

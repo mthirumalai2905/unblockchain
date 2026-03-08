@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowUp, Sparkles, Loader2, ThumbsUp, MessageCircle, ChevronDown, ChevronRight, Hash, Users, Lightbulb, X } from "lucide-react";
+import { ArrowUp, Sparkles, Loader2, ThumbsUp, MessageCircle, ChevronDown, ChevronRight, Hash, Users, Lightbulb, GitBranch } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/store/WorkspaceStore";
 import { useAuth } from "@/hooks/useAuth";
@@ -47,8 +47,15 @@ interface ContextGuidance {
   suggestions: string[];
 }
 
+interface SubGroup {
+  id: string;
+  title: string;
+  description: string | null;
+  member_count: number;
+}
+
 const SocialModeView = () => {
-  const { activeSessionId } = useWorkspace();
+  const { activeSessionId, setActiveSubGroupId } = useWorkspace();
   const { user } = useAuth();
   const [value, setValue] = useState("");
   const [socialDumps, setSocialDumps] = useState<SocialDump[]>([]);
@@ -58,6 +65,9 @@ const SocialModeView = () => {
   const [commentText, setCommentText] = useState<Record<string, string>>({});
   const [contextGuidance, setContextGuidance] = useState<ContextGuidance | null>(null);
   const [showGuidance, setShowGuidance] = useState(false);
+  const [subGroups, setSubGroups] = useState<Record<string, SubGroup[]>>({});
+  const [subGroupInput, setSubGroupInput] = useState<Record<string, string>>({});
+  const [creatingSubGroup, setCreatingSubGroup] = useState<string | null>(null);
 
   // Load ALL social dumps globally (not session-scoped)
   const loadSocialDumps = useCallback(async () => {
@@ -139,10 +149,65 @@ const SocialModeView = () => {
     }));
   }, [user]);
 
+  const loadSubGroups = useCallback(async (groupId: string) => {
+    const { data } = await supabase
+      .from("sub_groups")
+      .select("*")
+      .eq("group_id", groupId)
+      .order("created_at", { ascending: true });
+
+    if (data) {
+      const sgWithCounts = await Promise.all(data.map(async (sg: any) => {
+        const { count } = await supabase
+          .from("sub_group_members")
+          .select("*", { count: "exact", head: true })
+          .eq("sub_group_id", sg.id);
+        return { id: sg.id, title: sg.title, description: sg.description, member_count: count || 0 };
+      }));
+      setSubGroups((prev) => ({ ...prev, [groupId]: sgWithCounts }));
+    }
+  }, []);
+
+  const handleCreateSubGroup = async (groupId: string, userRequest?: string) => {
+    if (!user) return;
+    setCreatingSubGroup(groupId);
+    try {
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-sub-groups`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ group_id: groupId, user_id: user.id, user_request: userRequest || null }),
+        }
+      );
+      const data = await resp.json();
+      if (!resp.ok) {
+        toast.error(data.error || "Failed to create sub-groups");
+      } else {
+        toast.success(`Created ${data.created_count} sub-group${data.created_count !== 1 ? "s" : ""}`);
+        await loadSubGroups(groupId);
+      }
+    } catch {
+      toast.error("Failed to create sub-groups");
+    }
+    setCreatingSubGroup(null);
+    setSubGroupInput((prev) => ({ ...prev, [groupId]: "" }));
+  };
+
   useEffect(() => {
     loadSocialDumps();
     loadGroups();
   }, [loadSocialDumps, loadGroups]);
+
+  // Load sub-groups when a group is expanded
+  useEffect(() => {
+    if (expandedGroup) {
+      loadSubGroups(expandedGroup);
+    }
+  }, [expandedGroup, loadSubGroups]);
 
   const handleSubmit = async () => {
     if (!value.trim() || !user || !activeSessionId) return;
@@ -422,6 +487,72 @@ const SocialModeView = () => {
                           >
                             Post
                           </button>
+                        </div>
+
+                        {/* Sub-groups */}
+                        <div className="pt-3 border-t border-border/50 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <GitBranch className="w-3 h-3 text-primary" />
+                              <span className="text-[11px] font-semibold text-foreground">Sub-groups</span>
+                              <span className="text-[10px] text-muted-foreground font-mono">
+                                {(subGroups[group.id] || []).length}
+                              </span>
+                            </div>
+                            <button
+                              onClick={() => handleCreateSubGroup(group.id)}
+                              disabled={creatingSubGroup === group.id}
+                              className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-all"
+                            >
+                              {creatingSubGroup === group.id ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <Sparkles className="w-2.5 h-2.5" />}
+                              AI suggest
+                            </button>
+                          </div>
+
+                          {/* Existing sub-groups */}
+                          {(subGroups[group.id] || []).map((sg) => (
+                            <button
+                              key={sg.id}
+                              onClick={() => setActiveSubGroupId(sg.id)}
+                              className="w-full flex items-center gap-2.5 p-2.5 rounded-md bg-accent/30 hover:bg-accent/60 transition-colors text-left"
+                            >
+                              <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
+                                <GitBranch className="w-3 h-3 text-primary" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[12px] font-medium text-foreground truncate">{sg.title}</p>
+                                {sg.description && <p className="text-[10px] text-muted-foreground truncate">{sg.description}</p>}
+                              </div>
+                              <span className="text-[10px] text-muted-foreground font-mono shrink-0">{sg.member_count} members</span>
+                              <ChevronRight className="w-3 h-3 text-muted-foreground shrink-0" />
+                            </button>
+                          ))}
+
+                          {/* Create sub-group input */}
+                          <div className="flex items-center gap-2">
+                            <input
+                              value={subGroupInput[group.id] || ""}
+                              onChange={(e) => setSubGroupInput((prev) => ({ ...prev, [group.id]: e.target.value }))}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" && subGroupInput[group.id]?.trim()) {
+                                  handleCreateSubGroup(group.id, subGroupInput[group.id].trim());
+                                }
+                              }}
+                              placeholder="Type to create a sub-group (e.g., 'mobile UX team')..."
+                              className="flex-1 text-[11px] px-2.5 py-1.5 rounded-md bg-background border border-border text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-ring/50"
+                            />
+                            <button
+                              onClick={() => {
+                                if (subGroupInput[group.id]?.trim()) {
+                                  handleCreateSubGroup(group.id, subGroupInput[group.id].trim());
+                                }
+                              }}
+                              disabled={!subGroupInput[group.id]?.trim() || creatingSubGroup === group.id}
+                              className="text-[10px] px-2 py-1.5 rounded-md bg-foreground text-background disabled:opacity-30 hover:opacity-80 transition-opacity"
+                            >
+                              Create
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </motion.div>
