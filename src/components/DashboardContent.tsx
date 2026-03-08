@@ -19,6 +19,7 @@ import ThinkingPanel from "@/components/ThinkingPanel";
 import TwitterConnectorPanel from "@/components/TwitterConnectorPanel";
 import ArchiveView from "@/components/ArchiveView";
 import SearchDialog from "@/components/SearchDialog";
+import SocialModeView from "@/components/SocialModeView";
 
 const DashboardContent = () => {
   const {
@@ -68,6 +69,7 @@ const DashboardContent = () => {
       case "roadmap":
       case "twitter": return null;
       case "archive": return <ArchiveView />;
+      case "social": return <SocialModeView />;
       case "dumps":
       default:
         return (
