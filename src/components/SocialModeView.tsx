@@ -1,11 +1,13 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowUp, Sparkles, Loader2, ThumbsUp, MessageCircle, ChevronDown, ChevronRight, Hash, Users, Lightbulb, GitBranch, Plus, UserPlus, Search } from "lucide-react";
+import { ArrowUp, Sparkles, Loader2, ThumbsUp, MessageCircle, ChevronDown, ChevronRight, Hash, Users, Lightbulb, GitBranch, Plus, UserPlus, Search, X, Send, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/store/WorkspaceStore";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import ReactMarkdown from "react-markdown";
+import dumpstashBot from "@/assets/dumpstash-ai-bot.png";
 import {
   Dialog,
   DialogContent,
@@ -78,7 +80,11 @@ const SocialModeView = () => {
   const [showAddMember, setShowAddMember] = useState<string | null>(null);
   const [memberSearch, setMemberSearch] = useState("");
   const [memberResults, setMemberResults] = useState<{ user_id: string; display_name: string; avatar_initials: string }[]>([]);
-
+  const [showAIChat, setShowAIChat] = useState(false);
+  const [aiMessages, setAiMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
+  const [aiInput, setAiInput] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const aiChatEndRef = useRef<HTMLDivElement>(null);
   // Load ALL social dumps globally (not session-scoped)
   const loadSocialDumps = useCallback(async () => {
     if (!user) return;
@@ -282,6 +288,47 @@ const SocialModeView = () => {
     setValue("");
     loadSocialDumps();
   };
+
+  // AI Assistant chat
+  const sendAIMessage = async () => {
+    if (!aiInput.trim() || !user || aiLoading) return;
+    const userMsg = aiInput.trim();
+    setAiInput("");
+    setAiMessages((prev) => [...prev, { role: "user", content: userMsg }]);
+    setAiLoading(true);
+
+    try {
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-assistant`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ message: userMsg, user_id: user.id, session_id: activeSessionId }),
+        }
+      );
+      const data = await resp.json();
+      if (!resp.ok) {
+        toast.error(data.error || "AI request failed");
+        setAiMessages((prev) => [...prev, { role: "assistant", content: `❌ ${data.error || "Something went wrong"}` }]);
+      } else {
+        setAiMessages((prev) => [...prev, { role: "assistant", content: data.response }]);
+        // Refresh data if actions were performed
+        if (data.actions_performed > 0) {
+          await loadGroups();
+        }
+      }
+    } catch {
+      setAiMessages((prev) => [...prev, { role: "assistant", content: "❌ Network error, please try again." }]);
+    }
+    setAiLoading(false);
+  };
+
+  useEffect(() => {
+    aiChatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [aiMessages]);
 
   const handleProcess = async () => {
     if (!user || socialDumps.length === 0) return;
@@ -814,6 +861,93 @@ const SocialModeView = () => {
           </div>
         </DialogContent>
       </Dialog>
+      {/* Floating AI Bot Button */}
+      <motion.button
+        onClick={() => setShowAIChat((p) => !p)}
+        className={cn(
+          "fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105",
+          showAIChat ? "bg-destructive text-destructive-foreground" : "bg-primary text-primary-foreground"
+        )}
+        whileTap={{ scale: 0.9 }}
+      >
+        {showAIChat ? <X className="w-5 h-5" /> : <img src={dumpstashBot} alt="DumpStash AI" className="w-10 h-10 rounded-full" />}
+      </motion.button>
+
+      {/* AI Chat Panel */}
+      <AnimatePresence>
+        {showAIChat && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className="fixed bottom-24 right-6 z-50 w-[380px] max-h-[500px] rounded-xl border border-border bg-card shadow-2xl flex flex-col overflow-hidden"
+          >
+            <div className="flex items-center gap-3 p-3 border-b border-border bg-accent/30">
+              <img src={dumpstashBot} alt="DumpStash AI" className="w-8 h-8 rounded-full" />
+              <div>
+                <h4 className="text-[13px] font-semibold text-foreground">DumpStash AI</h4>
+                <p className="text-[10px] text-muted-foreground">Ask me to create groups, sub-groups & more</p>
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto p-3 space-y-3 min-h-[200px] max-h-[340px]">
+              {aiMessages.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <img src={dumpstashBot} alt="DumpStash AI" className="w-16 h-16 mb-3 opacity-60" />
+                  <p className="text-[12px] text-muted-foreground">Hey! I'm DumpStash AI 🤖</p>
+                  <p className="text-[11px] text-muted-foreground/70 mt-1 max-w-[260px]">
+                    Try: "Create a group called Web3 Gaming with Minato and thiru, and add a sub-group called Token Design"
+                  </p>
+                </div>
+              )}
+              {aiMessages.map((msg, i) => (
+                <div key={i} className={cn("flex gap-2", msg.role === "user" ? "justify-end" : "justify-start")}>
+                  {msg.role === "assistant" && (
+                    <img src={dumpstashBot} alt="AI" className="w-6 h-6 rounded-full shrink-0 mt-0.5" />
+                  )}
+                  <div className={cn(
+                    "rounded-lg px-3 py-2 max-w-[280px] text-[12px] leading-relaxed",
+                    msg.role === "user"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-accent/50 text-foreground border border-border"
+                  )}>
+                    {msg.role === "assistant" ? (
+                      <div className="prose prose-sm dark:prose-invert max-w-none [&_p]:m-0 [&_p]:text-[12px] [&_strong]:text-foreground">
+                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                      </div>
+                    ) : msg.content}
+                  </div>
+                </div>
+              ))}
+              {aiLoading && (
+                <div className="flex gap-2">
+                  <img src={dumpstashBot} alt="AI" className="w-6 h-6 rounded-full shrink-0" />
+                  <div className="rounded-lg px-3 py-2 bg-accent/50 border border-border">
+                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                  </div>
+                </div>
+              )}
+              <div ref={aiChatEndRef} />
+            </div>
+            <div className="border-t border-border p-2 flex items-center gap-2">
+              <input
+                value={aiInput}
+                onChange={(e) => setAiInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendAIMessage(); } }}
+                placeholder="Ask DumpStash AI..."
+                className="flex-1 text-[12px] px-3 py-2 rounded-lg bg-background border border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-ring/50"
+              />
+              <button
+                onClick={sendAIMessage}
+                disabled={!aiInput.trim() || aiLoading}
+                className="w-8 h-8 rounded-lg flex items-center justify-center bg-primary text-primary-foreground disabled:opacity-30 hover:opacity-80 transition-opacity"
+              >
+                <Send className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
