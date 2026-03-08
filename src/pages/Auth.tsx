@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
 const Auth = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const [mode, setMode] = useState<"login" | "signup" | "forgot">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -18,7 +18,14 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      if (isLogin) {
+      if (mode === "forgot") {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) throw error;
+        toast.success("Password reset link sent! Check your email.");
+        setMode("login");
+      } else if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Welcome back!");
@@ -133,14 +140,14 @@ const Auth = () => {
           </div>
 
           <h2 className="text-[22px] font-bold mb-1" style={{ color: "hsl(0 0% 8%)" }}>
-            {isLogin ? "Welcome back" : "Create your account"}
+            {mode === "login" ? "Welcome back" : mode === "signup" ? "Create your account" : "Reset password"}
           </h2>
           <p className="text-[13px] mb-8" style={{ color: "hsl(0 0% 45%)" }}>
-            {isLogin ? "Sign in to continue to your workspace" : "Start organizing your thoughts today"}
+            {mode === "login" ? "Sign in to continue to your workspace" : mode === "signup" ? "Start organizing your thoughts today" : "Enter your email to receive a reset link"}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-3.5">
-            {!isLogin && (
+            {mode === "signup" && (
               <div>
                 <label className="block text-[12px] font-medium mb-1.5" style={{ color: "hsl(0 0% 25%)" }}>Display Name</label>
                 <div className="relative">
@@ -181,6 +188,7 @@ const Auth = () => {
               </div>
             </div>
 
+            {mode !== "forgot" && (
             <div>
               <label className="block text-[12px] font-medium mb-1.5" style={{ color: "hsl(0 0% 25%)" }}>Password</label>
               <div className="relative">
@@ -201,6 +209,18 @@ const Auth = () => {
                 />
               </div>
             </div>
+            )}
+
+            {mode === "login" && (
+              <button
+                type="button"
+                onClick={() => setMode("forgot")}
+                className="text-[12px] hover:underline transition-colors"
+                style={{ color: "hsl(0 0% 45%)" }}
+              >
+                Forgot password?
+              </button>
+            )}
 
             <button
               type="submit"
@@ -215,21 +235,31 @@ const Auth = () => {
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <>
-                  {isLogin ? "Sign in" : "Create account"}
+                  {mode === "login" ? "Sign in" : mode === "signup" ? "Create account" : "Send reset link"}
                   <ArrowRight className="w-3.5 h-3.5" />
                 </>
               )}
             </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-[12px] hover:underline transition-colors"
-              style={{ color: "hsl(0 0% 45%)" }}
-            >
-              {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
-            </button>
+          <div className="mt-6 text-center space-y-1">
+            {mode === "forgot" ? (
+              <button
+                onClick={() => setMode("login")}
+                className="text-[12px] hover:underline transition-colors"
+                style={{ color: "hsl(0 0% 45%)" }}
+              >
+                Back to sign in
+              </button>
+            ) : (
+              <button
+                onClick={() => setMode(mode === "login" ? "signup" : "login")}
+                className="text-[12px] hover:underline transition-colors"
+                style={{ color: "hsl(0 0% 45%)" }}
+              >
+                {mode === "login" ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
+              </button>
+            )}
           </div>
 
           <p className="mt-8 text-center text-[10px]" style={{ color: "hsl(0 0% 70%)" }}>
