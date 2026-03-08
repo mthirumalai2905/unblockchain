@@ -85,7 +85,7 @@ const SocialModeView = () => {
   const [newSubGroupDesc, setNewSubGroupDesc] = useState("");
   const [showAddMember, setShowAddMember] = useState<string | null>(null);
   const [memberSearch, setMemberSearch] = useState("");
-  const [memberResults, setMemberResults] = useState<{ user_id: string; display_name: string; avatar_initials: string }[]>([]);
+  const [memberResults, setMemberResults] = useState<{ user_id: string; display_name: string; avatar_initials: string; avatar_url: string | null }[]>([]);
   
   const [aiMessages, setAiMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
   const [aiInput, setAiInput] = useState("");
@@ -305,7 +305,7 @@ const SocialModeView = () => {
     if (query.length < 2) { setMemberResults([]); return; }
     const { data } = await supabase
       .from("profiles")
-      .select("user_id, display_name, avatar_initials")
+      .select("user_id, display_name, avatar_initials, avatar_url")
       .ilike("display_name", `%${query}%`)
       .limit(5);
     setMemberResults((data || []) as any);
@@ -1137,9 +1137,7 @@ const SocialModeView = () => {
                   onClick={() => showAddMember && addMemberToGroup(showAddMember, m.user_id)}
                   className="w-full flex items-center gap-2.5 p-2 rounded-md hover:bg-accent/50 transition-colors text-left"
                 >
-                  <div className="w-7 h-7 rounded-full bg-accent flex items-center justify-center text-[10px] font-semibold text-muted-foreground">
-                    {m.avatar_initials || "??"}
-                  </div>
+                  <UserAvatar avatarUrl={m.avatar_url} initials={m.avatar_initials || "??"} size="md" />
                   <span className="text-[12px] font-medium text-foreground">{m.display_name || "User"}</span>
                 </button>
               ))}
