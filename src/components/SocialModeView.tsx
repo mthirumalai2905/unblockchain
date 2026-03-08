@@ -739,30 +739,201 @@ const SocialModeView = () => {
         <AnimatePresence>
           {!themeGroupsCollapsed && (
             <>
-              {themeGroups.map((theme, i) => (
-                <motion.div
-                  key={theme.id}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.03 }}
-                  className="rounded-lg border border-border bg-card p-3 sm:p-4"
-                >
-                  <div className="flex items-start gap-2.5">
-                    <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
-                      <Palette className="w-3.5 h-3.5 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-[13px] font-medium text-foreground">{theme.title}</h4>
-                      {theme.description && (
-                        <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">{theme.description}</p>
+              {themeGroups.map((group) => {
+                const isExpanded = expandedGroup === group.id;
+                const groupDumps = getDumpsForGroup(group.dump_ids);
+                return (
+                  <motion.div
+                    key={group.id}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="rounded-lg border border-border bg-card overflow-hidden"
+                  >
+                    <button
+                      onClick={() => setExpandedGroup(isExpanded ? null : group.id)}
+                      className="w-full flex items-center gap-3 p-3 sm:p-4 text-left hover:bg-accent/30 transition-colors"
+                    >
+                      {isExpanded ? <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" /> : <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />}
+                      <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                        <Palette className="w-3.5 h-3.5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-[13px] font-medium text-foreground truncate">{group.title}</h4>
+                        {group.description && <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{group.description}</p>}
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <span className="text-[11px] text-muted-foreground font-mono">{groupDumps.length} ideas</span>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleVote(group.id, group.hasVoted); }}
+                          className={cn(
+                            "flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-all",
+                            group.hasVoted ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent"
+                          )}
+                        >
+                          <ThumbsUp className="w-3 h-3" />
+                          {group.votes}
+                        </button>
+                        <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                          <MessageCircle className="w-3 h-3" />
+                          {group.comments.length}
+                        </span>
+                      </div>
+                    </button>
+
+                    <AnimatePresence>
+                      {isExpanded && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.15 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="border-t border-border p-3 sm:p-4 space-y-3">
+                            {/* Grouped dumps */}
+                            <div className="space-y-2">
+                              {groupDumps.map((dump) => (
+                                <div key={dump.id} className="flex items-start gap-2 p-2.5 rounded-md bg-accent/30">
+                                  <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-[9px] font-semibold text-muted-foreground shrink-0">
+                                    {dump.avatar}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="text-[12px] font-medium text-foreground">{dump.author}</span>
+                                      {dump.ai_label && (
+                                        <span className="inline-flex items-center gap-0.5 px-1.5 py-[1px] rounded text-[9px] font-mono bg-primary/10 text-primary">
+                                          <Hash className="w-2 h-2" />
+                                          {dump.ai_label}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <p className="text-[12px] text-foreground/80 leading-relaxed mt-0.5">{dump.content}</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Comments */}
+                            {group.comments.length > 0 && (
+                              <div className="space-y-2 pt-2 border-t border-border/50">
+                                {group.comments.map((comment) => (
+                                  <div key={comment.id} className="flex items-start gap-2">
+                                    <div className="w-5 h-5 rounded-full bg-accent flex items-center justify-center text-[8px] font-semibold text-muted-foreground shrink-0">
+                                      {comment.avatar}
+                                    </div>
+                                    <div>
+                                      <span className="text-[11px] font-medium text-foreground">{comment.author}</span>
+                                      <p className="text-[11px] text-foreground/70">{comment.content}</p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Comment input */}
+                            <div className="flex items-center gap-2 pt-1">
+                              <input
+                                value={commentText[group.id] || ""}
+                                onChange={(e) => setCommentText((prev) => ({ ...prev, [group.id]: e.target.value }))}
+                                onKeyDown={(e) => { if (e.key === "Enter") handleComment(group.id); }}
+                                placeholder="Add a comment..."
+                                className="flex-1 text-[12px] px-2.5 py-1.5 rounded-md bg-background border border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-ring/50"
+                              />
+                              <button
+                                onClick={() => handleComment(group.id)}
+                                disabled={!commentText[group.id]?.trim()}
+                                className="text-[11px] px-2 py-1.5 rounded-md bg-foreground text-background disabled:opacity-30 hover:opacity-80 transition-opacity"
+                              >
+                                Post
+                              </button>
+                            </div>
+
+                            {/* Sub-groups */}
+                            <div className="pt-3 border-t border-border/50 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-1.5">
+                                  <GitBranch className="w-3 h-3 text-primary" />
+                                  <span className="text-[11px] font-semibold text-foreground">Sub-groups</span>
+                                  <span className="text-[10px] text-muted-foreground font-mono">
+                                    {(subGroups[group.id] || []).length}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    onClick={() => setShowAddMember(group.id)}
+                                    className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-all"
+                                  >
+                                    <UserPlus className="w-2.5 h-2.5" />
+                                    Add Member
+                                  </button>
+                                  <button
+                                    onClick={() => setShowCreateSubGroup(group.id)}
+                                    className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-all"
+                                  >
+                                    <Plus className="w-2.5 h-2.5" />
+                                    New
+                                  </button>
+                                  <button
+                                    onClick={() => handleCreateSubGroup(group.id)}
+                                    disabled={creatingSubGroup === group.id}
+                                    className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-all"
+                                  >
+                                    {creatingSubGroup === group.id ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <Sparkles className="w-2.5 h-2.5" />}
+                                    AI suggest
+                                  </button>
+                                </div>
+                              </div>
+
+                              {(subGroups[group.id] || []).map((sg) => (
+                                <button
+                                  key={sg.id}
+                                  onClick={() => setActiveSubGroupId(sg.id)}
+                                  className="w-full flex items-center gap-2.5 p-2.5 rounded-md bg-accent/30 hover:bg-accent/60 transition-colors text-left"
+                                >
+                                  <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
+                                    <GitBranch className="w-3 h-3 text-primary" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-[12px] font-medium text-foreground truncate">{sg.title}</p>
+                                    {sg.description && <p className="text-[10px] text-muted-foreground truncate">{sg.description}</p>}
+                                  </div>
+                                  <span className="text-[10px] text-muted-foreground font-mono shrink-0">{sg.member_count} members</span>
+                                  <ChevronRight className="w-3 h-3 text-muted-foreground shrink-0" />
+                                </button>
+                              ))}
+
+                              <div className="flex items-center gap-2">
+                                <input
+                                  value={subGroupInput[group.id] || ""}
+                                  onChange={(e) => setSubGroupInput((prev) => ({ ...prev, [group.id]: e.target.value }))}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter" && subGroupInput[group.id]?.trim()) {
+                                      handleCreateSubGroup(group.id, subGroupInput[group.id].trim());
+                                    }
+                                  }}
+                                  placeholder="Type to create a sub-group..."
+                                  className="flex-1 text-[11px] px-2.5 py-1.5 rounded-md bg-background border border-border text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-ring/50"
+                                />
+                                <button
+                                  onClick={() => {
+                                    if (subGroupInput[group.id]?.trim()) {
+                                      handleCreateSubGroup(group.id, subGroupInput[group.id].trim());
+                                    }
+                                  }}
+                                  disabled={!subGroupInput[group.id]?.trim() || creatingSubGroup === group.id}
+                                  className="text-[10px] px-2 py-1.5 rounded-md bg-foreground text-background disabled:opacity-30 hover:opacity-80 transition-opacity"
+                                >
+                                  Create
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
                       )}
-                      <span className="text-[10px] text-muted-foreground/50 font-mono mt-1.5 block">
-                        {new Date(theme.created_at).toLocaleDateString([], { month: "short", day: "numeric" })}
-                      </span>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
+                    </AnimatePresence>
+                  </motion.div>
+                );
+              })}
               {themeGroups.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-8 text-center border border-dashed border-border rounded-lg">
                   <Palette className="w-6 h-6 text-muted-foreground/40 mb-2" />
