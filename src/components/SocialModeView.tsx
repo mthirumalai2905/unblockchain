@@ -123,7 +123,7 @@ const SocialModeView = () => {
         }),
       };
     }));
-  }, [activeSessionId, user]);
+  }, [user]);
 
   useEffect(() => {
     loadSocialDumps();
