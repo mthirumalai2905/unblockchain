@@ -339,21 +339,42 @@ const SubGroupView = () => {
                 })}
                 <div ref={chatEndRef} />
               </div>
-              <div className="shrink-0 border-t border-border p-3 flex gap-2">
-                <input
-                  value={msgInput}
-                  onChange={(e) => setMsgInput(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
-                  placeholder="Type a message..."
-                  className="flex-1 text-[13px] px-3 py-2 rounded-lg bg-background border border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-ring/50"
-                />
-                <button
-                  onClick={sendMessage}
-                  disabled={!msgInput.trim()}
-                  className="w-9 h-9 rounded-lg bg-foreground text-background flex items-center justify-center disabled:opacity-30 hover:opacity-80 transition-opacity"
-                >
-                  <Send className="w-4 h-4" />
-                </button>
+              <div className="shrink-0 border-t border-border p-3 space-y-2">
+                <div className="flex gap-2">
+                  <input
+                    value={msgInput}
+                    onChange={(e) => setMsgInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+                    placeholder="Type a message..."
+                    className="flex-1 text-[13px] px-3 py-2 rounded-lg bg-background border border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-ring/50"
+                  />
+                  <button
+                    onClick={sendMessage}
+                    disabled={!msgInput.trim()}
+                    className="w-9 h-9 rounded-lg bg-foreground text-background flex items-center justify-center disabled:opacity-30 hover:opacity-80 transition-opacity"
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => generateContent("draft")}
+                    disabled={generating}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[10px] font-medium border border-border text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-40 transition-all"
+                  >
+                    {generating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                    Generate PRD
+                  </button>
+                  <button
+                    onClick={() => generateContent("roadmap")}
+                    disabled={generating}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[10px] font-medium border border-border text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-40 transition-all"
+                  >
+                    {generating ? <Loader2 className="w-3 h-3 animate-spin" /> : <MapIcon className="w-3 h-3" />}
+                    Generate Roadmap
+                  </button>
+                  <span className="text-[9px] text-muted-foreground/50 font-mono ml-auto">{messages.length} messages</span>
+                </div>
               </div>
             </motion.div>
           )}
@@ -366,26 +387,35 @@ const SubGroupView = () => {
               exit={{ opacity: 0 }}
               className="overflow-auto cf-scrollbar p-4"
             >
-              <h3 className="text-[13px] font-semibold text-foreground mb-4">Sub-group Timeline</h3>
+              <h3 className="text-[13px] font-semibold text-foreground mb-1">Activity Timeline</h3>
+              <p className="text-[10px] text-muted-foreground mb-4 font-mono">{messages.length} entries · {subGroup?.title}</p>
               {messages.length === 0 ? (
                 <p className="text-[12px] text-muted-foreground text-center py-8">No activity yet</p>
               ) : (
-                <div className="relative pl-6 space-y-4">
-                  <div className="absolute left-2 top-0 bottom-0 w-px bg-border" />
-                  {messages.map((msg) => (
-                    <div key={msg.id} className="relative">
-                      <div className="absolute -left-[18px] top-1 w-2.5 h-2.5 rounded-full bg-primary border-2 border-background" />
-                      <div className="rounded-lg bg-card border border-border p-3">
-                        <div className="flex items-center gap-1.5 mb-1">
-                          <span className="text-[11px] font-medium text-foreground">{msg.author}</span>
-                          <span className="text-[10px] text-muted-foreground font-mono">
-                            {new Date(msg.created_at).toLocaleDateString([], { month: "short", day: "numeric" })} · {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                          </span>
+                <div className="relative pl-8 space-y-3">
+                  <div className="absolute left-3 top-0 bottom-0 w-px bg-border" />
+                  {messages.map((msg) => {
+                    const date = new Date(msg.created_at);
+                    return (
+                      <div key={msg.id} className="relative">
+                        <div className="absolute -left-[22px] top-2 w-3 h-3 rounded-full bg-primary border-2 border-background" />
+                        <div className="rounded-lg bg-card border border-border p-3">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <div className="flex items-center gap-2">
+                              <div className="w-5 h-5 rounded-full bg-accent flex items-center justify-center text-[8px] font-bold text-muted-foreground">
+                                {msg.avatar}
+                              </div>
+                              <span className="text-[11px] font-semibold text-foreground">{msg.author}</span>
+                            </div>
+                            <span className="text-[9px] text-muted-foreground font-mono">
+                              {date.toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })} · {date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                            </span>
+                          </div>
+                          <p className="text-[12px] text-foreground/80 leading-relaxed">{msg.content}</p>
                         </div>
-                        <p className="text-[12px] text-foreground/80">{msg.content}</p>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </motion.div>
