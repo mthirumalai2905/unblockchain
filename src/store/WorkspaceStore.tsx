@@ -78,6 +78,7 @@ interface WorkspaceState {
   thinkingSteps: ThinkingStep[];
   showThinking: boolean;
   socialMode: boolean;
+  activeSubGroupId: string | null;
 }
 
 interface WorkspaceActions {
@@ -102,6 +103,7 @@ interface WorkspaceActions {
   toggleSidebar: () => void;
   closeThinking: () => void;
   toggleSocialMode: () => void;
+  setActiveSubGroupId: (id: string | null) => void;
 }
 
 const WorkspaceContext = createContext<(WorkspaceState & WorkspaceActions) | null>(null);
