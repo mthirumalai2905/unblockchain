@@ -19,7 +19,6 @@ serve(async (req) => {
 
     const { user_id } = await req.json();
 
-    // Get ALL social-mode dumps globally (not session-scoped)
     const { data: socialDumps, error: dumpsErr } = await supabase
       .from("dumps")
       .select("*")
@@ -43,35 +42,32 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are DumpStash AI Social Analyzer. You receive a list of short social-style dumps (like tweets) from multiple users across the entire platform. Your job:
+            content: `You are DumpStash AI Social Analyzer. You receive a list of short social-style dumps (like tweets) from multiple users across the entire platform.
 
-1. Assign a DYNAMIC LABEL to each dump. Do NOT use predefined categories. Create specific, contextual labels that describe what the dump is about (e.g., "market-gap", "user-pain-point", "growth-hack", "tech-debt", "feature-request", "competitive-insight", "pricing-strategy", "ux-friction", "onboarding-idea", "monetization", "team-blocker", "pivot-signal").
+STEP 1 - ASSESS: First, decide if you have ENOUGH context to create meaningful groups. Consider:
+- Are there enough dumps to find patterns? (you decide the threshold based on topic complexity)
+- Are the dumps diverse enough or too similar?
+- Do you need more perspectives on certain topics?
 
-2. Group similar dumps together into idea groups. Each group should have:
-   - A clear title describing the shared theme
-   - A short description of what the group represents
-   - The indices (1-based) of dumps that belong to this group
+If you DON'T have enough context, set "needs_more_context" to true and provide:
+- A clear, friendly reason why more context is needed
+- Specific guidance on what kind of dumps would help (e.g., "Add more dumps about user pain points" or "Need perspectives from different team members")
+- You can still label individual dumps even if you can't group them yet
 
-A dump can belong to multiple groups. Create groups only when 2+ dumps share a meaningful connection.
+STEP 2 - LABEL: Assign a DYNAMIC LABEL to each dump. Create specific, contextual labels (e.g., "market-gap", "user-pain-point", "growth-hack", "tech-debt", "feature-request", "competitive-insight", "pricing-strategy", "ux-friction", "onboarding-idea", "monetization", "team-blocker", "pivot-signal").
 
-Respond with JSON (no markdown):
-{
-  "labels": [
-    { "index": 1, "label": "market-gap" },
-    { "index": 2, "label": "ux-friction" }
-  ],
-  "groups": [
-    {
-      "title": "User Onboarding Issues",
-      "description": "Multiple dumps highlighting friction in the onboarding flow",
-      "dump_indices": [1, 3, 5]
-    }
-  ]
-}`
+STEP 3 - GROUP (only if enough context): Group similar dumps together. Each group needs:
+- A clear title describing the shared theme
+- A short description
+- The indices (1-based) of dumps belonging to this group
+- A dump can belong to multiple groups
+- Create groups only when 2+ dumps share a meaningful connection
+
+Respond via the tool call.`
           },
           {
             role: "user",
-            content: `Analyze these social dumps:\n${dumpsText}`
+            content: `Analyze these ${socialDumps.length} social dumps:\n${dumpsText}`
           }
         ],
         temperature: 0.3,
@@ -80,10 +76,23 @@ Respond with JSON (no markdown):
             type: "function",
             function: {
               name: "classify_social_dumps",
-              description: "Classify social dumps with dynamic labels and group similar ones",
+              description: "Classify social dumps with dynamic labels and optionally group them",
               parameters: {
                 type: "object",
                 properties: {
+                  needs_more_context: {
+                    type: "boolean",
+                    description: "Whether more dumps/context are needed before meaningful grouping can be done"
+                  },
+                  context_message: {
+                    type: "string",
+                    description: "Friendly message explaining why more context is needed and what would help. Only set when needs_more_context is true."
+                  },
+                  context_suggestions: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "Specific actionable suggestions for what to dump next. Only set when needs_more_context is true."
+                  },
                   labels: {
                     type: "array",
                     items: {
@@ -110,7 +119,7 @@ Respond with JSON (no markdown):
                     }
                   }
                 },
-                required: ["labels", "groups"],
+                required: ["needs_more_context", "labels", "groups"],
                 additionalProperties: false
               }
             }
@@ -165,14 +174,27 @@ Respond with JSON (no markdown):
       }
     }
 
+    // If AI says needs more context, return early with guidance
+    if (result.needs_more_context) {
+      return new Response(JSON.stringify({
+        success: true,
+        needs_more_context: true,
+        context_message: result.context_message || "Need more dumps to find meaningful patterns.",
+        context_suggestions: result.context_suggestions || [],
+        labels_count: result.labels?.length || 0,
+        groups_count: 0,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Delete existing global idea groups created by this user to rebuild
     await supabase.from("idea_groups").delete().eq("user_id", user_id);
 
-    // Create idea groups (global, not session-scoped)
+    // Create idea groups
     const createdGroups = [];
     if (result.groups?.length > 0) {
       for (const group of result.groups) {
-        // Use the first dump's session_id as a reference (required by schema)
         const firstDumpIdx = group.dump_indices?.[0];
         const refSessionId = firstDumpIdx && firstDumpIdx >= 1 && firstDumpIdx <= socialDumps.length
           ? socialDumps[firstDumpIdx - 1].session_id
@@ -205,11 +227,12 @@ Respond with JSON (no markdown):
       }
     }
 
-    return new Response(JSON.stringify({ 
-      success: true, 
+    return new Response(JSON.stringify({
+      success: true,
+      needs_more_context: false,
       labels_count: result.labels?.length || 0,
       groups_count: createdGroups.length,
-      result 
+      result
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

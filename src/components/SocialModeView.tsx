@@ -1,11 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowUp, Sparkles, Loader2, ThumbsUp, MessageCircle, ChevronDown, ChevronRight, Hash, Users } from "lucide-react";
+import { ArrowUp, Sparkles, Loader2, ThumbsUp, MessageCircle, ChevronDown, ChevronRight, Hash, Users, Lightbulb, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/store/WorkspaceStore";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 interface SocialDump {
   id: string;
@@ -35,6 +42,11 @@ interface GroupComment {
   created_at: string;
 }
 
+interface ContextGuidance {
+  message: string;
+  suggestions: string[];
+}
+
 const SocialModeView = () => {
   const { activeSessionId } = useWorkspace();
   const { user } = useAuth();
@@ -44,6 +56,8 @@ const SocialModeView = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const [commentText, setCommentText] = useState<Record<string, string>>({});
+  const [contextGuidance, setContextGuidance] = useState<ContextGuidance | null>(null);
+  const [showGuidance, setShowGuidance] = useState(false);
 
   // Load ALL social dumps globally (not session-scoped)
   const loadSocialDumps = useCallback(async () => {
@@ -158,6 +172,17 @@ const SocialModeView = () => {
       const data = await resp.json();
       if (!resp.ok) {
         toast.error(data.error || "Processing failed");
+      } else if (data.needs_more_context) {
+        // AI decided it needs more context - show guidance dialog
+        setContextGuidance({
+          message: data.context_message || "Need more dumps to find meaningful patterns.",
+          suggestions: data.context_suggestions || [],
+        });
+        setShowGuidance(true);
+        if (data.labels_count > 0) {
+          toast.info(`Labeled ${data.labels_count} dumps, but need more context to group them`);
+          await loadSocialDumps();
+        }
       } else {
         toast.success(`Created ${data.groups_count} groups from ${data.labels_count} labeled dumps`);
         await Promise.all([loadSocialDumps(), loadGroups()]);
@@ -190,6 +215,49 @@ const SocialModeView = () => {
 
   return (
     <div className="space-y-6">
+      {/* Context Guidance Dialog */}
+      <Dialog open={showGuidance} onOpenChange={setShowGuidance}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-[15px]">
+              <Lightbulb className="w-4 h-4 text-primary" />
+              Need More Context
+            </DialogTitle>
+            <DialogDescription className="text-[13px] leading-relaxed pt-2">
+              {contextGuidance?.message}
+            </DialogDescription>
+          </DialogHeader>
+          {contextGuidance?.suggestions && contextGuidance.suggestions.length > 0 && (
+            <div className="space-y-2 pt-2">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                What to do next
+              </p>
+              <div className="space-y-1.5">
+                {contextGuidance.suggestions.map((suggestion, i) => (
+                  <div
+                    key={i}
+                    className="flex items-start gap-2.5 p-2.5 rounded-lg bg-accent/50 border border-border"
+                  >
+                    <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                      <span className="text-[10px] font-bold text-primary">{i + 1}</span>
+                    </div>
+                    <p className="text-[12px] text-foreground/80 leading-relaxed">{suggestion}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          <div className="flex justify-end pt-2">
+            <button
+              onClick={() => setShowGuidance(false)}
+              className="px-4 py-2 rounded-md bg-foreground text-background text-[12px] font-medium hover:opacity-90 transition-opacity"
+            >
+              Got it
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Social dump input */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
@@ -206,7 +274,7 @@ const SocialModeView = () => {
         />
         <div className="flex items-center justify-between px-2.5 pb-2.5">
           <span className="text-[11px] text-muted-foreground/40 font-mono px-2">
-            {socialDumps.length} posts in this session
+            {socialDumps.length} posts globally
           </span>
           <div className="flex items-center gap-2.5">
             <button
