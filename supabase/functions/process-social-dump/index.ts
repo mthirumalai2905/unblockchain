@@ -191,7 +191,7 @@ Respond via the tool call.`
     // Delete existing global idea groups created by this user to rebuild
     await supabase.from("idea_groups").delete().eq("user_id", user_id);
 
-    // Create idea groups and add members
+    // Create idea groups
     const createdGroups = [];
     if (result.groups?.length > 0) {
       for (const group of result.groups) {
@@ -212,53 +212,17 @@ Respond via the tool call.`
           .single();
 
         if (newGroup) {
-          // Link dumps to group
-          const groupDumpIndices = group.dump_indices.filter((idx: number) => idx >= 1 && idx <= socialDumps.length);
-          const dumpLinks = groupDumpIndices.map((idx: number) => ({
-            group_id: newGroup.id,
-            dump_id: socialDumps[idx - 1].id,
-          }));
+          const dumpLinks = group.dump_indices
+            .filter((idx: number) => idx >= 1 && idx <= socialDumps.length)
+            .map((idx: number) => ({
+              group_id: newGroup.id,
+              dump_id: socialDumps[idx - 1].id,
+            }));
 
           if (dumpLinks.length > 0) {
             await supabase.from("idea_group_dumps").insert(dumpLinks);
           }
-
-          // Collect unique user_ids from the dumps in this group (contributors)
-          const contributorIds = new Set<string>();
-          contributorIds.add(user_id); // always add the user who triggered processing
-          for (const idx of groupDumpIndices) {
-            contributorIds.add(socialDumps[idx - 1].user_id);
-          }
-
-          // Parse mentions from dump content (e.g., "@luffy", "i want luffy")
-          // Look up display_names in profiles to find mentioned users
-          const allContent = groupDumpIndices
-            .map((idx: number) => socialDumps[idx - 1].content)
-            .join(" ")
-            .toLowerCase();
-
-          const { data: allProfiles } = await supabase
-            .from("profiles")
-            .select("user_id, display_name");
-
-          if (allProfiles) {
-            for (const profile of allProfiles) {
-              if (profile.display_name && allContent.includes(profile.display_name.toLowerCase())) {
-                contributorIds.add(profile.user_id);
-              }
-            }
-          }
-
-          // Insert group members
-          const memberRows = Array.from(contributorIds).map((uid) => ({
-            group_id: newGroup.id,
-            user_id: uid,
-          }));
-          if (memberRows.length > 0) {
-            await supabase.from("group_members").insert(memberRows);
-          }
-
-          createdGroups.push({ ...newGroup, dump_count: dumpLinks.length, member_count: memberRows.length });
+          createdGroups.push({ ...newGroup, dump_count: dumpLinks.length });
         }
       }
     }

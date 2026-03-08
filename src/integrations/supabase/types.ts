@@ -206,32 +206,6 @@ export type Database = {
           },
         ]
       }
-      group_members: {
-        Row: {
-          added_at: string
-          group_id: string
-          user_id: string
-        }
-        Insert: {
-          added_at?: string
-          group_id: string
-          user_id: string
-        }
-        Update: {
-          added_at?: string
-          group_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "group_members_group_id_fkey"
-            columns: ["group_id"]
-            isOneToOne: false
-            referencedRelation: "idea_groups"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       group_votes: {
         Row: {
           created_at: string
@@ -698,14 +672,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      is_group_member: {
-        Args: { _group_id: string; _user_id: string }
-        Returns: boolean
-      }
-      is_sub_group_member: {
-        Args: { _sub_group_id: string; _user_id: string }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
       dump_type:
