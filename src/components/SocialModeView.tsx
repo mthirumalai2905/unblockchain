@@ -174,6 +174,17 @@ const SocialModeView = () => {
     }));
   }, [user]);
 
+  const loadThemeGroups = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("theme_groups")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (data) {
+      setThemeGroups(data.map((t: any) => ({ id: t.id, title: t.title, description: t.description, created_at: t.created_at })));
+    }
+  }, [user]);
+
   const loadSubGroups = useCallback(async (groupId: string) => {
     const { data } = await supabase
       .from("sub_groups")
@@ -279,7 +290,8 @@ const SocialModeView = () => {
   useEffect(() => {
     loadSocialDumps();
     loadGroups();
-  }, [loadSocialDumps, loadGroups]);
+    loadThemeGroups();
+  }, [loadSocialDumps, loadGroups, loadThemeGroups]);
 
   // Load sub-groups when a group is expanded
   useEffect(() => {
