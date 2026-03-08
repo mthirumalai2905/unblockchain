@@ -74,6 +74,10 @@ const SubGroupView = () => {
   const [generating, setGenerating] = useState(false);
   const [deleteVotes, setDeleteVotes] = useState<{ votes: number; total: number; hasVoted: boolean }>({ votes: 0, total: 0, hasVoted: false });
   const [votingInProgress, setVotingInProgress] = useState(false);
+  const [members, setMembers] = useState<MemberInfo[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<MemberInfo[]>([]);
+  const [addingMember, setAddingMember] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const loadSubGroup = useCallback(async () => {
