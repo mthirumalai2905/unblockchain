@@ -6,6 +6,7 @@ import {
   Trash2, AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import UserAvatar from "@/components/UserAvatar";
 import { useWorkspace } from "@/store/WorkspaceStore";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +21,7 @@ interface MemberInfo {
   user_id: string;
   display_name: string;
   avatar_initials: string;
+  avatar_url: string | null;
 }
 
 interface Message {
@@ -28,6 +30,7 @@ interface Message {
   user_id: string;
   author: string;
   avatar: string;
+  avatar_url: string | null;
   created_at: string;
 }
 
@@ -122,7 +125,7 @@ const SubGroupView = () => {
     if (data) {
       const userIds = [...new Set(data.map((m: any) => m.user_id))];
       const { data: profiles } = userIds.length > 0
-        ? await supabase.from("profiles").select("user_id, display_name, avatar_initials").in("user_id", userIds)
+        ? await supabase.from("profiles").select("user_id, display_name, avatar_initials, avatar_url").in("user_id", userIds)
         : { data: [] };
       const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
 
@@ -134,6 +137,7 @@ const SubGroupView = () => {
           user_id: m.user_id,
           author: profile?.display_name || "User",
           avatar: profile?.avatar_initials || "??",
+          avatar_url: profile?.avatar_url || null,
           created_at: m.created_at,
         };
       }));
@@ -184,7 +188,7 @@ const SubGroupView = () => {
       const userIds = memberLinks.map((m: any) => m.user_id);
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, display_name, avatar_initials")
+        .select("user_id, display_name, avatar_initials, avatar_url")
         .in("user_id", userIds);
       setMembers((profiles || []) as MemberInfo[]);
     } else {
@@ -196,7 +200,7 @@ const SubGroupView = () => {
     if (!query.trim()) { setSearchResults([]); return; }
     const { data } = await supabase
       .from("profiles")
-      .select("user_id, display_name, avatar_initials")
+      .select("user_id, display_name, avatar_initials, avatar_url")
       .ilike("display_name", `%${query}%`)
       .limit(5);
     // Filter out existing members
@@ -251,7 +255,7 @@ const SubGroupView = () => {
         if (msg.user_id === user?.id) return; // already added optimistically
         const { data: profile } = await supabase
           .from("profiles")
-          .select("display_name, avatar_initials")
+          .select("display_name, avatar_initials, avatar_url")
           .eq("user_id", msg.user_id)
           .maybeSingle();
         setMessages((prev) => [...prev, {
@@ -260,6 +264,7 @@ const SubGroupView = () => {
           user_id: msg.user_id,
           author: profile?.display_name || "User",
           avatar: profile?.avatar_initials || "??",
+          avatar_url: (profile as any)?.avatar_url || null,
           created_at: msg.created_at,
         }]);
       })
@@ -304,6 +309,7 @@ const SubGroupView = () => {
       user_id: user.id,
       author: "You",
       avatar: "YO",
+      avatar_url: null,
       created_at: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, optimistic]);
@@ -516,14 +522,12 @@ const SubGroupView = () => {
                           </div>
                         ) : (
                           <>
-                            <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-[9px] font-semibold text-muted-foreground shrink-0">
-                              {msg.avatar}
-                            </div>
+                            <UserAvatar avatarUrl={msg.avatar_url} initials={msg.avatar} size="sm" />
                             <div className={cn(
                               "max-w-[75%] rounded-lg px-3 py-2",
                               isOwn ? "bg-foreground text-background" : "bg-accent"
                             )}>
-                              {!isOwn && <p className="text-[10px] font-medium mb-0.5 opacity-70">{msg.author}</p>}
+                              {!isOwn && !msg.avatar_url && <p className="text-[10px] font-medium mb-0.5 opacity-70">{msg.author}</p>}
                               <p className="text-[12px] leading-relaxed">{msg.content}</p>
                               <p className={cn("text-[9px] mt-1 opacity-50", isOwn ? "text-right" : "")}>
                                 {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
@@ -762,9 +766,7 @@ const SubGroupView = () => {
                         disabled={addingMember}
                         className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-accent transition-colors text-left disabled:opacity-50"
                       >
-                        <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-[9px] font-semibold text-muted-foreground">
-                          {p.avatar_initials}
-                        </div>
+                        <UserAvatar avatarUrl={p.avatar_url} initials={p.avatar_initials} size="sm" />
                         <span className="text-[12px] font-medium text-foreground">{p.display_name}</span>
                         <span className="ml-auto text-[10px] text-primary font-medium">+ Add</span>
                       </button>
@@ -777,9 +779,7 @@ const SubGroupView = () => {
               <div className="space-y-1">
                 {members.map((m) => (
                   <div key={m.user_id} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-accent/30 transition-colors">
-                    <div className="w-7 h-7 rounded-full bg-accent flex items-center justify-center text-[10px] font-semibold text-muted-foreground">
-                      {m.avatar_initials}
-                    </div>
+                    <UserAvatar avatarUrl={m.avatar_url} initials={m.avatar_initials} size="md" />
                     <span className="text-[13px] font-medium text-foreground">{m.display_name}</span>
                     {m.user_id === user?.id && (
                       <span className="text-[9px] font-mono text-muted-foreground bg-accent px-1.5 py-0.5 rounded">you</span>

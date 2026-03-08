@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import dumpstashBot from "@/assets/dumpstash-ai-bot.png";
+import UserAvatar from "@/components/UserAvatar";
 import {
   Dialog,
   DialogContent,
@@ -23,6 +24,7 @@ interface SocialDump {
   created_at: string;
   author: string;
   avatar: string;
+  avatar_url: string | null;
 }
 
 interface IdeaGroup {
@@ -43,6 +45,7 @@ interface GroupComment {
   user_id: string;
   author: string;
   avatar: string;
+  avatar_url: string | null;
   created_at: string;
 }
 
@@ -82,7 +85,7 @@ const SocialModeView = () => {
   const [newSubGroupDesc, setNewSubGroupDesc] = useState("");
   const [showAddMember, setShowAddMember] = useState<string | null>(null);
   const [memberSearch, setMemberSearch] = useState("");
-  const [memberResults, setMemberResults] = useState<{ user_id: string; display_name: string; avatar_initials: string }[]>([]);
+  const [memberResults, setMemberResults] = useState<{ user_id: string; display_name: string; avatar_initials: string; avatar_url: string | null }[]>([]);
   
   const [aiMessages, setAiMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
   const [aiInput, setAiInput] = useState("");
@@ -137,7 +140,7 @@ const SocialModeView = () => {
     if (dumps) {
       const userIds = [...new Set(dumps.map((d: any) => d.user_id))];
       const { data: profiles } = userIds.length > 0
-        ? await supabase.from("profiles").select("user_id, display_name, avatar_initials").in("user_id", userIds)
+        ? await supabase.from("profiles").select("user_id, display_name, avatar_initials, avatar_url").in("user_id", userIds)
         : { data: [] };
       const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
 
@@ -150,6 +153,7 @@ const SocialModeView = () => {
           created_at: d.created_at,
           author: profile?.display_name || "User",
           avatar: profile?.avatar_initials || "??",
+          avatar_url: profile?.avatar_url || null,
         };
       }));
     }
@@ -175,7 +179,7 @@ const SocialModeView = () => {
     // Get commenter profiles
     const commentUserIds = [...new Set((commentsRes.data || []).map((c: any) => c.user_id))];
     const { data: commentProfiles } = commentUserIds.length > 0
-      ? await supabase.from("profiles").select("user_id, display_name, avatar_initials").in("user_id", commentUserIds)
+      ? await supabase.from("profiles").select("user_id, display_name, avatar_initials, avatar_url").in("user_id", commentUserIds)
       : { data: [] };
     const commentProfileMap = new Map((commentProfiles || []).map((p: any) => [p.user_id, p]));
 
@@ -200,6 +204,7 @@ const SocialModeView = () => {
             user_id: c.user_id,
             author: profile?.display_name || "User",
             avatar: profile?.avatar_initials || "??",
+            avatar_url: profile?.avatar_url || null,
             created_at: c.created_at,
           };
         }),
@@ -300,7 +305,7 @@ const SocialModeView = () => {
     if (query.length < 2) { setMemberResults([]); return; }
     const { data } = await supabase
       .from("profiles")
-      .select("user_id, display_name, avatar_initials")
+      .select("user_id, display_name, avatar_initials, avatar_url")
       .ilike("display_name", `%${query}%`)
       .limit(5);
     setMemberResults((data || []) as any);
@@ -854,12 +859,10 @@ const SocialModeView = () => {
                             <div className="space-y-2">
                               {groupDumps.map((dump) => (
                                 <div key={dump.id} className="flex items-start gap-2 p-2.5 rounded-md bg-accent/30">
-                                  <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-[9px] font-semibold text-muted-foreground shrink-0">
-                                    {dump.avatar}
-                                  </div>
+                                  <UserAvatar avatarUrl={dump.avatar_url} initials={dump.avatar} size="sm" />
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-1.5">
-                                      <span className="text-[12px] font-medium text-foreground">{dump.author}</span>
+                                      {!dump.avatar_url && <span className="text-[12px] font-medium text-foreground">{dump.author}</span>}
                                       {dump.ai_label && (
                                         <span className="inline-flex items-center gap-0.5 px-1.5 py-[1px] rounded text-[9px] font-mono bg-primary/10 text-primary">
                                           <Hash className="w-2 h-2" />
@@ -878,11 +881,9 @@ const SocialModeView = () => {
                               <div className="space-y-2 pt-2 border-t border-border/50">
                                 {group.comments.map((comment) => (
                                   <div key={comment.id} className="flex items-start gap-2">
-                                    <div className="w-5 h-5 rounded-full bg-accent flex items-center justify-center text-[8px] font-semibold text-muted-foreground shrink-0">
-                                      {comment.avatar}
-                                    </div>
+                                    <UserAvatar avatarUrl={comment.avatar_url} initials={comment.avatar} size="xs" />
                                     <div>
-                                      <span className="text-[11px] font-medium text-foreground">{comment.author}</span>
+                                      {!comment.avatar_url && <span className="text-[11px] font-medium text-foreground">{comment.author}</span>}
                                       <p className="text-[11px] text-foreground/70">{comment.content}</p>
                                     </div>
                                   </div>
@@ -1016,12 +1017,10 @@ const SocialModeView = () => {
             className="group relative p-3 sm:p-4 rounded-lg bg-card border border-border hover:border-ring/30 transition-all duration-150"
           >
             <div className="flex items-start gap-2 sm:gap-3">
-              <div className="w-7 h-7 rounded-full bg-accent flex items-center justify-center text-[10px] font-semibold text-muted-foreground shrink-0">
-                {dump.avatar}
-              </div>
+              <UserAvatar avatarUrl={dump.avatar_url} initials={dump.avatar} size="md" />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                  <span className="text-[13px] font-medium text-foreground">{dump.author}</span>
+                  {!dump.avatar_url && <span className="text-[13px] font-medium text-foreground">{dump.author}</span>}
                   <span className="text-[11px] text-muted-foreground font-mono">
                     {new Date(dump.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })} · {new Date(dump.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
@@ -1138,9 +1137,7 @@ const SocialModeView = () => {
                   onClick={() => showAddMember && addMemberToGroup(showAddMember, m.user_id)}
                   className="w-full flex items-center gap-2.5 p-2 rounded-md hover:bg-accent/50 transition-colors text-left"
                 >
-                  <div className="w-7 h-7 rounded-full bg-accent flex items-center justify-center text-[10px] font-semibold text-muted-foreground">
-                    {m.avatar_initials || "??"}
-                  </div>
+                  <UserAvatar avatarUrl={m.avatar_url} initials={m.avatar_initials || "??"} size="md" />
                   <span className="text-[12px] font-medium text-foreground">{m.display_name || "User"}</span>
                 </button>
               ))}
