@@ -1,0 +1,1 @@
+ALTER TABLE public.idea_groups ADD COLUMN is_ai_created BOOLEAN NOT NULL DEFAULT false;
