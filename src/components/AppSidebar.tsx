@@ -35,7 +35,7 @@ interface AppSidebarProps {
 }
 
 const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
-  const { activeSection, setActiveSection, actions, questions, themes, dumps, sessions, activeSessionId, switchSession, createSession, deleteSession, archiveSession } = useWorkspace();
+  const { activeSection, setActiveSection, actions, questions, themes, dumps, sessions, activeSessionId, switchSession, createSession, deleteSession, archiveSession, socialMode } = useWorkspace();
   const { signOut, user } = useAuth();
   const [sessionsOpen, setSessionsOpen] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
