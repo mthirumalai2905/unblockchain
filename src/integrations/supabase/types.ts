@@ -135,25 +135,31 @@ export type Database = {
       }
       dumps: {
         Row: {
+          ai_label: string | null
           content: string
           created_at: string
           id: string
+          mode: string
           session_id: string
           type: Database["public"]["Enums"]["dump_type"]
           user_id: string
         }
         Insert: {
+          ai_label?: string | null
           content: string
           created_at?: string
           id?: string
+          mode?: string
           session_id: string
           type?: Database["public"]["Enums"]["dump_type"]
           user_id: string
         }
         Update: {
+          ai_label?: string | null
           content?: string
           created_at?: string
           id?: string
+          mode?: string
           session_id?: string
           type?: Database["public"]["Enums"]["dump_type"]
           user_id?: string
@@ -161,6 +167,132 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "dumps_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_comments: {
+        Row: {
+          content: string
+          created_at: string
+          group_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          group_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          group_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_comments_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "idea_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_votes: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_votes_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "idea_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      idea_group_dumps: {
+        Row: {
+          dump_id: string
+          group_id: string
+        }
+        Insert: {
+          dump_id: string
+          group_id: string
+        }
+        Update: {
+          dump_id?: string
+          group_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "idea_group_dumps_dump_id_fkey"
+            columns: ["dump_id"]
+            isOneToOne: false
+            referencedRelation: "dumps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "idea_group_dumps_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "idea_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      idea_groups: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          session_id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          session_id: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          session_id?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "idea_groups_session_id_fkey"
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "sessions"
