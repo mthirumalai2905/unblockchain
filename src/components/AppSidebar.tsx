@@ -1,14 +1,15 @@
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap, MessageSquare, Brain, CheckSquare, Lightbulb,
-  HelpCircle, Clock, Archive, ChevronDown, Plus, Search,
-  Command, LogOut, FileText, Trash2, Users,
+  HelpCircle, Clock, Archive, ChevronDown, ChevronRight, Plus, Search,
+  Command, LogOut, FileText, Trash2, Users, GitBranch,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Map } from "lucide-react";
 import { useWorkspace, ViewSection } from "@/store/WorkspaceStore";
 import { useAuth } from "@/hooks/useAuth";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import ThemeToggle from "@/components/ThemeToggle";
 
 const normalNavItems: { id: ViewSection; label: string; icon: typeof Brain; badge?: string }[] = [
@@ -23,20 +24,63 @@ const normalNavItems: { id: ViewSection; label: string; icon: typeof Brain; badg
   { id: "archive", label: "Archive", icon: Archive },
 ];
 
-const socialNavItems: { id: ViewSection; label: string; icon: typeof Brain }[] = [
-  { id: "dumps", label: "Groups", icon: Users },
-];
+interface SidebarGroup {
+  id: string;
+  title: string;
+  subGroups: { id: string; title: string }[];
+}
 
 interface AppSidebarProps {
   onSearchOpen?: () => void;
 }
 
 const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
-  const { activeSection, setActiveSection, actions, questions, themes, dumps, sessions, activeSessionId, switchSession, createSession, deleteSession, archiveSession, socialMode } = useWorkspace();
+  const {
+    activeSection, setActiveSection, actions, questions, themes, dumps,
+    sessions, activeSessionId, switchSession, createSession, deleteSession,
+    archiveSession, socialMode, setActiveSubGroupId, activeSubGroupId,
+  } = useWorkspace();
   const { signOut, user } = useAuth();
   const [sessionsOpen, setSessionsOpen] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [newSessionName, setNewSessionName] = useState("");
+
+  // Social mode: groups with sub-groups
+  const [sidebarGroups, setSidebarGroups] = useState<SidebarGroup[]>([]);
+  const [expandedGroupId, setExpandedGroupId] = useState<string | null>(null);
+
+  const loadSidebarGroups = useCallback(async () => {
+    if (!socialMode || !user) { setSidebarGroups([]); return; }
+    const { data: groups } = await supabase
+      .from("idea_groups")
+      .select("id, title")
+      .order("created_at", { ascending: false });
+
+    if (!groups || groups.length === 0) { setSidebarGroups([]); return; }
+
+    const groupIds = groups.map((g: any) => g.id);
+    const { data: subGroups } = await supabase
+      .from("sub_groups")
+      .select("id, title, group_id")
+      .in("group_id", groupIds)
+      .order("created_at", { ascending: true });
+
+    setSidebarGroups(groups.map((g: any) => ({
+      id: g.id,
+      title: g.title,
+      subGroups: (subGroups || []).filter((sg: any) => sg.group_id === g.id).map((sg: any) => ({ id: sg.id, title: sg.title })),
+    })));
+  }, [socialMode, user]);
+
+  useEffect(() => { loadSidebarGroups(); }, [loadSidebarGroups]);
+
+  // Auto-expand group that contains the active sub-group
+  useEffect(() => {
+    if (activeSubGroupId) {
+      const parentGroup = sidebarGroups.find((g) => g.subGroups.some((sg) => sg.id === activeSubGroupId));
+      if (parentGroup) setExpandedGroupId(parentGroup.id);
+    }
+  }, [activeSubGroupId, sidebarGroups]);
 
   const activeSessions = sessions.filter((s) => s.is_active);
 
@@ -88,135 +132,224 @@ const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
       </div>
 
       {/* Navigation */}
-      <nav className="px-2 py-2 space-y-px">
-        {(socialMode ? socialNavItems : normalNavItems).map((item) => {
-          const isActive = activeSection === item.id;
-          const count = counts[item.id];
-          return (
-            <button
-              key={item.id}
-              onClick={() => setActiveSection(item.id)}
-              className={cn(
-                "w-full flex items-center gap-2.5 px-2.5 py-[7px] text-[13px] rounded-md transition-all duration-150",
-                isActive
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-              )}
-            >
-              <item.icon className={cn("w-4 h-4 shrink-0", isActive && "text-foreground")} />
-              <span className="truncate">{item.label}</span>
-              {'badge' in item && (item as any).badge && !count && (
-                <span className="ml-auto px-1.5 py-0.5 rounded text-[9px] font-bold bg-foreground text-background">
-                  {(item as any).badge}
-                </span>
-              )}
-              {count !== undefined && count > 0 && (
-                <span className={cn(
-                  "ml-auto text-[11px] font-mono tabular-nums",
-                  isActive ? "text-sidebar-accent-foreground/60" : "text-sidebar-muted"
-                )}>
-                  {count}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </nav>
+      {socialMode ? (
+        <nav className="px-2 py-2 space-y-px">
+          {/* Groups top-level nav */}
+          <button
+            onClick={() => { setActiveSection("dumps"); setActiveSubGroupId(null); }}
+            className={cn(
+              "w-full flex items-center gap-2.5 px-2.5 py-[7px] text-[13px] rounded-md transition-all duration-150",
+              activeSection === "dumps" && !activeSubGroupId
+                ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+            )}
+          >
+            <Users className="w-4 h-4 shrink-0" />
+            <span>Groups</span>
+            {sidebarGroups.length > 0 && (
+              <span className="ml-auto text-[11px] font-mono tabular-nums text-sidebar-muted">{sidebarGroups.length}</span>
+            )}
+          </button>
+        </nav>
+      ) : (
+        <nav className="px-2 py-2 space-y-px">
+          {normalNavItems.map((item) => {
+            const isActive = activeSection === item.id;
+            const count = counts[item.id];
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveSection(item.id)}
+                className={cn(
+                  "w-full flex items-center gap-2.5 px-2.5 py-[7px] text-[13px] rounded-md transition-all duration-150",
+                  isActive
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+                )}
+              >
+                <item.icon className={cn("w-4 h-4 shrink-0", isActive && "text-foreground")} />
+                <span className="truncate">{item.label}</span>
+                {'badge' in item && (item as any).badge && !count && (
+                  <span className="ml-auto px-1.5 py-0.5 rounded text-[9px] font-bold bg-foreground text-background">
+                    {(item as any).badge}
+                  </span>
+                )}
+                {count !== undefined && count > 0 && (
+                  <span className={cn(
+                    "ml-auto text-[11px] font-mono tabular-nums",
+                    isActive ? "text-sidebar-accent-foreground/60" : "text-sidebar-muted"
+                  )}>
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </nav>
+      )}
 
       <div className="mx-3 my-1 h-px bg-sidebar-border" />
 
-      {/* Sessions */}
-      <div className="px-2 flex-1 overflow-auto cf-scrollbar">
-        <button
-          onClick={() => setSessionsOpen(!sessionsOpen)}
-          className="w-full flex items-center gap-1 px-2.5 py-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-sidebar-muted hover:text-sidebar-foreground transition-colors"
-        >
-          <ChevronDown className={cn("w-3 h-3 transition-transform duration-200", !sessionsOpen && "-rotate-90")} />
-          Sessions
-          <span className="ml-auto text-[10px] font-mono">{activeSessions.length}</span>
-        </button>
-        <AnimatePresence>
-          {sessionsOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              className="overflow-hidden space-y-px"
-            >
-              {activeSessions.map((session) => {
-                const isActive = session.id === activeSessionId;
+      {/* Social mode: Groups with sub-group branches */}
+      {socialMode ? (
+        <div className="px-2 flex-1 overflow-auto cf-scrollbar">
+          {sidebarGroups.length === 0 ? (
+            <p className="px-2.5 py-4 text-[11px] text-sidebar-muted text-center">No groups yet. Post dumps and run AI grouping.</p>
+          ) : (
+            <div className="space-y-px">
+              {sidebarGroups.map((group) => {
+                const isExpanded = expandedGroupId === group.id;
                 return (
-                  <div
-                    key={session.id}
-                    className={cn(
-                      "flex items-center rounded-md transition-colors group",
-                      isActive ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"
-                    )}
-                  >
+                  <div key={group.id}>
                     <button
-                      onClick={() => switchSession(session.id)}
-                      className="flex-1 text-left px-2.5 py-2 min-w-0"
+                      onClick={() => setExpandedGroupId(isExpanded ? null : group.id)}
+                      className="w-full flex items-center gap-1.5 px-2.5 py-[7px] text-[12px] rounded-md text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
                     >
-                      <div className="flex items-center justify-between">
-                        <span className={cn(
-                          "text-[13px] truncate",
-                          isActive ? "text-sidebar-accent-foreground font-medium" : "text-sidebar-foreground"
-                        )}>
-                          {session.name}
-                        </span>
-                        {isActive && (
-                          <div className="w-1.5 h-1.5 rounded-full bg-cf-decision shrink-0 ml-1" />
-                        )}
-                      </div>
+                      {isExpanded
+                        ? <ChevronDown className="w-3 h-3 text-sidebar-muted shrink-0" />
+                        : <ChevronRight className="w-3 h-3 text-sidebar-muted shrink-0" />
+                      }
+                      <span className="truncate font-medium">{group.title}</span>
+                      {group.subGroups.length > 0 && (
+                        <span className="ml-auto text-[10px] font-mono text-sidebar-muted">{group.subGroups.length}</span>
+                      )}
                     </button>
-                    <div className="flex items-center opacity-0 group-hover:opacity-100 transition-all mr-1">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); archiveSession(session.id); }}
-                        className="p-1 rounded text-muted-foreground/30 hover:text-cf-question transition-colors"
-                        title="Archive session"
-                      >
-                        <Archive className="w-3 h-3" />
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); deleteSession(session.id); }}
-                        className="p-1 rounded text-muted-foreground/30 hover:text-destructive transition-colors"
-                        title="Delete session"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
-                    </div>
+                    <AnimatePresence>
+                      {isExpanded && group.subGroups.length > 0 && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.12 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="ml-3 pl-2.5 border-l border-sidebar-border space-y-px">
+                            {group.subGroups.map((sg) => {
+                              const isActiveSg = activeSubGroupId === sg.id;
+                              return (
+                                <button
+                                  key={sg.id}
+                                  onClick={() => { setActiveSubGroupId(sg.id); setActiveSection("dumps"); }}
+                                  className={cn(
+                                    "w-full flex items-center gap-2 px-2 py-[6px] text-[11px] rounded-md transition-all",
+                                    isActiveSg
+                                      ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                                      : "text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent/40"
+                                  )}
+                                >
+                                  <GitBranch className="w-3 h-3 shrink-0" />
+                                  <span className="truncate">{sg.title}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 );
               })}
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
-      </div>
+        </div>
+      ) : (
+        /* Sessions (normal mode) */
+        <div className="px-2 flex-1 overflow-auto cf-scrollbar">
+          <button
+            onClick={() => setSessionsOpen(!sessionsOpen)}
+            className="w-full flex items-center gap-1 px-2.5 py-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-sidebar-muted hover:text-sidebar-foreground transition-colors"
+          >
+            <ChevronDown className={cn("w-3 h-3 transition-transform duration-200", !sessionsOpen && "-rotate-90")} />
+            Sessions
+            <span className="ml-auto text-[10px] font-mono">{activeSessions.length}</span>
+          </button>
+          <AnimatePresence>
+            {sessionsOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="overflow-hidden space-y-px"
+              >
+                {activeSessions.map((session) => {
+                  const isActive = session.id === activeSessionId;
+                  return (
+                    <div
+                      key={session.id}
+                      className={cn(
+                        "flex items-center rounded-md transition-colors group",
+                        isActive ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"
+                      )}
+                    >
+                      <button
+                        onClick={() => switchSession(session.id)}
+                        className="flex-1 text-left px-2.5 py-2 min-w-0"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className={cn(
+                            "text-[13px] truncate",
+                            isActive ? "text-sidebar-accent-foreground font-medium" : "text-sidebar-foreground"
+                          )}>
+                            {session.name}
+                          </span>
+                          {isActive && (
+                            <div className="w-1.5 h-1.5 rounded-full bg-cf-decision shrink-0 ml-1" />
+                          )}
+                        </div>
+                      </button>
+                      <div className="flex items-center opacity-0 group-hover:opacity-100 transition-all mr-1">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); archiveSession(session.id); }}
+                          className="p-1 rounded text-muted-foreground/30 hover:text-cf-question transition-colors"
+                          title="Archive session"
+                        >
+                          <Archive className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); deleteSession(session.id); }}
+                          className="p-1 rounded text-muted-foreground/30 hover:text-destructive transition-colors"
+                          title="Delete session"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
 
-      {/* New Session */}
+      {/* New Session (normal mode only) */}
       <div className="p-3 space-y-2 border-t border-sidebar-border">
-        <AnimatePresence>
-          {isCreating && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
-              <input
-                autoFocus
-                value={newSessionName}
-                onChange={(e) => setNewSessionName(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") handleCreateSession(); if (e.key === "Escape") setIsCreating(false); }}
-                placeholder="Session name..."
-                className="w-full px-3 py-2 text-[13px] rounded-md bg-background border border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-ring/50 transition-colors mb-2"
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-        <button
-          onClick={handleCreateSession}
-          className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-[13px] font-medium rounded-md bg-foreground text-background hover:opacity-90 transition-opacity"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          {isCreating ? "Create" : "New Session"}
-        </button>
+        {!socialMode && (
+          <>
+            <AnimatePresence>
+              {isCreating && (
+                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
+                  <input
+                    autoFocus
+                    value={newSessionName}
+                    onChange={(e) => setNewSessionName(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleCreateSession(); if (e.key === "Escape") setIsCreating(false); }}
+                    placeholder="Session name..."
+                    className="w-full px-3 py-2 text-[13px] rounded-md bg-background border border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-ring/50 transition-colors mb-2"
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <button
+              onClick={handleCreateSession}
+              className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-[13px] font-medium rounded-md bg-foreground text-background hover:opacity-90 transition-opacity"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              {isCreating ? "Create" : "New Session"}
+            </button>
+          </>
+        )}
 
         <button
           onClick={signOut}
