@@ -286,6 +286,7 @@ const SubGroupView = () => {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
+  }, [activeSubGroupId, loadMembers, loadSubGroup, loadDeleteVotes]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
