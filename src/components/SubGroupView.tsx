@@ -340,11 +340,37 @@ const SubGroupView = () => {
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <h2 className="text-[14px] font-semibold text-foreground truncate">{subGroup.title}</h2>
             <p className="text-[11px] text-muted-foreground font-mono">
               {subGroup.parent_title} · {subGroup.member_count} members
             </p>
+          </div>
+          {/* Delete vote button */}
+          <div className="flex items-center gap-1.5">
+            {deleteVotes.votes > 0 && (
+              <span className="text-[9px] font-mono text-destructive">
+                {deleteVotes.votes}/{deleteVotes.total} votes
+              </span>
+            )}
+            {deleteVotes.hasVoted ? (
+              <button
+                onClick={cancelVote}
+                className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 transition-colors"
+              >
+                <Trash2 className="w-3 h-3" />
+                Voted
+              </button>
+            ) : (
+              <button
+                onClick={voteToDelete}
+                disabled={votingInProgress}
+                className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-muted-foreground border border-border hover:text-destructive hover:border-destructive/30 hover:bg-destructive/5 transition-colors disabled:opacity-40"
+              >
+                {votingInProgress ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                Vote Delete
+              </button>
+            )}
           </div>
         </div>
         {subGroup.description && (
