@@ -45,23 +45,21 @@ const SocialModeView = () => {
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const [commentText, setCommentText] = useState<Record<string, string>>({});
 
-  // Load social dumps
+  // Load ALL social dumps globally (not session-scoped)
   const loadSocialDumps = useCallback(async () => {
-    if (!activeSessionId || !user) return;
+    if (!user) return;
     const { data: dumps } = await supabase
       .from("dumps")
       .select("*")
-      .eq("session_id", activeSessionId)
       .eq("mode", "social")
       .order("created_at", { ascending: false });
 
     if (dumps) {
       const userIds = [...new Set(dumps.map((d: any) => d.user_id))];
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, display_name, avatar_initials")
-        .in("user_id", userIds);
-      const profileMap = new Map(profiles?.map((p: any) => [p.user_id, p]) || []);
+      const { data: profiles } = userIds.length > 0
+        ? await supabase.from("profiles").select("user_id, display_name, avatar_initials").in("user_id", userIds)
+        : { data: [] };
+      const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
 
       setSocialDumps(dumps.map((d: any) => {
         const profile = profileMap.get(d.user_id) as any;
@@ -70,20 +68,19 @@ const SocialModeView = () => {
           content: d.content,
           ai_label: d.ai_label,
           created_at: d.created_at,
-          author: profile?.display_name || "You",
-          avatar: profile?.avatar_initials || "YO",
+          author: profile?.display_name || "User",
+          avatar: profile?.avatar_initials || "??",
         };
       }));
     }
-  }, [activeSessionId, user]);
+  }, [user]);
 
-  // Load idea groups
+  // Load ALL idea groups globally
   const loadGroups = useCallback(async () => {
-    if (!activeSessionId || !user) return;
+    if (!user) return;
     const { data: groups } = await supabase
       .from("idea_groups")
       .select("*")
-      .eq("session_id", activeSessionId)
       .order("created_at", { ascending: false });
 
     if (!groups || groups.length === 0) { setIdeaGroups([]); return; }
@@ -126,7 +123,7 @@ const SocialModeView = () => {
         }),
       };
     }));
-  }, [activeSessionId, user]);
+  }, [user]);
 
   useEffect(() => {
     loadSocialDumps();
@@ -137,14 +134,14 @@ const SocialModeView = () => {
     if (!value.trim() || !user || !activeSessionId) return;
     const { error } = await supabase
       .from("dumps")
-      .insert({ session_id: activeSessionId, user_id: user.id, content: value.trim(), type: "note", mode: "social" });
+      .insert({ session_id: activeSessionId, user_id: user.id, content: value.trim(), type: "note" as const, mode: "social" });
     if (error) { toast.error("Failed to post"); return; }
     setValue("");
     loadSocialDumps();
   };
 
   const handleProcess = async () => {
-    if (!user || !activeSessionId || socialDumps.length === 0) return;
+    if (!user || socialDumps.length === 0) return;
     setIsProcessing(true);
     try {
       const resp = await fetch(
@@ -155,7 +152,7 @@ const SocialModeView = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
-          body: JSON.stringify({ session_id: activeSessionId, user_id: user.id }),
+          body: JSON.stringify({ user_id: user.id }),
         }
       );
       const data = await resp.json();

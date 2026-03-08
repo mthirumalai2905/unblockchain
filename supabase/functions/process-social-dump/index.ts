@@ -17,13 +17,12 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { session_id, user_id } = await req.json();
+    const { user_id } = await req.json();
 
-    // Get all social-mode dumps for this session
+    // Get ALL social-mode dumps globally (not session-scoped)
     const { data: socialDumps, error: dumpsErr } = await supabase
       .from("dumps")
       .select("*")
-      .eq("session_id", session_id)
       .eq("mode", "social")
       .order("created_at", { ascending: true });
 
@@ -44,7 +43,7 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are DumpStash AI Social Analyzer. You receive a list of short social-style dumps (like tweets). Your job:
+            content: `You are DumpStash AI Social Analyzer. You receive a list of short social-style dumps (like tweets) from multiple users across the entire platform. Your job:
 
 1. Assign a DYNAMIC LABEL to each dump. Do NOT use predefined categories. Create specific, contextual labels that describe what the dump is about (e.g., "market-gap", "user-pain-point", "growth-hack", "tech-debt", "feature-request", "competitive-insight", "pricing-strategy", "ux-friction", "onboarding-idea", "monetization", "team-blocker", "pivot-signal").
 
@@ -166,17 +165,23 @@ Respond with JSON (no markdown):
       }
     }
 
-    // Delete existing groups for this session to rebuild
-    await supabase.from("idea_groups").delete().eq("session_id", session_id).eq("user_id", user_id);
+    // Delete existing global idea groups created by this user to rebuild
+    await supabase.from("idea_groups").delete().eq("user_id", user_id);
 
-    // Create idea groups
+    // Create idea groups (global, not session-scoped)
     const createdGroups = [];
     if (result.groups?.length > 0) {
       for (const group of result.groups) {
+        // Use the first dump's session_id as a reference (required by schema)
+        const firstDumpIdx = group.dump_indices?.[0];
+        const refSessionId = firstDumpIdx && firstDumpIdx >= 1 && firstDumpIdx <= socialDumps.length
+          ? socialDumps[firstDumpIdx - 1].session_id
+          : socialDumps[0].session_id;
+
         const { data: newGroup } = await supabase
           .from("idea_groups")
           .insert({
-            session_id,
+            session_id: refSessionId,
             user_id,
             title: group.title,
             description: group.description,
