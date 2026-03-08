@@ -187,7 +187,7 @@ const SubGroupView = () => {
       const userIds = memberLinks.map((m: any) => m.user_id);
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, display_name, avatar_initials")
+        .select("user_id, display_name, avatar_initials, avatar_url")
         .in("user_id", userIds);
       setMembers((profiles || []) as MemberInfo[]);
     } else {
