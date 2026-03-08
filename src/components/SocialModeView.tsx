@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowUp, Sparkles, Loader2, ThumbsUp, MessageCircle, ChevronDown, ChevronRight, Hash, Users, Lightbulb, GitBranch, Plus, UserPlus, Search, X, Send, Bot } from "lucide-react";
+import { ArrowUp, Sparkles, Loader2, ThumbsUp, MessageCircle, ChevronDown, ChevronRight, Hash, Users, Lightbulb, GitBranch, Plus, UserPlus, Search, X, Send, Bot, Palette } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/store/WorkspaceStore";
 import { useAuth } from "@/hooks/useAuth";
@@ -56,6 +56,13 @@ interface SubGroup {
   member_count: number;
 }
 
+interface ThemeGroup {
+  id: string;
+  title: string;
+  description: string | null;
+  created_at: string;
+}
+
 const SocialModeView = () => {
   const { activeSessionId, setActiveSubGroupId } = useWorkspace();
   const { user } = useAuth();
@@ -69,6 +76,8 @@ const SocialModeView = () => {
   const [showGuidance, setShowGuidance] = useState(false);
   const [subGroups, setSubGroups] = useState<Record<string, SubGroup[]>>({});
   const [groupsCollapsed, setGroupsCollapsed] = useState(false);
+  const [themeGroupsCollapsed, setThemeGroupsCollapsed] = useState(false);
+  const [themeGroups, setThemeGroups] = useState<ThemeGroup[]>([]);
   const [subGroupInput, setSubGroupInput] = useState<Record<string, string>>({});
   const [creatingSubGroup, setCreatingSubGroup] = useState<string | null>(null);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
@@ -163,6 +172,17 @@ const SocialModeView = () => {
         }),
       };
     }));
+  }, [user]);
+
+  const loadThemeGroups = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("theme_groups")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (data) {
+      setThemeGroups(data.map((t: any) => ({ id: t.id, title: t.title, description: t.description, created_at: t.created_at })));
+    }
   }, [user]);
 
   const loadSubGroups = useCallback(async (groupId: string) => {
@@ -270,7 +290,8 @@ const SocialModeView = () => {
   useEffect(() => {
     loadSocialDumps();
     loadGroups();
-  }, [loadSocialDumps, loadGroups]);
+    loadThemeGroups();
+  }, [loadSocialDumps, loadGroups, loadThemeGroups]);
 
   // Load sub-groups when a group is expanded
   useEffect(() => {
@@ -318,6 +339,7 @@ const SocialModeView = () => {
         // Refresh data if actions were performed
         if (data.actions_performed > 0) {
           await loadGroups();
+          await loadThemeGroups();
         }
       }
     } catch {
@@ -714,6 +736,55 @@ const SocialModeView = () => {
         )}
         </AnimatePresence>
         </div>
+
+      {/* Theme Groups */}
+      <div className="space-y-3">
+        <button
+          onClick={() => setThemeGroupsCollapsed((p) => !p)}
+          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+        >
+          {themeGroupsCollapsed ? <ChevronRight className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+          <Palette className="w-4 h-4 text-primary" />
+          <h3 className="text-[13px] font-semibold text-foreground">Theme Groups</h3>
+          <span className="text-[11px] text-muted-foreground font-mono">{themeGroups.length} themes</span>
+        </button>
+        <AnimatePresence>
+          {!themeGroupsCollapsed && (
+            <>
+              {themeGroups.map((theme, i) => (
+                <motion.div
+                  key={theme.id}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.03 }}
+                  className="rounded-lg border border-border bg-card p-3 sm:p-4"
+                >
+                  <div className="flex items-start gap-2.5">
+                    <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                      <Palette className="w-3.5 h-3.5 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-[13px] font-medium text-foreground">{theme.title}</h4>
+                      {theme.description && (
+                        <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">{theme.description}</p>
+                      )}
+                      <span className="text-[10px] text-muted-foreground/50 font-mono mt-1.5 block">
+                        {new Date(theme.created_at).toLocaleDateString([], { month: "short", day: "numeric" })}
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+              {themeGroups.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-8 text-center border border-dashed border-border rounded-lg">
+                  <Palette className="w-6 h-6 text-muted-foreground/40 mb-2" />
+                  <p className="text-[12px] text-muted-foreground">No theme groups yet. Ask the DumpStash AI to create one!</p>
+                </div>
+              )}
+            </>
+          )}
+        </AnimatePresence>
+      </div>
 
       {/* Social dumps feed */}
       <div className="space-y-1.5">
