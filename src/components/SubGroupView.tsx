@@ -268,6 +268,25 @@ const SubGroupView = () => {
     return () => { supabase.removeChannel(channel); };
   }, [activeSubGroupId, user]);
 
+  // Realtime members subscription
+  useEffect(() => {
+    if (!activeSubGroupId) return;
+    const channel = supabase
+      .channel(`sub-group-members-${activeSubGroupId}`)
+      .on("postgres_changes", {
+        event: "*",
+        schema: "public",
+        table: "sub_group_members",
+        filter: `sub_group_id=eq.${activeSubGroupId}`,
+      }, () => {
+        loadMembers();
+        loadSubGroup();
+        loadDeleteVotes();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
