@@ -302,6 +302,27 @@ If the user just wants to chat or ask questions, respond normally without tool c
               .upsert({ sub_group_id: targetSubGroupId, user_id: memberId }, { onConflict: "sub_group_id,user_id" });
           }
           actions.push(`✅ Added **${name}** to ${targetSubGroupId ? "sub-group" : "group"}`);
+      }
+
+      if (toolCall.function.name === "create_theme_group") {
+        const { data: newTheme, error } = await supabase
+          .from("theme_groups")
+          .insert({
+            title: args.title,
+            description: args.description || null,
+            user_id,
+            session_id: session_id || null,
+          })
+          .select()
+          .single();
+
+        if (error) {
+          actions.push(`❌ Failed to create theme group "${args.title}": ${error.message}`);
+        } else {
+          actions.push(`✅ Created theme group **"${args.title}"**`);
+          if (args.description) {
+            actions.push(`  📝 ${args.description}`);
+          }
         }
       }
     }
