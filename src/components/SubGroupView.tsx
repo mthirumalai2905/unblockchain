@@ -14,7 +14,13 @@ import ReactMarkdown from "react-markdown";
 
 const DUMPSTASH_AI_ID = "00000000-0000-0000-0000-000000000001";
 
-type SubTab = "chat" | "timeline" | "draft" | "roadmap";
+type SubTab = "chat" | "timeline" | "draft" | "roadmap" | "members";
+
+interface MemberInfo {
+  user_id: string;
+  display_name: string;
+  avatar_initials: string;
+}
 
 interface Message {
   id: string;
