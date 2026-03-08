@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowLeft, MessageCircle, Clock, FileText, Map, Send,
+  ArrowLeft, MessageCircle, Clock, FileText, Send,
   Loader2, Sparkles, Users, ChevronRight, Map as MapIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
