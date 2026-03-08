@@ -46,6 +46,7 @@ You can perform these actions via tool calls:
 1. create_group - Create a new idea group
 2. create_sub_group - Create a sub-group within an existing group
 3. add_members - Add members to a group or sub-group
+4. create_theme_group - Create a themed group with a description (for topics, themes, agendas)
 
 When a user asks you to set something up, figure out the right sequence of actions. For example:
 - "Create a group called X with members A, B and a sub-group Y" → create_group, then create_sub_group, then add_members
@@ -117,6 +118,22 @@ If the user just wants to chat or ask questions, respond normally without tool c
                   member_names: { type: "array", items: { type: "string" }, description: "Display names of users to add" },
                 },
                 required: ["member_names"],
+                additionalProperties: false,
+              },
+            },
+          },
+          {
+            type: "function",
+            function: {
+              name: "create_theme_group",
+              description: "Create a theme group - a high-level themed collection with a description. Use when user asks to create a theme, topic, or themed group.",
+              parameters: {
+                type: "object",
+                properties: {
+                  title: { type: "string", description: "Theme group title" },
+                  description: { type: "string", description: "Detailed description of what this theme is about" },
+                },
+                required: ["title", "description"],
                 additionalProperties: false,
               },
             },
