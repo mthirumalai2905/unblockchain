@@ -66,6 +66,7 @@ const SocialModeView = () => {
   const [contextGuidance, setContextGuidance] = useState<ContextGuidance | null>(null);
   const [showGuidance, setShowGuidance] = useState(false);
   const [subGroups, setSubGroups] = useState<Record<string, SubGroup[]>>({});
+  const [groupsCollapsed, setGroupsCollapsed] = useState(false);
   const [subGroupInput, setSubGroupInput] = useState<Record<string, string>>({});
   const [creatingSubGroup, setCreatingSubGroup] = useState<string | null>(null);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
