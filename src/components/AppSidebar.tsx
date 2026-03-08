@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap, MessageSquare, Brain, CheckSquare, Lightbulb,
   HelpCircle, Clock, Archive, ChevronDown, Plus, Search,
-  Command, LogOut, FileText, Trash2,
+  Command, LogOut, FileText, Trash2, Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Map } from "lucide-react";
@@ -11,7 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 import ThemeToggle from "@/components/ThemeToggle";
 
-const navItems: { id: ViewSection; label: string; icon: typeof Brain; badge?: string }[] = [
+const normalNavItems: { id: ViewSection; label: string; icon: typeof Brain; badge?: string }[] = [
   { id: "dumps", label: "Brain Dump", icon: MessageSquare },
   { id: "structures", label: "AI Insights", icon: Brain },
   { id: "actions", label: "Actions", icon: CheckSquare },
@@ -21,6 +21,13 @@ const navItems: { id: ViewSection; label: string; icon: typeof Brain; badge?: st
   { id: "draft", label: "Draft PRD", icon: FileText },
   { id: "roadmap", label: "Roadmap", icon: Map },
   { id: "archive", label: "Archive", icon: Archive },
+];
+
+const socialNavItems: { id: ViewSection; label: string; icon: typeof Brain }[] = [
+  { id: "dumps", label: "Groups", icon: Users },
+  { id: "timeline", label: "Timeline", icon: Clock },
+  { id: "draft", label: "Draft PRD", icon: FileText },
+  { id: "roadmap", label: "Roadmap", icon: Map },
 ];
 
 interface AppSidebarProps {
