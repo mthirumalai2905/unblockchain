@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowUp, Sparkles, Loader2, ThumbsUp, MessageCircle, ChevronDown, ChevronRight, Hash, Users, Lightbulb, GitBranch } from "lucide-react";
+import { ArrowUp, Sparkles, Loader2, ThumbsUp, MessageCircle, ChevronDown, ChevronRight, Hash, Users, Lightbulb, GitBranch, Plus, UserPlus, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/store/WorkspaceStore";
 import { useAuth } from "@/hooks/useAuth";
@@ -68,6 +68,15 @@ const SocialModeView = () => {
   const [subGroups, setSubGroups] = useState<Record<string, SubGroup[]>>({});
   const [subGroupInput, setSubGroupInput] = useState<Record<string, string>>({});
   const [creatingSubGroup, setCreatingSubGroup] = useState<string | null>(null);
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [newGroupTitle, setNewGroupTitle] = useState("");
+  const [newGroupDesc, setNewGroupDesc] = useState("");
+  const [showCreateSubGroup, setShowCreateSubGroup] = useState<string | null>(null);
+  const [newSubGroupTitle, setNewSubGroupTitle] = useState("");
+  const [newSubGroupDesc, setNewSubGroupDesc] = useState("");
+  const [showAddMember, setShowAddMember] = useState<string | null>(null);
+  const [memberSearch, setMemberSearch] = useState("");
+  const [memberResults, setMemberResults] = useState<{ user_id: string; display_name: string; avatar_initials: string }[]>([]);
 
   // Load ALL social dumps globally (not session-scoped)
   const loadSocialDumps = useCallback(async () => {
@@ -195,6 +204,60 @@ const SocialModeView = () => {
     }
     setCreatingSubGroup(null);
     setSubGroupInput((prev) => ({ ...prev, [groupId]: "" }));
+  };
+
+  // Manual group creation
+  const handleManualCreateGroup = async () => {
+    if (!user || !newGroupTitle.trim()) return;
+    const { data, error } = await supabase
+      .from("idea_groups")
+      .insert({ title: newGroupTitle.trim(), description: newGroupDesc.trim() || null, user_id: user.id, session_id: activeSessionId! })
+      .select()
+      .single();
+    if (error) { toast.error("Failed to create group"); return; }
+    toast.success("Group created!");
+    setNewGroupTitle("");
+    setNewGroupDesc("");
+    setShowCreateGroup(false);
+    await loadGroups();
+  };
+
+  // Manual sub-group creation (direct DB insert, no AI)
+  const handleManualCreateSubGroup = async (groupId: string) => {
+    if (!user || !newSubGroupTitle.trim()) return;
+    const { data: sg, error } = await supabase
+      .from("sub_groups")
+      .insert({ group_id: groupId, created_by: user.id, title: newSubGroupTitle.trim(), description: newSubGroupDesc.trim() || null })
+      .select()
+      .single();
+    if (error) { toast.error("Failed to create sub-group"); return; }
+    // Add creator as member
+    await supabase.from("sub_group_members").upsert({ sub_group_id: sg.id, user_id: user.id }, { onConflict: "sub_group_id,user_id" });
+    toast.success("Sub-group created!");
+    setNewSubGroupTitle("");
+    setNewSubGroupDesc("");
+    setShowCreateSubGroup(null);
+    await loadSubGroups(groupId);
+  };
+
+  // Search members to add
+  const searchMembers = async (query: string) => {
+    setMemberSearch(query);
+    if (query.length < 2) { setMemberResults([]); return; }
+    const { data } = await supabase
+      .from("profiles")
+      .select("user_id, display_name, avatar_initials")
+      .ilike("display_name", `%${query}%`)
+      .limit(5);
+    setMemberResults((data || []) as any);
+  };
+
+  // Add member to group + sub-group
+  const addMemberToGroup = async (groupId: string, memberId: string) => {
+    await supabase.from("group_members").upsert({ group_id: groupId, user_id: memberId }, { onConflict: "group_id,user_id" });
+    toast.success("Member added to group!");
+    setMemberSearch("");
+    setMemberResults([]);
   };
 
   useEffect(() => {
@@ -374,13 +437,21 @@ const SocialModeView = () => {
       </motion.div>
 
       {/* Idea Groups */}
-      {ideaGroups.length > 0 && (
-        <div className="space-y-3">
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4 text-primary" />
             <h3 className="text-[13px] font-semibold text-foreground">Idea Groups</h3>
             <span className="text-[11px] text-muted-foreground font-mono">{ideaGroups.length} groups</span>
           </div>
+          <button
+            onClick={() => setShowCreateGroup(true)}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-[11px] font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-all"
+          >
+            <Plus className="w-3 h-3" />
+            Create Group
+          </button>
+        </div>
           {ideaGroups.map((group) => {
             const isExpanded = expandedGroup === group.id;
             const groupDumps = getDumpsForGroup(group.dump_ids);
@@ -499,14 +570,30 @@ const SocialModeView = () => {
                                 {(subGroups[group.id] || []).length}
                               </span>
                             </div>
-                            <button
-                              onClick={() => handleCreateSubGroup(group.id)}
-                              disabled={creatingSubGroup === group.id}
-                              className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-all"
-                            >
-                              {creatingSubGroup === group.id ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <Sparkles className="w-2.5 h-2.5" />}
-                              AI suggest
-                            </button>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => setShowAddMember(group.id)}
+                                className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-all"
+                              >
+                                <UserPlus className="w-2.5 h-2.5" />
+                                Add Member
+                              </button>
+                              <button
+                                onClick={() => setShowCreateSubGroup(group.id)}
+                                className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-all"
+                              >
+                                <Plus className="w-2.5 h-2.5" />
+                                New
+                              </button>
+                              <button
+                                onClick={() => handleCreateSubGroup(group.id)}
+                                disabled={creatingSubGroup === group.id}
+                                className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-all"
+                              >
+                                {creatingSubGroup === group.id ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <Sparkles className="w-2.5 h-2.5" />}
+                                AI suggest
+                              </button>
+                            </div>
                           </div>
 
                           {/* Existing sub-groups */}
@@ -561,8 +648,14 @@ const SocialModeView = () => {
               </motion.div>
             );
           })}
+
+          {ideaGroups.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-8 text-center border border-dashed border-border rounded-lg">
+              <Users className="w-6 h-6 text-muted-foreground/40 mb-2" />
+              <p className="text-[12px] text-muted-foreground">No groups yet. Create one manually or use AI grouping!</p>
+            </div>
+          )}
         </div>
-      )}
 
       {/* Social dumps feed */}
       <div className="space-y-1.5">
@@ -602,6 +695,114 @@ const SocialModeView = () => {
           </div>
         )}
       </div>
+
+      {/* Create Group Dialog */}
+      <Dialog open={showCreateGroup} onOpenChange={setShowCreateGroup}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-[15px]">Create Group</DialogTitle>
+            <DialogDescription className="text-[12px]">Create your own idea group manually.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 pt-2">
+            <input
+              value={newGroupTitle}
+              onChange={(e) => setNewGroupTitle(e.target.value)}
+              placeholder="Group title..."
+              className="w-full text-[13px] px-3 py-2 rounded-md bg-background border border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-ring/50"
+            />
+            <textarea
+              value={newGroupDesc}
+              onChange={(e) => setNewGroupDesc(e.target.value)}
+              placeholder="Description (optional)..."
+              rows={2}
+              className="w-full text-[13px] px-3 py-2 rounded-md bg-background border border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-ring/50 resize-none"
+            />
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setShowCreateGroup(false)} className="px-3 py-1.5 rounded-md text-[12px] text-muted-foreground hover:bg-accent transition-colors">Cancel</button>
+              <button
+                onClick={handleManualCreateGroup}
+                disabled={!newGroupTitle.trim()}
+                className="px-4 py-1.5 rounded-md text-[12px] font-medium bg-foreground text-background hover:opacity-80 disabled:opacity-30 transition-opacity"
+              >
+                Create
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Sub-Group Dialog */}
+      <Dialog open={!!showCreateSubGroup} onOpenChange={(open) => !open && setShowCreateSubGroup(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-[15px]">Create Sub-group</DialogTitle>
+            <DialogDescription className="text-[12px]">Create a sub-group manually within this group.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 pt-2">
+            <input
+              value={newSubGroupTitle}
+              onChange={(e) => setNewSubGroupTitle(e.target.value)}
+              placeholder="Sub-group title..."
+              className="w-full text-[13px] px-3 py-2 rounded-md bg-background border border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-ring/50"
+            />
+            <textarea
+              value={newSubGroupDesc}
+              onChange={(e) => setNewSubGroupDesc(e.target.value)}
+              placeholder="Description (optional)..."
+              rows={2}
+              className="w-full text-[13px] px-3 py-2 rounded-md bg-background border border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-ring/50 resize-none"
+            />
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setShowCreateSubGroup(null)} className="px-3 py-1.5 rounded-md text-[12px] text-muted-foreground hover:bg-accent transition-colors">Cancel</button>
+              <button
+                onClick={() => showCreateSubGroup && handleManualCreateSubGroup(showCreateSubGroup)}
+                disabled={!newSubGroupTitle.trim()}
+                className="px-4 py-1.5 rounded-md text-[12px] font-medium bg-foreground text-background hover:opacity-80 disabled:opacity-30 transition-opacity"
+              >
+                Create
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Member to Group Dialog */}
+      <Dialog open={!!showAddMember} onOpenChange={(open) => !open && setShowAddMember(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-[15px] flex items-center gap-2"><UserPlus className="w-4 h-4" /> Add Member</DialogTitle>
+            <DialogDescription className="text-[12px]">Search users to add to this group.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 pt-2">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <input
+                value={memberSearch}
+                onChange={(e) => searchMembers(e.target.value)}
+                placeholder="Search by name..."
+                className="w-full text-[13px] pl-8 pr-3 py-2 rounded-md bg-background border border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-ring/50"
+              />
+            </div>
+            <div className="space-y-1 max-h-48 overflow-y-auto">
+              {memberResults.map((m) => (
+                <button
+                  key={m.user_id}
+                  onClick={() => showAddMember && addMemberToGroup(showAddMember, m.user_id)}
+                  className="w-full flex items-center gap-2.5 p-2 rounded-md hover:bg-accent/50 transition-colors text-left"
+                >
+                  <div className="w-7 h-7 rounded-full bg-accent flex items-center justify-center text-[10px] font-semibold text-muted-foreground">
+                    {m.avatar_initials || "??"}
+                  </div>
+                  <span className="text-[12px] font-medium text-foreground">{m.display_name || "User"}</span>
+                </button>
+              ))}
+              {memberSearch.length >= 2 && memberResults.length === 0 && (
+                <p className="text-[11px] text-muted-foreground text-center py-4">No users found</p>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
