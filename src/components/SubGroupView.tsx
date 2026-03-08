@@ -255,7 +255,7 @@ const SubGroupView = () => {
     { id: "chat", label: "Chat", icon: MessageCircle },
     { id: "timeline", label: "Timeline", icon: Clock },
     { id: "draft", label: "Draft PRD", icon: FileText },
-    { id: "roadmap", label: "Roadmap", icon: Map },
+    { id: "roadmap", label: "Roadmap", icon: MapIcon },
   ];
 
   return (
