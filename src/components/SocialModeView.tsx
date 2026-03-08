@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowUp, Sparkles, Loader2, ThumbsUp, MessageCircle, ChevronDown, ChevronRight, Hash, Users, Lightbulb, GitBranch, Plus, UserPlus, Search, X, Send, Bot, Palette } from "lucide-react";
+import { ArrowUp, Sparkles, Loader2, ThumbsUp, MessageCircle, ChevronDown, ChevronRight, Hash, Users, Lightbulb, GitBranch, Plus, UserPlus, Search, X, Send, Bot, Palette, Camera } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/store/WorkspaceStore";
 import { useAuth } from "@/hooks/useAuth";
@@ -88,6 +88,43 @@ const SocialModeView = () => {
   const [aiInput, setAiInput] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const aiChatEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [userProfile, setUserProfile] = useState<{ display_name: string; avatar_initials: string; avatar_url: string | null } | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  // Load user profile
+  const loadProfile = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase.from("profiles").select("display_name, avatar_initials, avatar_url").eq("user_id", user.id).single();
+    if (data) setUserProfile(data as any);
+  }, [user]);
+
+  useEffect(() => { loadProfile(); }, [loadProfile]);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    if (!file.type.startsWith("image/")) { toast.error("Please select an image file"); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error("Image must be under 5MB"); return; }
+    
+    setUploadingAvatar(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `${user.id}/avatar.${ext}`;
+      const { error: uploadErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+      if (uploadErr) throw uploadErr;
+      
+      const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path);
+      const avatarUrl = `${publicUrl}?t=${Date.now()}`;
+      await supabase.from("profiles").update({ avatar_url: avatarUrl }).eq("user_id", user.id);
+      setUserProfile((prev) => prev ? { ...prev, avatar_url: avatarUrl } : null);
+      toast.success("Profile picture updated!");
+    } catch (err: any) {
+      toast.error("Failed to upload: " + (err.message || "Unknown error"));
+    }
+    setUploadingAvatar(false);
+  };
+
   // Load ALL social dumps globally (not session-scoped)
   const loadSocialDumps = useCallback(async () => {
     if (!user) return;
@@ -443,6 +480,29 @@ const SocialModeView = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Profile Card */}
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 p-3 rounded-xl border border-border bg-card">
+        <input type="file" ref={fileInputRef} accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploadingAvatar}
+          className="relative w-10 h-10 rounded-full bg-accent flex items-center justify-center shrink-0 overflow-hidden group hover:ring-2 hover:ring-primary/30 transition-all"
+        >
+          {userProfile?.avatar_url ? (
+            <img src={userProfile.avatar_url} alt="avatar" className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-[13px] font-semibold text-muted-foreground">{userProfile?.avatar_initials || "??"}</span>
+          )}
+          <div className="absolute inset-0 bg-background/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            {uploadingAvatar ? <Loader2 className="w-4 h-4 animate-spin text-foreground" /> : <Camera className="w-4 h-4 text-foreground" />}
+          </div>
+        </button>
+        <div className="flex-1 min-w-0">
+          <p className="text-[13px] font-semibold text-foreground truncate">{userProfile?.display_name || "User"}</p>
+          <p className="text-[10px] text-muted-foreground">Click avatar to change profile picture</p>
+        </div>
+      </motion.div>
 
       {/* Social dump input */}
       <motion.div
