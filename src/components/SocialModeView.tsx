@@ -68,6 +68,15 @@ const SocialModeView = () => {
   const [subGroups, setSubGroups] = useState<Record<string, SubGroup[]>>({});
   const [subGroupInput, setSubGroupInput] = useState<Record<string, string>>({});
   const [creatingSubGroup, setCreatingSubGroup] = useState<string | null>(null);
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [newGroupTitle, setNewGroupTitle] = useState("");
+  const [newGroupDesc, setNewGroupDesc] = useState("");
+  const [showCreateSubGroup, setShowCreateSubGroup] = useState<string | null>(null);
+  const [newSubGroupTitle, setNewSubGroupTitle] = useState("");
+  const [newSubGroupDesc, setNewSubGroupDesc] = useState("");
+  const [showAddMember, setShowAddMember] = useState<string | null>(null);
+  const [memberSearch, setMemberSearch] = useState("");
+  const [memberResults, setMemberResults] = useState<{ user_id: string; display_name: string; avatar_initials: string }[]>([]);
 
   // Load ALL social dumps globally (not session-scoped)
   const loadSocialDumps = useCallback(async () => {
