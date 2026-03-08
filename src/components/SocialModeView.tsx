@@ -149,10 +149,65 @@ const SocialModeView = () => {
     }));
   }, [user]);
 
+  const loadSubGroups = useCallback(async (groupId: string) => {
+    const { data } = await supabase
+      .from("sub_groups")
+      .select("*")
+      .eq("group_id", groupId)
+      .order("created_at", { ascending: true });
+
+    if (data) {
+      const sgWithCounts = await Promise.all(data.map(async (sg: any) => {
+        const { count } = await supabase
+          .from("sub_group_members")
+          .select("*", { count: "exact", head: true })
+          .eq("sub_group_id", sg.id);
+        return { id: sg.id, title: sg.title, description: sg.description, member_count: count || 0 };
+      }));
+      setSubGroups((prev) => ({ ...prev, [groupId]: sgWithCounts }));
+    }
+  }, []);
+
+  const handleCreateSubGroup = async (groupId: string, userRequest?: string) => {
+    if (!user) return;
+    setCreatingSubGroup(groupId);
+    try {
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-sub-groups`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ group_id: groupId, user_id: user.id, user_request: userRequest || null }),
+        }
+      );
+      const data = await resp.json();
+      if (!resp.ok) {
+        toast.error(data.error || "Failed to create sub-groups");
+      } else {
+        toast.success(`Created ${data.created_count} sub-group${data.created_count !== 1 ? "s" : ""}`);
+        await loadSubGroups(groupId);
+      }
+    } catch {
+      toast.error("Failed to create sub-groups");
+    }
+    setCreatingSubGroup(null);
+    setSubGroupInput((prev) => ({ ...prev, [groupId]: "" }));
+  };
+
   useEffect(() => {
     loadSocialDumps();
     loadGroups();
   }, [loadSocialDumps, loadGroups]);
+
+  // Load sub-groups when a group is expanded
+  useEffect(() => {
+    if (expandedGroup) {
+      loadSubGroups(expandedGroup);
+    }
+  }, [expandedGroup, loadSubGroups]);
 
   const handleSubmit = async () => {
     if (!value.trim() || !user || !activeSessionId) return;
