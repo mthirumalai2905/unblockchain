@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, MessageCircle, Clock, FileText, Send,
   Loader2, Sparkles, Users, ChevronRight, Map as MapIcon,
+  Trash2, AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/store/WorkspaceStore";
@@ -10,6 +11,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
+
+const DUMPSTASH_AI_ID = "00000000-0000-0000-0000-000000000001";
 
 type SubTab = "chat" | "timeline" | "draft" | "roadmap";
 
