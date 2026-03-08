@@ -308,12 +308,13 @@ If the user just wants to chat or ask questions, respond normally without tool c
 
       if (toolCall.function.name === "create_theme_group") {
         const { data: newTheme, error } = await supabase
-          .from("theme_groups")
+          .from("idea_groups")
           .insert({
             title: args.title,
             description: args.description || null,
             user_id,
             session_id: session_id || null,
+            is_ai_created: true,
           })
           .select()
           .single();
