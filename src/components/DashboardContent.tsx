@@ -66,8 +66,7 @@ const DashboardContent = () => {
       case "questions": return <QuestionsView />;
       case "timeline": return <TimelineView />;
       case "draft":
-      case "roadmap":
-      case "twitter": return null;
+      case "roadmap": return null;
       case "archive": return <ArchiveView />;
       case "social": return <SocialModeView />;
       case "dumps":
@@ -100,7 +99,7 @@ const DashboardContent = () => {
     }
   };
 
-  const isFullLayout = activeSection === "draft" || activeSection === "roadmap" || activeSection === "twitter";
+  const isFullLayout = activeSection === "draft" || activeSection === "roadmap";
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
