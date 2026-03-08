@@ -2,15 +2,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap, MessageSquare, Brain, CheckSquare, Lightbulb,
   HelpCircle, Clock, Archive, ChevronDown, ChevronRight, Plus, Search,
-  Command, LogOut, FileText, Trash2, Users, GitBranch,
+  Command, LogOut, FileText, Trash2, Users, GitBranch, Camera, Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Map } from "lucide-react";
 import { useWorkspace, ViewSection } from "@/store/WorkspaceStore";
 import { useAuth } from "@/hooks/useAuth";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import ThemeToggle from "@/components/ThemeToggle";
+import UserAvatar from "@/components/UserAvatar";
+import { toast } from "sonner";
 
 const normalNavItems: { id: ViewSection; label: string; icon: typeof Brain; badge?: string }[] = [
   { id: "dumps", label: "Brain Dump", icon: MessageSquare },
@@ -44,6 +46,39 @@ const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
   const [sessionsOpen, setSessionsOpen] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [newSessionName, setNewSessionName] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [userProfile, setUserProfile] = useState<{ display_name: string; avatar_initials: string; avatar_url: string | null } | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  const loadProfile = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase.from("profiles").select("display_name, avatar_initials, avatar_url").eq("user_id", user.id).single();
+    if (data) setUserProfile(data as any);
+  }, [user]);
+
+  useEffect(() => { loadProfile(); }, [loadProfile]);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    if (!file.type.startsWith("image/")) { toast.error("Please select an image file"); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error("Image must be under 5MB"); return; }
+    setUploadingAvatar(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `${user.id}/avatar.${ext}`;
+      const { error: uploadErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+      if (uploadErr) throw uploadErr;
+      const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path);
+      const avatarUrl = `${publicUrl}?t=${Date.now()}`;
+      await supabase.from("profiles").update({ avatar_url: avatarUrl }).eq("user_id", user.id);
+      setUserProfile((prev) => prev ? { ...prev, avatar_url: avatarUrl } : null);
+      toast.success("Profile picture updated!");
+    } catch (err: any) {
+      toast.error("Failed to upload: " + (err.message || "Unknown error"));
+    }
+    setUploadingAvatar(false);
+  };
 
   // Social mode: groups with sub-groups
   const [sidebarGroups, setSidebarGroups] = useState<SidebarGroup[]>([]);
@@ -351,13 +386,30 @@ const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
           </>
         )}
 
-        <button
-          onClick={signOut}
-          className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <LogOut className="w-3 h-3" />
-          Sign out
-        </button>
+        {/* Profile */}
+        <input type="file" ref={fileInputRef} accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadingAvatar}
+            className="relative w-8 h-8 rounded-full shrink-0 overflow-hidden group hover:ring-2 hover:ring-primary/30 transition-all"
+          >
+            <UserAvatar avatarUrl={userProfile?.avatar_url} initials={userProfile?.avatar_initials || "??"} size="md" className="w-8 h-8" />
+            <div className="absolute inset-0 bg-background/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              {uploadingAvatar ? <Loader2 className="w-3 h-3 animate-spin text-foreground" /> : <Camera className="w-3 h-3 text-foreground" />}
+            </div>
+          </button>
+          <div className="flex-1 min-w-0">
+            <p className="text-[12px] font-medium text-sidebar-foreground truncate">{userProfile?.display_name || "User"}</p>
+          </div>
+          <button
+            onClick={signOut}
+            className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors"
+            title="Sign out"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
     </aside>
   );
