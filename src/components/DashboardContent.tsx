@@ -145,8 +145,20 @@ const DashboardContent = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-3">
             <span className="text-[11px] text-muted-foreground font-mono hidden sm:inline">{dumps.length} dumps</span>
+            <button
+              onClick={toggleSocialMode}
+              className={cn(
+                "flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-md text-[11px] sm:text-[12px] font-medium border transition-all duration-150",
+                socialMode
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-transparent text-muted-foreground border-border hover:border-ring/50 hover:text-foreground"
+              )}
+            >
+              <Globe className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{socialMode ? "Social" : "Social"}</span>
+            </button>
             <button
               onClick={toggleAIPanel}
               className={cn(
