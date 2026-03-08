@@ -296,6 +296,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          is_ai_created: boolean
           session_id: string
           title: string
           user_id: string
@@ -304,6 +305,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_ai_created?: boolean
           session_id: string
           title: string
           user_id: string
@@ -312,6 +314,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_ai_created?: boolean
           session_id?: string
           title?: string
           user_id?: string
