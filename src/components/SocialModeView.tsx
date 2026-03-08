@@ -517,7 +517,7 @@ const SocialModeView = () => {
         <AnimatePresence>
         {!groupsCollapsed && (
           <>
-          {ideaGroups.map((group) => {
+          {manualGroups.map((group) => {
             const isExpanded = expandedGroup === group.id;
             const groupDumps = getDumpsForGroup(group.dump_ids);
             return (
@@ -714,7 +714,7 @@ const SocialModeView = () => {
             );
           })}
 
-          {ideaGroups.length === 0 && (
+          {manualGroups.length === 0 && (
             <div className="flex flex-col items-center justify-center py-8 text-center border border-dashed border-border rounded-lg">
               <Users className="w-6 h-6 text-muted-foreground/40 mb-2" />
               <p className="text-[12px] text-muted-foreground">No groups yet. Create one manually or use AI grouping!</p>
