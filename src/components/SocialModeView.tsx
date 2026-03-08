@@ -570,14 +570,30 @@ const SocialModeView = () => {
                                 {(subGroups[group.id] || []).length}
                               </span>
                             </div>
-                            <button
-                              onClick={() => handleCreateSubGroup(group.id)}
-                              disabled={creatingSubGroup === group.id}
-                              className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-all"
-                            >
-                              {creatingSubGroup === group.id ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <Sparkles className="w-2.5 h-2.5" />}
-                              AI suggest
-                            </button>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => setShowAddMember(group.id)}
+                                className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-all"
+                              >
+                                <UserPlus className="w-2.5 h-2.5" />
+                                Add Member
+                              </button>
+                              <button
+                                onClick={() => setShowCreateSubGroup(group.id)}
+                                className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-all"
+                              >
+                                <Plus className="w-2.5 h-2.5" />
+                                New
+                              </button>
+                              <button
+                                onClick={() => handleCreateSubGroup(group.id)}
+                                disabled={creatingSubGroup === group.id}
+                                className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-all"
+                              >
+                                {creatingSubGroup === group.id ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <Sparkles className="w-2.5 h-2.5" />}
+                                AI suggest
+                              </button>
+                            </div>
                           </div>
 
                           {/* Existing sub-groups */}
