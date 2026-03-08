@@ -206,6 +206,60 @@ const SocialModeView = () => {
     setSubGroupInput((prev) => ({ ...prev, [groupId]: "" }));
   };
 
+  // Manual group creation
+  const handleManualCreateGroup = async () => {
+    if (!user || !newGroupTitle.trim()) return;
+    const { data, error } = await supabase
+      .from("idea_groups")
+      .insert({ title: newGroupTitle.trim(), description: newGroupDesc.trim() || null, user_id: user.id, session_id: activeSessionId! })
+      .select()
+      .single();
+    if (error) { toast.error("Failed to create group"); return; }
+    toast.success("Group created!");
+    setNewGroupTitle("");
+    setNewGroupDesc("");
+    setShowCreateGroup(false);
+    await loadGroups();
+  };
+
+  // Manual sub-group creation (direct DB insert, no AI)
+  const handleManualCreateSubGroup = async (groupId: string) => {
+    if (!user || !newSubGroupTitle.trim()) return;
+    const { data: sg, error } = await supabase
+      .from("sub_groups")
+      .insert({ group_id: groupId, created_by: user.id, title: newSubGroupTitle.trim(), description: newSubGroupDesc.trim() || null })
+      .select()
+      .single();
+    if (error) { toast.error("Failed to create sub-group"); return; }
+    // Add creator as member
+    await supabase.from("sub_group_members").upsert({ sub_group_id: sg.id, user_id: user.id }, { onConflict: "sub_group_id,user_id" });
+    toast.success("Sub-group created!");
+    setNewSubGroupTitle("");
+    setNewSubGroupDesc("");
+    setShowCreateSubGroup(null);
+    await loadSubGroups(groupId);
+  };
+
+  // Search members to add
+  const searchMembers = async (query: string) => {
+    setMemberSearch(query);
+    if (query.length < 2) { setMemberResults([]); return; }
+    const { data } = await supabase
+      .from("profiles")
+      .select("user_id, display_name, avatar_initials")
+      .ilike("display_name", `%${query}%`)
+      .limit(5);
+    setMemberResults((data || []) as any);
+  };
+
+  // Add member to group + sub-group
+  const addMemberToGroup = async (groupId: string, memberId: string) => {
+    await supabase.from("group_members").upsert({ group_id: groupId, user_id: memberId }, { onConflict: "group_id,user_id" });
+    toast.success("Member added to group!");
+    setMemberSearch("");
+    setMemberResults([]);
+  };
+
   useEffect(() => {
     loadSocialDumps();
     loadGroups();
