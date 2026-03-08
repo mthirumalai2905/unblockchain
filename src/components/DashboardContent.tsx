@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Brain, Loader2, PanelLeftClose, PanelLeft, Menu, Globe } from "lucide-react";
+import { Brain, Loader2, PanelLeftClose, PanelLeft, Menu, Globe, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/store/WorkspaceStore";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -26,6 +26,7 @@ const DashboardContent = () => {
   const {
     dumps, activeSection, isProcessing, showAIPanel, toggleAIPanel, selectedDumpId, loading, sessions, activeSessionId,
     sidebarCollapsed, toggleSidebar, thinkingSteps, showThinking, closeThinking, socialMode, toggleSocialMode, activeSubGroupId,
+    showChromeChat, toggleChromeChat,
   } = useWorkspace();
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -159,18 +160,33 @@ const DashboardContent = () => {
               <Globe className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">{socialMode ? "Social" : "Social"}</span>
             </button>
-            <button
-              onClick={toggleAIPanel}
-              className={cn(
-                "flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-md text-[11px] sm:text-[12px] font-medium border transition-all duration-150",
-                showAIPanel
-                  ? "bg-foreground text-background border-foreground"
-                  : "bg-transparent text-muted-foreground border-border hover:border-ring/50 hover:text-foreground"
-              )}
-            >
-              <Brain className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{showAIPanel ? "AI On" : "AI Off"}</span>
-            </button>
+            {socialMode ? (
+              <button
+                onClick={toggleChromeChat}
+                className={cn(
+                  "flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-md text-[11px] sm:text-[12px] font-medium border transition-all duration-150",
+                  showChromeChat
+                    ? "bg-foreground text-background border-foreground"
+                    : "bg-transparent text-muted-foreground border-border hover:border-ring/50 hover:text-foreground"
+                )}
+              >
+                <Bot className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Chrome</span>
+              </button>
+            ) : (
+              <button
+                onClick={toggleAIPanel}
+                className={cn(
+                  "flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-md text-[11px] sm:text-[12px] font-medium border transition-all duration-150",
+                  showAIPanel
+                    ? "bg-foreground text-background border-foreground"
+                    : "bg-transparent text-muted-foreground border-border hover:border-ring/50 hover:text-foreground"
+                )}
+              >
+                <Brain className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">{showAIPanel ? "AI On" : "AI Off"}</span>
+              </button>
+            )}
           </div>
         </header>
 
