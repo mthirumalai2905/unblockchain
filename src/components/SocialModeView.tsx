@@ -679,6 +679,114 @@ const SocialModeView = () => {
           </div>
         )}
       </div>
+
+      {/* Create Group Dialog */}
+      <Dialog open={showCreateGroup} onOpenChange={setShowCreateGroup}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-[15px]">Create Group</DialogTitle>
+            <DialogDescription className="text-[12px]">Create your own idea group manually.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 pt-2">
+            <input
+              value={newGroupTitle}
+              onChange={(e) => setNewGroupTitle(e.target.value)}
+              placeholder="Group title..."
+              className="w-full text-[13px] px-3 py-2 rounded-md bg-background border border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-ring/50"
+            />
+            <textarea
+              value={newGroupDesc}
+              onChange={(e) => setNewGroupDesc(e.target.value)}
+              placeholder="Description (optional)..."
+              rows={2}
+              className="w-full text-[13px] px-3 py-2 rounded-md bg-background border border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-ring/50 resize-none"
+            />
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setShowCreateGroup(false)} className="px-3 py-1.5 rounded-md text-[12px] text-muted-foreground hover:bg-accent transition-colors">Cancel</button>
+              <button
+                onClick={handleManualCreateGroup}
+                disabled={!newGroupTitle.trim()}
+                className="px-4 py-1.5 rounded-md text-[12px] font-medium bg-foreground text-background hover:opacity-80 disabled:opacity-30 transition-opacity"
+              >
+                Create
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Sub-Group Dialog */}
+      <Dialog open={!!showCreateSubGroup} onOpenChange={(open) => !open && setShowCreateSubGroup(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-[15px]">Create Sub-group</DialogTitle>
+            <DialogDescription className="text-[12px]">Create a sub-group manually within this group.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 pt-2">
+            <input
+              value={newSubGroupTitle}
+              onChange={(e) => setNewSubGroupTitle(e.target.value)}
+              placeholder="Sub-group title..."
+              className="w-full text-[13px] px-3 py-2 rounded-md bg-background border border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-ring/50"
+            />
+            <textarea
+              value={newSubGroupDesc}
+              onChange={(e) => setNewSubGroupDesc(e.target.value)}
+              placeholder="Description (optional)..."
+              rows={2}
+              className="w-full text-[13px] px-3 py-2 rounded-md bg-background border border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-ring/50 resize-none"
+            />
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setShowCreateSubGroup(null)} className="px-3 py-1.5 rounded-md text-[12px] text-muted-foreground hover:bg-accent transition-colors">Cancel</button>
+              <button
+                onClick={() => showCreateSubGroup && handleManualCreateSubGroup(showCreateSubGroup)}
+                disabled={!newSubGroupTitle.trim()}
+                className="px-4 py-1.5 rounded-md text-[12px] font-medium bg-foreground text-background hover:opacity-80 disabled:opacity-30 transition-opacity"
+              >
+                Create
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Member to Group Dialog */}
+      <Dialog open={!!showAddMember} onOpenChange={(open) => !open && setShowAddMember(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-[15px] flex items-center gap-2"><UserPlus className="w-4 h-4" /> Add Member</DialogTitle>
+            <DialogDescription className="text-[12px]">Search users to add to this group.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 pt-2">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <input
+                value={memberSearch}
+                onChange={(e) => searchMembers(e.target.value)}
+                placeholder="Search by name..."
+                className="w-full text-[13px] pl-8 pr-3 py-2 rounded-md bg-background border border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-ring/50"
+              />
+            </div>
+            <div className="space-y-1 max-h-48 overflow-y-auto">
+              {memberResults.map((m) => (
+                <button
+                  key={m.user_id}
+                  onClick={() => showAddMember && addMemberToGroup(showAddMember, m.user_id)}
+                  className="w-full flex items-center gap-2.5 p-2 rounded-md hover:bg-accent/50 transition-colors text-left"
+                >
+                  <div className="w-7 h-7 rounded-full bg-accent flex items-center justify-center text-[10px] font-semibold text-muted-foreground">
+                    {m.avatar_initials || "??"}
+                  </div>
+                  <span className="text-[12px] font-medium text-foreground">{m.display_name || "User"}</span>
+                </button>
+              ))}
+              {memberSearch.length >= 2 && memberResults.length === 0 && (
+                <p className="text-[11px] text-muted-foreground text-center py-4">No users found</p>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
