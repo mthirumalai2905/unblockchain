@@ -197,13 +197,13 @@ IMPORTANT: When creating groups, check if any existing groups already cover the 
       });
     }
 
-    // Delete existing global idea groups created by this user to rebuild
-    await supabase.from("idea_groups").delete().eq("user_id", user_id);
-
-    // Create idea groups
+    // Create NEW idea groups only (no longer deleting existing ones)
     const createdGroups = [];
     if (result.groups?.length > 0) {
       for (const group of result.groups) {
+        // Skip if a group with similar title already exists
+        if (existingGroupTitles.some((t: string) => t.toLowerCase() === group.title.toLowerCase())) continue;
+
         const firstDumpIdx = group.dump_indices?.[0];
         const refSessionId = firstDumpIdx && firstDumpIdx >= 1 && firstDumpIdx <= socialDumps.length
           ? socialDumps[firstDumpIdx - 1].session_id
