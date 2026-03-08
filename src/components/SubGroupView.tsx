@@ -663,54 +663,75 @@ const SubGroupView = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="overflow-auto cf-scrollbar p-4 space-y-4"
+              className="overflow-auto cf-scrollbar h-full"
+              style={{
+                backgroundImage: "radial-gradient(circle, hsl(0 0% 20%) 1px, transparent 1px)",
+                backgroundSize: "20px 20px",
+              }}
             >
-              <div className="flex items-center justify-between">
-                <h3 className="text-[13px] font-semibold text-foreground">Roadmaps</h3>
-                <button
-                  onClick={() => generateContent("roadmap")}
-                  disabled={generating}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium bg-foreground text-background hover:opacity-90 disabled:opacity-50 transition-opacity"
-                >
-                  {generating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-                  Generate Roadmap
-                </button>
-              </div>
-              {roadmaps.length === 0 ? (
-                <div className="text-center py-12">
-                  <MapIcon className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-                  <p className="text-[12px] text-muted-foreground">No roadmaps yet. Generate one from your group's context.</p>
+              <div className="p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[13px] font-semibold text-foreground">Roadmaps</h3>
+                  <button
+                    onClick={() => generateContent("roadmap")}
+                    disabled={generating}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium bg-foreground text-background hover:opacity-90 disabled:opacity-50 transition-opacity"
+                  >
+                    {generating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                    Generate Roadmap
+                  </button>
                 </div>
-              ) : (
-                roadmaps.map((rm) => (
-                  <div key={rm.id} className="space-y-3">
-                    <h4 className="text-[14px] font-semibold text-foreground">{rm.title}</h4>
-                    <div className="relative pl-6 space-y-4">
-                      <div className="absolute left-2 top-0 bottom-0 w-px bg-border" />
-                      {(rm.phases_json || []).map((phase, i) => (
-                        <div key={i} className="relative">
-                          <div className="absolute -left-[18px] top-1 w-2.5 h-2.5 rounded-full bg-primary border-2 border-background" />
-                          <div className="rounded-lg bg-card border border-border p-3">
-                            <div className="flex items-center justify-between mb-1">
-                              <h5 className="text-[12px] font-semibold text-foreground">{phase.title}</h5>
-                              <span className="text-[10px] font-mono text-muted-foreground">{phase.duration}</span>
-                            </div>
-                            <p className="text-[11px] text-muted-foreground mb-2">{phase.description}</p>
-                            <div className="space-y-1">
-                              {phase.deliverables?.map((d, j) => (
-                                <div key={j} className="flex items-center gap-1.5">
-                                  <ChevronRight className="w-2.5 h-2.5 text-primary shrink-0" />
-                                  <span className="text-[11px] text-foreground/70">{d}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                {roadmaps.length === 0 ? (
+                  <div className="text-center py-12">
+                    <MapIcon className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+                    <p className="text-[12px] text-muted-foreground">No roadmaps yet. Generate one from your group's context.</p>
                   </div>
-                ))
-              )}
+                ) : (
+                  roadmaps.map((rm) => (
+                    <div key={rm.id} className="space-y-3">
+                      <h4 className="text-[14px] font-semibold text-foreground">{rm.title}</h4>
+                      <div className="space-y-1">
+                        {(rm.phases_json || []).map((phase, i) => (
+                          <motion.div
+                            key={i}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: i * 0.08 }}
+                          >
+                            <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card/90 backdrop-blur-sm hover:shadow-md transition-all">
+                              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                                <MapIcon className="w-4 h-4 text-primary" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[12px] font-semibold text-foreground">{phase.title}</span>
+                                  <span className="text-[10px] font-mono text-muted-foreground px-1.5 py-0.5 rounded bg-accent">{phase.duration}</span>
+                                </div>
+                                <p className="text-[11px] text-muted-foreground mt-0.5">{phase.description}</p>
+                                {phase.deliverables && phase.deliverables.length > 0 && (
+                                  <div className="mt-2 ml-1 pl-3 border-l-2 border-border space-y-1">
+                                    {phase.deliverables.map((d, j) => (
+                                      <div key={j} className="flex items-center gap-1.5">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-primary/50 shrink-0" />
+                                        <span className="text-[11px] text-foreground/70">{d}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            {i < (rm.phases_json || []).length - 1 && (
+                              <div className="flex justify-center py-0.5">
+                                <div className="w-0.5 h-3 bg-border" />
+                              </div>
+                            )}
+                          </motion.div>
+                        ))}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             </motion.div>
           )}
 
