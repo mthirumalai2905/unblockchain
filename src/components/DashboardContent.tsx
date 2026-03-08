@@ -68,7 +68,6 @@ const DashboardContent = () => {
       case "draft":
       case "roadmap": return null;
       case "archive": return <ArchiveView />;
-      case "social": return <SocialModeView />;
       case "dumps":
       default:
         return (
