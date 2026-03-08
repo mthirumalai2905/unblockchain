@@ -418,6 +418,38 @@ export type Database = {
         }
         Relationships: []
       }
+      sub_group_delete_votes: {
+        Row: {
+          created_at: string
+          id: string
+          sub_group_id: string
+          user_id: string
+          vote: boolean
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          sub_group_id: string
+          user_id: string
+          vote?: boolean
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          sub_group_id?: string
+          user_id?: string
+          vote?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sub_group_delete_votes_sub_group_id_fkey"
+            columns: ["sub_group_id"]
+            isOneToOne: false
+            referencedRelation: "sub_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sub_group_drafts: {
         Row: {
           content: string
@@ -559,6 +591,7 @@ export type Database = {
           description: string | null
           group_id: string
           id: string
+          last_activity_at: string
           title: string
         }
         Insert: {
@@ -567,6 +600,7 @@ export type Database = {
           description?: string | null
           group_id: string
           id?: string
+          last_activity_at?: string
           title: string
         }
         Update: {
@@ -575,6 +609,7 @@ export type Database = {
           description?: string | null
           group_id?: string
           id?: string
+          last_activity_at?: string
           title?: string
         }
         Relationships: [
