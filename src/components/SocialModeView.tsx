@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import dumpstashBot from "@/assets/dumpstash-ai-bot.png";
+import UserAvatar from "@/components/UserAvatar";
 import {
   Dialog,
   DialogContent,
@@ -858,12 +859,10 @@ const SocialModeView = () => {
                             <div className="space-y-2">
                               {groupDumps.map((dump) => (
                                 <div key={dump.id} className="flex items-start gap-2 p-2.5 rounded-md bg-accent/30">
-                                  <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-[9px] font-semibold text-muted-foreground shrink-0">
-                                    {dump.avatar}
-                                  </div>
+                                  <UserAvatar avatarUrl={dump.avatar_url} initials={dump.avatar} size="sm" />
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-1.5">
-                                      <span className="text-[12px] font-medium text-foreground">{dump.author}</span>
+                                      {!dump.avatar_url && <span className="text-[12px] font-medium text-foreground">{dump.author}</span>}
                                       {dump.ai_label && (
                                         <span className="inline-flex items-center gap-0.5 px-1.5 py-[1px] rounded text-[9px] font-mono bg-primary/10 text-primary">
                                           <Hash className="w-2 h-2" />
@@ -882,11 +881,9 @@ const SocialModeView = () => {
                               <div className="space-y-2 pt-2 border-t border-border/50">
                                 {group.comments.map((comment) => (
                                   <div key={comment.id} className="flex items-start gap-2">
-                                    <div className="w-5 h-5 rounded-full bg-accent flex items-center justify-center text-[8px] font-semibold text-muted-foreground shrink-0">
-                                      {comment.avatar}
-                                    </div>
+                                    <UserAvatar avatarUrl={comment.avatar_url} initials={comment.avatar} size="xs" />
                                     <div>
-                                      <span className="text-[11px] font-medium text-foreground">{comment.author}</span>
+                                      {!comment.avatar_url && <span className="text-[11px] font-medium text-foreground">{comment.author}</span>}
                                       <p className="text-[11px] text-foreground/70">{comment.content}</p>
                                     </div>
                                   </div>
@@ -1020,12 +1017,10 @@ const SocialModeView = () => {
             className="group relative p-3 sm:p-4 rounded-lg bg-card border border-border hover:border-ring/30 transition-all duration-150"
           >
             <div className="flex items-start gap-2 sm:gap-3">
-              <div className="w-7 h-7 rounded-full bg-accent flex items-center justify-center text-[10px] font-semibold text-muted-foreground shrink-0">
-                {dump.avatar}
-              </div>
+              <UserAvatar avatarUrl={dump.avatar_url} initials={dump.avatar} size="md" />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                  <span className="text-[13px] font-medium text-foreground">{dump.author}</span>
+                  {!dump.avatar_url && <span className="text-[13px] font-medium text-foreground">{dump.author}</span>}
                   <span className="text-[11px] text-muted-foreground font-mono">
                     {new Date(dump.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })} · {new Date(dump.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>

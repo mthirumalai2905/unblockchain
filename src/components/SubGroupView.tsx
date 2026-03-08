@@ -522,14 +522,12 @@ const SubGroupView = () => {
                           </div>
                         ) : (
                           <>
-                            <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-[9px] font-semibold text-muted-foreground shrink-0">
-                              {msg.avatar}
-                            </div>
+                            <UserAvatar avatarUrl={msg.avatar_url} initials={msg.avatar} size="sm" />
                             <div className={cn(
                               "max-w-[75%] rounded-lg px-3 py-2",
                               isOwn ? "bg-foreground text-background" : "bg-accent"
                             )}>
-                              {!isOwn && <p className="text-[10px] font-medium mb-0.5 opacity-70">{msg.author}</p>}
+                              {!isOwn && !msg.avatar_url && <p className="text-[10px] font-medium mb-0.5 opacity-70">{msg.author}</p>}
                               <p className="text-[12px] leading-relaxed">{msg.content}</p>
                               <p className={cn("text-[9px] mt-1 opacity-50", isOwn ? "text-right" : "")}>
                                 {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
