@@ -437,13 +437,21 @@ const SocialModeView = () => {
       </motion.div>
 
       {/* Idea Groups */}
-      {ideaGroups.length > 0 && (
-        <div className="space-y-3">
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4 text-primary" />
             <h3 className="text-[13px] font-semibold text-foreground">Idea Groups</h3>
             <span className="text-[11px] text-muted-foreground font-mono">{ideaGroups.length} groups</span>
           </div>
+          <button
+            onClick={() => setShowCreateGroup(true)}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-[11px] font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-all"
+          >
+            <Plus className="w-3 h-3" />
+            Create Group
+          </button>
+        </div>
           {ideaGroups.map((group) => {
             const isExpanded = expandedGroup === group.id;
             const groupDumps = getDumpsForGroup(group.dump_ids);
