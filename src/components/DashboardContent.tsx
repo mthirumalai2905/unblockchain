@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Brain, Loader2, PanelLeftClose, PanelLeft, Menu } from "lucide-react";
+import { Brain, Loader2, PanelLeftClose, PanelLeft, Menu, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/store/WorkspaceStore";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -24,7 +24,7 @@ import SocialModeView from "@/components/SocialModeView";
 const DashboardContent = () => {
   const {
     dumps, activeSection, isProcessing, showAIPanel, toggleAIPanel, selectedDumpId, loading, sessions, activeSessionId,
-    sidebarCollapsed, toggleSidebar, thinkingSteps, showThinking, closeThinking,
+    sidebarCollapsed, toggleSidebar, thinkingSteps, showThinking, closeThinking, socialMode, toggleSocialMode,
   } = useWorkspace();
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
