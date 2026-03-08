@@ -168,16 +168,10 @@ const SocialModeView = () => {
     }));
   }, [user]);
 
-  const loadThemeGroups = useCallback(async () => {
-    if (!user) return;
-    const { data } = await supabase
-      .from("theme_groups")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (data) {
-      setThemeGroups(data.map((t: any) => ({ id: t.id, title: t.title, description: t.description, created_at: t.created_at })));
-    }
-  }, [user]);
+  // Derive theme groups (AI-created) and manual groups from ideaGroups
+  const themeGroups = ideaGroups.filter((g) => g.is_ai_created);
+  const manualGroups = ideaGroups.filter((g) => !g.is_ai_created);
+
 
   const loadSubGroups = useCallback(async (groupId: string) => {
     const { data } = await supabase
