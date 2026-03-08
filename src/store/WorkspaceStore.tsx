@@ -79,6 +79,7 @@ interface WorkspaceState {
   showThinking: boolean;
   socialMode: boolean;
   activeSubGroupId: string | null;
+  showChromeChat: boolean;
 }
 
 interface WorkspaceActions {
