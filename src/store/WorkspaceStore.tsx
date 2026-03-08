@@ -79,6 +79,7 @@ interface WorkspaceState {
   showThinking: boolean;
   socialMode: boolean;
   activeSubGroupId: string | null;
+  showChromeChat: boolean;
 }
 
 interface WorkspaceActions {
@@ -104,6 +105,7 @@ interface WorkspaceActions {
   closeThinking: () => void;
   toggleSocialMode: () => void;
   setActiveSubGroupId: (id: string | null) => void;
+  toggleChromeChat: () => void;
 }
 
 const WorkspaceContext = createContext<(WorkspaceState & WorkspaceActions) | null>(null);
@@ -488,6 +490,8 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const toggleSidebar = useCallback(() => setSidebarCollapsed((p) => !p), []);
   const closeThinking = useCallback(() => setShowThinking(false), []);
   const toggleSocialMode = useCallback(() => setSocialMode((p) => !p), []);
+  const [showChromeChat, setShowChromeChat] = useState(false);
+  const toggleChromeChat = useCallback(() => setShowChromeChat((p) => !p), []);
 
   const getDumpsForTheme = useCallback((themeId: string) => {
     const theme = themes.find((t) => t.id === themeId);
@@ -508,13 +512,13 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const value = useMemo(() => ({
     sessions, activeSessionId, dumps, themes, actions, questions,
     activeSection, selectedThemeId, selectedDumpId, isProcessing, showAIPanel, loading,
-    sidebarCollapsed, thinkingSteps, showThinking, socialMode, activeSubGroupId,
+    sidebarCollapsed, thinkingSteps, showThinking, socialMode, activeSubGroupId, showChromeChat,
     addDump, createSession, deleteSession, switchSession, renameSession, archiveSession, restoreSession,
     setActiveSection, selectTheme, selectDump,
     toggleAction, voteQuestion, toggleAIPanel, toggleSidebar, closeThinking, toggleSocialMode,
     getDumpsForTheme, getDumpsForAction, getThemesForDump, refreshSessionData, processAllDumps,
-    setActiveSubGroupId,
-  }), [sessions, activeSessionId, dumps, themes, actions, questions, activeSection, selectedThemeId, selectedDumpId, isProcessing, showAIPanel, loading, sidebarCollapsed, thinkingSteps, showThinking, socialMode, activeSubGroupId, addDump, createSession, deleteSession, switchSession, renameSession, archiveSession, restoreSession, toggleAction, voteQuestion, toggleAIPanel, toggleSidebar, closeThinking, toggleSocialMode, getDumpsForTheme, getDumpsForAction, getThemesForDump, refreshSessionData, processAllDumps, setActiveSubGroupId]);
+    setActiveSubGroupId, toggleChromeChat,
+  }), [sessions, activeSessionId, dumps, themes, actions, questions, activeSection, selectedThemeId, selectedDumpId, isProcessing, showAIPanel, loading, sidebarCollapsed, thinkingSteps, showThinking, socialMode, activeSubGroupId, showChromeChat, addDump, createSession, deleteSession, switchSession, renameSession, archiveSession, restoreSession, toggleAction, voteQuestion, toggleAIPanel, toggleSidebar, closeThinking, toggleSocialMode, getDumpsForTheme, getDumpsForAction, getThemesForDump, refreshSessionData, processAllDumps, setActiveSubGroupId, toggleChromeChat]);
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
 };

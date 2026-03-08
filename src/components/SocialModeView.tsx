@@ -59,7 +59,7 @@ interface SubGroup {
 }
 
 const SocialModeView = () => {
-  const { activeSessionId, setActiveSubGroupId } = useWorkspace();
+  const { activeSessionId, setActiveSubGroupId, showChromeChat, toggleChromeChat } = useWorkspace();
   const { user } = useAuth();
   const [value, setValue] = useState("");
   const [socialDumps, setSocialDumps] = useState<SocialDump[]>([]);
@@ -83,7 +83,7 @@ const SocialModeView = () => {
   const [showAddMember, setShowAddMember] = useState<string | null>(null);
   const [memberSearch, setMemberSearch] = useState("");
   const [memberResults, setMemberResults] = useState<{ user_id: string; display_name: string; avatar_initials: string }[]>([]);
-  const [showAIChat, setShowAIChat] = useState(false);
+  
   const [aiMessages, setAiMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
   const [aiInput, setAiInput] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
@@ -1091,40 +1091,31 @@ const SocialModeView = () => {
           </div>
         </DialogContent>
       </Dialog>
-      {/* Floating AI Bot Button */}
-      <motion.button
-        onClick={() => setShowAIChat((p) => !p)}
-        className={cn(
-          "fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105",
-          showAIChat ? "bg-destructive text-destructive-foreground" : "bg-primary text-primary-foreground"
-        )}
-        whileTap={{ scale: 0.9 }}
-      >
-        {showAIChat ? <X className="w-5 h-5" /> : <img src={dumpstashBot} alt="DumpStash AI" className="w-10 h-10 rounded-full" />}
-      </motion.button>
-
-      {/* AI Chat Panel */}
+      {/* Chrome AI Chat Panel */}
       <AnimatePresence>
-        {showAIChat && (
+        {showChromeChat && (
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-24 right-6 z-50 w-[380px] max-h-[500px] rounded-xl border border-border bg-card shadow-2xl flex flex-col overflow-hidden"
+            className="fixed bottom-6 right-6 z-50 w-[400px] max-h-[540px] rounded-xl border border-border bg-card shadow-2xl flex flex-col overflow-hidden"
           >
             <div className="flex items-center gap-3 p-3 border-b border-border bg-accent/30">
-              <img src={dumpstashBot} alt="DumpStash AI" className="w-8 h-8 rounded-full" />
-              <div>
-                <h4 className="text-[13px] font-semibold text-foreground">DumpStash AI</h4>
-                <p className="text-[10px] text-muted-foreground">Ask me to create groups, sub-groups & more</p>
+              <img src={dumpstashBot} alt="Chrome AI" className="w-8 h-8 rounded-full" />
+              <div className="flex-1">
+                <h4 className="text-[13px] font-semibold text-foreground">Chrome</h4>
+                <p className="text-[10px] text-muted-foreground">DumpStash AI assistant — groups, sub-groups & more</p>
               </div>
+              <button onClick={toggleChromeChat} className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
+                <X className="w-4 h-4" />
+              </button>
             </div>
             <div className="flex-1 overflow-y-auto p-3 space-y-3 min-h-[200px] max-h-[340px]">
               {aiMessages.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <img src={dumpstashBot} alt="DumpStash AI" className="w-16 h-16 mb-3 opacity-60" />
-                  <p className="text-[12px] text-muted-foreground">Hey! I'm DumpStash AI 🤖</p>
+                  <img src={dumpstashBot} alt="Chrome" className="w-16 h-16 mb-3 opacity-60" />
+                  <p className="text-[12px] text-muted-foreground">Hey! I'm Chrome 🤖</p>
                   <p className="text-[11px] text-muted-foreground/70 mt-1 max-w-[260px]">
                     Try: "Create a group called Web3 Gaming with Minato and thiru, and add a sub-group called Token Design"
                   </p>
@@ -1164,7 +1155,7 @@ const SocialModeView = () => {
                 value={aiInput}
                 onChange={(e) => setAiInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendAIMessage(); } }}
-                placeholder="Ask DumpStash AI..."
+                placeholder="Ask Chrome..."
                 className="flex-1 text-[12px] px-3 py-2 rounded-lg bg-background border border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-ring/50"
               />
               <button
