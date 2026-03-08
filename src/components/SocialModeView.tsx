@@ -139,7 +139,7 @@ const SocialModeView = () => {
     if (dumps) {
       const userIds = [...new Set(dumps.map((d: any) => d.user_id))];
       const { data: profiles } = userIds.length > 0
-        ? await supabase.from("profiles").select("user_id, display_name, avatar_initials").in("user_id", userIds)
+        ? await supabase.from("profiles").select("user_id, display_name, avatar_initials, avatar_url").in("user_id", userIds)
         : { data: [] };
       const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
 
@@ -152,6 +152,7 @@ const SocialModeView = () => {
           created_at: d.created_at,
           author: profile?.display_name || "User",
           avatar: profile?.avatar_initials || "??",
+          avatar_url: profile?.avatar_url || null,
         };
       }));
     }
@@ -177,7 +178,7 @@ const SocialModeView = () => {
     // Get commenter profiles
     const commentUserIds = [...new Set((commentsRes.data || []).map((c: any) => c.user_id))];
     const { data: commentProfiles } = commentUserIds.length > 0
-      ? await supabase.from("profiles").select("user_id, display_name, avatar_initials").in("user_id", commentUserIds)
+      ? await supabase.from("profiles").select("user_id, display_name, avatar_initials, avatar_url").in("user_id", commentUserIds)
       : { data: [] };
     const commentProfileMap = new Map((commentProfiles || []).map((p: any) => [p.user_id, p]));
 
@@ -202,6 +203,7 @@ const SocialModeView = () => {
             user_id: c.user_id,
             author: profile?.display_name || "User",
             avatar: profile?.avatar_initials || "??",
+            avatar_url: profile?.avatar_url || null,
             created_at: c.created_at,
           };
         }),
