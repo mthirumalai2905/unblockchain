@@ -33,6 +33,7 @@ interface IdeaGroup {
   votes: number;
   hasVoted: boolean;
   comments: GroupComment[];
+  is_ai_created: boolean;
 }
 
 interface GroupComment {
@@ -156,6 +157,7 @@ const SocialModeView = () => {
         id: g.id,
         title: g.title,
         description: g.description,
+        is_ai_created: g.is_ai_created || false,
         dump_ids: links.map((l: any) => l.dump_id),
         votes: votes.length,
         hasVoted: votes.some((v: any) => v.user_id === user.id),
