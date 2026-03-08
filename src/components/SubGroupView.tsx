@@ -690,6 +690,61 @@ const SubGroupView = () => {
               )}
             </motion.div>
           )}
+
+          {activeTab === "members" && (
+            <motion.div
+              key="members"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="overflow-auto cf-scrollbar p-4 space-y-4"
+            >
+              <h3 className="text-[13px] font-semibold text-foreground">Members ({members.length})</h3>
+
+              {/* Search & Add */}
+              <div className="space-y-2">
+                <input
+                  value={searchQuery}
+                  onChange={(e) => { setSearchQuery(e.target.value); searchUsers(e.target.value); }}
+                  placeholder="Search users to add..."
+                  className="w-full text-[13px] px-3 py-2 rounded-lg bg-background border border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-ring/50"
+                />
+                {searchResults.length > 0 && (
+                  <div className="rounded-lg border border-border bg-card overflow-hidden">
+                    {searchResults.map((p) => (
+                      <button
+                        key={p.user_id}
+                        onClick={() => addMember(p.user_id)}
+                        disabled={addingMember}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-accent transition-colors text-left disabled:opacity-50"
+                      >
+                        <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-[9px] font-semibold text-muted-foreground">
+                          {p.avatar_initials}
+                        </div>
+                        <span className="text-[12px] font-medium text-foreground">{p.display_name}</span>
+                        <span className="ml-auto text-[10px] text-primary font-medium">+ Add</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Current members */}
+              <div className="space-y-1">
+                {members.map((m) => (
+                  <div key={m.user_id} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-accent/30 transition-colors">
+                    <div className="w-7 h-7 rounded-full bg-accent flex items-center justify-center text-[10px] font-semibold text-muted-foreground">
+                      {m.avatar_initials}
+                    </div>
+                    <span className="text-[13px] font-medium text-foreground">{m.display_name}</span>
+                    {m.user_id === user?.id && (
+                      <span className="text-[9px] font-mono text-muted-foreground bg-accent px-1.5 py-0.5 rounded">you</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
         </AnimatePresence>
       </div>
     </div>
