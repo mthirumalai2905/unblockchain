@@ -23,6 +23,7 @@ interface SocialDump {
   created_at: string;
   author: string;
   avatar: string;
+  avatar_url: string | null;
 }
 
 interface IdeaGroup {
@@ -43,6 +44,7 @@ interface GroupComment {
   user_id: string;
   author: string;
   avatar: string;
+  avatar_url: string | null;
   created_at: string;
 }
 

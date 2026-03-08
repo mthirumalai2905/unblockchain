@@ -20,6 +20,7 @@ interface MemberInfo {
   user_id: string;
   display_name: string;
   avatar_initials: string;
+  avatar_url: string | null;
 }
 
 interface Message {
@@ -28,6 +29,7 @@ interface Message {
   user_id: string;
   author: string;
   avatar: string;
+  avatar_url: string | null;
   created_at: string;
 }
 
