@@ -14,7 +14,13 @@ import ReactMarkdown from "react-markdown";
 
 const DUMPSTASH_AI_ID = "00000000-0000-0000-0000-000000000001";
 
-type SubTab = "chat" | "timeline" | "draft" | "roadmap";
+type SubTab = "chat" | "timeline" | "draft" | "roadmap" | "members";
+
+interface MemberInfo {
+  user_id: string;
+  display_name: string;
+  avatar_initials: string;
+}
 
 interface Message {
   id: string;
@@ -68,6 +74,10 @@ const SubGroupView = () => {
   const [generating, setGenerating] = useState(false);
   const [deleteVotes, setDeleteVotes] = useState<{ votes: number; total: number; hasVoted: boolean }>({ votes: 0, total: 0, hasVoted: false });
   const [votingInProgress, setVotingInProgress] = useState(false);
+  const [members, setMembers] = useState<MemberInfo[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<MemberInfo[]>([]);
+  const [addingMember, setAddingMember] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const loadSubGroup = useCallback(async () => {
@@ -164,13 +174,67 @@ const SubGroupView = () => {
     });
   }, [activeSubGroupId, user]);
 
+  const loadMembers = useCallback(async () => {
+    if (!activeSubGroupId) return;
+    const { data: memberLinks } = await supabase
+      .from("sub_group_members")
+      .select("user_id")
+      .eq("sub_group_id", activeSubGroupId);
+    if (memberLinks && memberLinks.length > 0) {
+      const userIds = memberLinks.map((m: any) => m.user_id);
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, display_name, avatar_initials")
+        .in("user_id", userIds);
+      setMembers((profiles || []) as MemberInfo[]);
+    } else {
+      setMembers([]);
+    }
+  }, [activeSubGroupId]);
+
+  const searchUsers = useCallback(async (query: string) => {
+    if (!query.trim()) { setSearchResults([]); return; }
+    const { data } = await supabase
+      .from("profiles")
+      .select("user_id, display_name, avatar_initials")
+      .ilike("display_name", `%${query}%`)
+      .limit(5);
+    // Filter out existing members
+    const memberIds = new Set(members.map((m) => m.user_id));
+    setSearchResults(((data || []) as MemberInfo[]).filter((p) => !memberIds.has(p.user_id)));
+  }, [members]);
+
+  const addMember = async (userId: string) => {
+    if (!activeSubGroupId || !subGroup) return;
+    setAddingMember(true);
+    // First ensure they're a group member too
+    const { error: gmErr } = await supabase
+      .from("group_members")
+      .upsert({ group_id: subGroup.group_id, user_id: userId }, { onConflict: "group_id,user_id" });
+    if (gmErr) console.warn("group_members upsert:", gmErr.message);
+
+    const { error } = await supabase
+      .from("sub_group_members")
+      .upsert({ sub_group_id: activeSubGroupId, user_id: userId }, { onConflict: "sub_group_id,user_id" });
+    if (error) {
+      toast.error("Failed to add member");
+    } else {
+      toast.success("Member added!");
+      setSearchQuery("");
+      setSearchResults([]);
+      await Promise.all([loadMembers(), loadSubGroup()]);
+    }
+    setAddingMember(false);
+  };
+
   useEffect(() => {
     loadSubGroup();
     loadMessages();
     loadDrafts();
     loadRoadmaps();
     loadDeleteVotes();
-  }, [loadSubGroup, loadMessages, loadDrafts, loadRoadmaps, loadDeleteVotes]);
+    loadMembers();
+  }, [loadSubGroup, loadMessages, loadDrafts, loadRoadmaps, loadDeleteVotes, loadMembers]);
 
   // Realtime chat subscription
   useEffect(() => {
@@ -327,6 +391,7 @@ const SubGroupView = () => {
     { id: "timeline", label: "Timeline", icon: Clock },
     { id: "draft", label: "Draft PRD", icon: FileText },
     { id: "roadmap", label: "Roadmap", icon: MapIcon },
+    { id: "members", label: "Members", icon: Users },
   ];
 
   return (
@@ -623,6 +688,61 @@ const SubGroupView = () => {
                   </div>
                 ))
               )}
+            </motion.div>
+          )}
+
+          {activeTab === "members" && (
+            <motion.div
+              key="members"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="overflow-auto cf-scrollbar p-4 space-y-4"
+            >
+              <h3 className="text-[13px] font-semibold text-foreground">Members ({members.length})</h3>
+
+              {/* Search & Add */}
+              <div className="space-y-2">
+                <input
+                  value={searchQuery}
+                  onChange={(e) => { setSearchQuery(e.target.value); searchUsers(e.target.value); }}
+                  placeholder="Search users to add..."
+                  className="w-full text-[13px] px-3 py-2 rounded-lg bg-background border border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-ring/50"
+                />
+                {searchResults.length > 0 && (
+                  <div className="rounded-lg border border-border bg-card overflow-hidden">
+                    {searchResults.map((p) => (
+                      <button
+                        key={p.user_id}
+                        onClick={() => addMember(p.user_id)}
+                        disabled={addingMember}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-accent transition-colors text-left disabled:opacity-50"
+                      >
+                        <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-[9px] font-semibold text-muted-foreground">
+                          {p.avatar_initials}
+                        </div>
+                        <span className="text-[12px] font-medium text-foreground">{p.display_name}</span>
+                        <span className="ml-auto text-[10px] text-primary font-medium">+ Add</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Current members */}
+              <div className="space-y-1">
+                {members.map((m) => (
+                  <div key={m.user_id} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-accent/30 transition-colors">
+                    <div className="w-7 h-7 rounded-full bg-accent flex items-center justify-center text-[10px] font-semibold text-muted-foreground">
+                      {m.avatar_initials}
+                    </div>
+                    <span className="text-[13px] font-medium text-foreground">{m.display_name}</span>
+                    {m.user_id === user?.id && (
+                      <span className="text-[9px] font-mono text-muted-foreground bg-accent px-1.5 py-0.5 rounded">you</span>
+                    )}
+                  </div>
+                ))}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

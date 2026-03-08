@@ -29,6 +29,13 @@ serve(async (req) => {
       throw new Error("No social dumps found");
     }
 
+    // Get existing groups to avoid recreating them
+    const { data: existingGroups } = await supabase
+      .from("idea_groups")
+      .select("id, title")
+      .order("created_at", { ascending: false });
+    const existingGroupTitles = (existingGroups || []).map((g: any) => g.title);
+
     const dumpsText = socialDumps.map((d: any, i: number) => `[${i + 1}] ${d.content}`).join("\n");
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -63,11 +70,13 @@ STEP 3 - GROUP (only if enough context): Group similar dumps together. Each grou
 - A dump can belong to multiple groups
 - Create groups only when 2+ dumps share a meaningful connection
 
-Respond via the tool call.`
+Respond via the tool call.
+
+IMPORTANT: When creating groups, check if any existing groups already cover the same topic. Only create NEW groups for topics not already covered. Do NOT recreate groups that already exist.`
           },
           {
             role: "user",
-            content: `Analyze these ${socialDumps.length} social dumps:\n${dumpsText}`
+            content: `Analyze these ${socialDumps.length} social dumps:\n${dumpsText}\n\nExisting groups (do NOT recreate these): ${existingGroupTitles.join(", ") || "none"}`
           }
         ],
         temperature: 0.3,
@@ -188,13 +197,13 @@ Respond via the tool call.`
       });
     }
 
-    // Delete existing global idea groups created by this user to rebuild
-    await supabase.from("idea_groups").delete().eq("user_id", user_id);
-
-    // Create idea groups
+    // Create NEW idea groups only (no longer deleting existing ones)
     const createdGroups = [];
     if (result.groups?.length > 0) {
       for (const group of result.groups) {
+        // Skip if a group with similar title already exists
+        if (existingGroupTitles.some((t: string) => t.toLowerCase() === group.title.toLowerCase())) continue;
+
         const firstDumpIdx = group.dump_indices?.[0];
         const refSessionId = firstDumpIdx && firstDumpIdx >= 1 && firstDumpIdx <= socialDumps.length
           ? socialDumps[firstDumpIdx - 1].session_id
