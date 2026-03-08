@@ -387,35 +387,36 @@ const SubGroupView = () => {
               exit={{ opacity: 0 }}
               className="overflow-auto cf-scrollbar p-4"
             >
-              <h3 className="text-[13px] font-semibold text-foreground mb-1">Activity Timeline</h3>
-              <p className="text-[10px] text-muted-foreground mb-4 font-mono">{messages.length} entries · {subGroup?.title}</p>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground mb-4 px-0.5">
+                Timeline
+              </div>
               {messages.length === 0 ? (
                 <p className="text-[12px] text-muted-foreground text-center py-8">No activity yet</p>
               ) : (
-                <div className="relative pl-8 space-y-3">
-                  <div className="absolute left-3 top-0 bottom-0 w-px bg-border" />
-                  {messages.map((msg) => {
-                    const date = new Date(msg.created_at);
-                    return (
-                      <div key={msg.id} className="relative">
-                        <div className="absolute -left-[22px] top-2 w-3 h-3 rounded-full bg-primary border-2 border-background" />
-                        <div className="rounded-lg bg-card border border-border p-3">
-                          <div className="flex items-center justify-between mb-1.5">
-                            <div className="flex items-center gap-2">
-                              <div className="w-5 h-5 rounded-full bg-accent flex items-center justify-center text-[8px] font-bold text-muted-foreground">
-                                {msg.avatar}
-                              </div>
-                              <span className="text-[11px] font-semibold text-foreground">{msg.author}</span>
-                            </div>
-                            <span className="text-[9px] text-muted-foreground font-mono">
-                              {date.toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })} · {date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                <div className="relative pl-6">
+                  <div className="absolute left-[7px] top-2 bottom-2 w-px bg-border" />
+                  <div className="space-y-1">
+                    {messages.map((msg, i) => (
+                      <motion.div
+                        key={msg.id}
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.03 }}
+                        className="relative flex items-start gap-3 p-3 rounded-lg hover:bg-card transition-colors group"
+                      >
+                        <div className="absolute left-[-19px] top-[18px] w-2.5 h-2.5 rounded-full border-2 border-background bg-primary" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <span className="text-[11px] font-mono text-muted-foreground/50">
+                              {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                             </span>
+                            <span className="text-[12px] font-medium text-muted-foreground">{msg.author}</span>
                           </div>
-                          <p className="text-[12px] text-foreground/80 leading-relaxed">{msg.content}</p>
+                          <p className="text-[13px] text-foreground/70 leading-relaxed truncate">{msg.content}</p>
                         </div>
-                      </div>
-                    );
-                  })}
+                      </motion.div>
+                    ))}
+                  </div>
                 </div>
               )}
             </motion.div>
