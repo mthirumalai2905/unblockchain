@@ -440,11 +440,15 @@ const SocialModeView = () => {
       {/* Idea Groups */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <button
+            onClick={() => setGroupsCollapsed((p) => !p)}
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          >
+            {groupsCollapsed ? <ChevronRight className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
             <Users className="w-4 h-4 text-primary" />
             <h3 className="text-[13px] font-semibold text-foreground">Idea Groups</h3>
             <span className="text-[11px] text-muted-foreground font-mono">{ideaGroups.length} groups</span>
-          </div>
+          </button>
           <button
             onClick={() => setShowCreateGroup(true)}
             className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-[11px] font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-all"
@@ -453,6 +457,9 @@ const SocialModeView = () => {
             Create Group
           </button>
         </div>
+        <AnimatePresence>
+        {!groupsCollapsed && (
+          <>
           {ideaGroups.map((group) => {
             const isExpanded = expandedGroup === group.id;
             const groupDumps = getDumpsForGroup(group.dump_ids);
