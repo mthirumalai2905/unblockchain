@@ -330,6 +330,7 @@ const SocialModeView = () => {
     aiChatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [aiMessages]);
 
+  const handleProcess = async () => {
     if (!user || socialDumps.length === 0) return;
     setIsProcessing(true);
     try {
