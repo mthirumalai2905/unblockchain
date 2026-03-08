@@ -57,13 +57,6 @@ interface SubGroup {
   member_count: number;
 }
 
-interface ThemeGroup {
-  id: string;
-  title: string;
-  description: string | null;
-  created_at: string;
-}
-
 const SocialModeView = () => {
   const { activeSessionId, setActiveSubGroupId } = useWorkspace();
   const { user } = useAuth();
@@ -78,7 +71,6 @@ const SocialModeView = () => {
   const [subGroups, setSubGroups] = useState<Record<string, SubGroup[]>>({});
   const [groupsCollapsed, setGroupsCollapsed] = useState(false);
   const [themeGroupsCollapsed, setThemeGroupsCollapsed] = useState(false);
-  const [themeGroups, setThemeGroups] = useState<ThemeGroup[]>([]);
   const [subGroupInput, setSubGroupInput] = useState<Record<string, string>>({});
   const [creatingSubGroup, setCreatingSubGroup] = useState<string | null>(null);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
