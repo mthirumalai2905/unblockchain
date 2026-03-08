@@ -504,7 +504,7 @@ const SocialModeView = () => {
             {groupsCollapsed ? <ChevronRight className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
             <Users className="w-4 h-4 text-primary" />
             <h3 className="text-[13px] font-semibold text-foreground">Idea Groups</h3>
-            <span className="text-[11px] text-muted-foreground font-mono">{ideaGroups.length} groups</span>
+            <span className="text-[11px] text-muted-foreground font-mono">{manualGroups.length} groups</span>
           </button>
           <button
             onClick={() => setShowCreateGroup(true)}
