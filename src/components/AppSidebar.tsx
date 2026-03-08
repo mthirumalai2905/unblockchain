@@ -108,7 +108,7 @@ const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
             >
               <item.icon className={cn("w-4 h-4 shrink-0", isActive && "text-foreground")} />
               <span className="truncate">{item.label}</span>
-              {item.badge && !count && (
+              {'badge' in item && item.badge && !count && (
                 <span className="ml-auto px-1.5 py-0.5 rounded text-[9px] font-bold bg-foreground text-background">
                   {item.badge}
                 </span>
