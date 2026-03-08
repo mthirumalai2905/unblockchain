@@ -151,6 +151,7 @@ const SocialModeView = () => {
         title: g.title,
         description: g.description,
         is_ai_created: g.is_ai_created || false,
+        created_at: g.created_at,
         dump_ids: links.map((l: any) => l.dump_id),
         votes: votes.length,
         hasVoted: votes.some((v: any) => v.user_id === user.id),
