@@ -176,7 +176,7 @@ const DashboardContent = () => {
         <div className="flex-1 flex overflow-hidden">
           {isFullLayout ? (
             <div className="flex-1 overflow-hidden">
-              {activeSection === "draft" ? <DraftView /> : activeSection === "roadmap" ? <RoadmapView /> : <TwitterConnectorPanel />}
+              {activeSection === "draft" ? <DraftView /> : <RoadmapView />}
             </div>
           ) : (
             <div className="flex-1 overflow-auto cf-scrollbar">
