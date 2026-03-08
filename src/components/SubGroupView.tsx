@@ -124,7 +124,7 @@ const SubGroupView = () => {
     if (data) {
       const userIds = [...new Set(data.map((m: any) => m.user_id))];
       const { data: profiles } = userIds.length > 0
-        ? await supabase.from("profiles").select("user_id, display_name, avatar_initials").in("user_id", userIds)
+        ? await supabase.from("profiles").select("user_id, display_name, avatar_initials, avatar_url").in("user_id", userIds)
         : { data: [] };
       const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
 
@@ -136,6 +136,7 @@ const SubGroupView = () => {
           user_id: m.user_id,
           author: profile?.display_name || "User",
           avatar: profile?.avatar_initials || "??",
+          avatar_url: profile?.avatar_url || null,
           created_at: m.created_at,
         };
       }));
@@ -253,7 +254,7 @@ const SubGroupView = () => {
         if (msg.user_id === user?.id) return; // already added optimistically
         const { data: profile } = await supabase
           .from("profiles")
-          .select("display_name, avatar_initials")
+          .select("display_name, avatar_initials, avatar_url")
           .eq("user_id", msg.user_id)
           .maybeSingle();
         setMessages((prev) => [...prev, {
@@ -262,6 +263,7 @@ const SubGroupView = () => {
           user_id: msg.user_id,
           author: profile?.display_name || "User",
           avatar: profile?.avatar_initials || "??",
+          avatar_url: (profile as any)?.avatar_url || null,
           created_at: msg.created_at,
         }]);
       })
@@ -306,6 +308,7 @@ const SubGroupView = () => {
       user_id: user.id,
       author: "You",
       avatar: "YO",
+      avatar_url: null,
       created_at: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, optimistic]);
