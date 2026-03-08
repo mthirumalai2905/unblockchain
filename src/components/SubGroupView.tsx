@@ -415,7 +415,7 @@ const SubGroupView = () => {
   ];
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full overflow-hidden">
       {/* Header */}
       <div className="shrink-0 border-b border-border px-4 py-3">
         <div className="flex items-center gap-2 mb-2">
@@ -482,7 +482,7 @@ const SubGroupView = () => {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-hidden">
         <AnimatePresence mode="wait">
           {activeTab === "chat" && (
             <motion.div
