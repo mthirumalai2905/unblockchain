@@ -19,10 +19,28 @@ const Auth = () => {
 
     try {
       if (mode === "forgot") {
+        // Use default Supabase reset which triggers the recovery email
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: `${window.location.origin}/reset-password`,
         });
         if (error) throw error;
+
+        // Also send branded email via Resend
+        try {
+          const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+          await fetch(`https://${projectId}.supabase.co/functions/v1/send-email`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "recovery",
+              email,
+              confirmationUrl: `${window.location.origin}/reset-password`,
+            }),
+          });
+        } catch {
+          // Branded email is best-effort; Supabase default still works
+        }
+
         toast.success("Password reset link sent! Check your email.");
         setMode("login");
       } else if (mode === "login") {
