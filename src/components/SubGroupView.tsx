@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, MessageCircle, Clock, FileText, Map, Send,
-  Loader2, Sparkles, Users, ChevronRight,
+  Loader2, Sparkles, Users, ChevronRight, Map as MapIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/store/WorkspaceStore";
@@ -142,7 +142,7 @@ const SubGroupView = () => {
       .select("*")
       .eq("sub_group_id", activeSubGroupId)
       .order("created_at", { ascending: false });
-    setRoadmaps((data || []) as Roadmap[]);
+    setRoadmaps((data || []) as unknown as Roadmap[]);
   }, [activeSubGroupId]);
 
   useEffect(() => {
