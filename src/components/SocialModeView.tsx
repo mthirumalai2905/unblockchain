@@ -339,6 +339,7 @@ const SocialModeView = () => {
         // Refresh data if actions were performed
         if (data.actions_performed > 0) {
           await loadGroups();
+          await loadThemeGroups();
         }
       }
     } catch {
