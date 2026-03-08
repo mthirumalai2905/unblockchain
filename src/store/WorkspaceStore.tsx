@@ -175,7 +175,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     const loadSessionData = async () => {
       try {
       const [dumpsRes, themesRes, actionsRes, questionsRes] = await Promise.all([
-        supabase.from("dumps").select("*").eq("session_id", activeSessionId).order("created_at", { ascending: false }),
+        supabase.from("dumps").select("*").eq("session_id", activeSessionId).eq("mode", "normal").order("created_at", { ascending: false }),
         supabase.from("themes").select("*").eq("session_id", activeSessionId),
         supabase.from("actions").select("*").eq("session_id", activeSessionId),
         supabase.from("questions").select("*").eq("session_id", activeSessionId),
@@ -255,7 +255,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     setIsProcessing(true);
     const { data, error } = await supabase
       .from("dumps")
-      .insert({ session_id: activeSessionId, user_id: user.id, content, type: "note" })
+      .insert({ session_id: activeSessionId, user_id: user.id, content, type: "note", mode: "normal" })
       .select()
       .single();
 
@@ -362,7 +362,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const refreshSessionData = useCallback(async () => {
     if (!activeSessionId || !user) return;
     const [dumpsRes, themesRes, actionsRes, questionsRes] = await Promise.all([
-      supabase.from("dumps").select("*").eq("session_id", activeSessionId).order("created_at", { ascending: false }),
+      supabase.from("dumps").select("*").eq("session_id", activeSessionId).eq("mode", "normal").order("created_at", { ascending: false }),
       supabase.from("themes").select("*").eq("session_id", activeSessionId),
       supabase.from("actions").select("*").eq("session_id", activeSessionId),
       supabase.from("questions").select("*").eq("session_id", activeSessionId),
