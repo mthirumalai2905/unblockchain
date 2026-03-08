@@ -78,6 +78,7 @@ const SocialModeView = () => {
   const [groupsCollapsed, setGroupsCollapsed] = useState(false);
   const [themeGroupsCollapsed, setThemeGroupsCollapsed] = useState(false);
   const [themeGroups, setThemeGroups] = useState<ThemeGroup[]>([]);
+  const [subGroupInput, setSubGroupInput] = useState<Record<string, string>>({});
   const [creatingSubGroup, setCreatingSubGroup] = useState<string | null>(null);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [newGroupTitle, setNewGroupTitle] = useState("");
