@@ -25,9 +25,6 @@ const normalNavItems: { id: ViewSection; label: string; icon: typeof Brain; badg
 
 const socialNavItems: { id: ViewSection; label: string; icon: typeof Brain }[] = [
   { id: "dumps", label: "Groups", icon: Users },
-  { id: "timeline", label: "Timeline", icon: Clock },
-  { id: "draft", label: "Draft PRD", icon: FileText },
-  { id: "roadmap", label: "Roadmap", icon: Map },
 ];
 
 interface AppSidebarProps {
