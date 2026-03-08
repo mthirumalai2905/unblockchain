@@ -199,8 +199,7 @@ Only suggest sub-groups where 2+ users share related dumps. Respond via the tool
           const memberId = nameToId.get(name.toLowerCase());
           if (memberId && memberId !== user_id) {
             await supabase.from("sub_group_members")
-              .insert({ sub_group_id: newSg.id, user_id: memberId })
-              .onConflict("sub_group_id,user_id" as any);
+              .upsert({ sub_group_id: newSg.id, user_id: memberId }, { onConflict: "sub_group_id,user_id" });
           }
         }
 
