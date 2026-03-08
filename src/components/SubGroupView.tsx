@@ -150,12 +150,27 @@ const SubGroupView = () => {
     setRoadmaps((data || []) as unknown as Roadmap[]);
   }, [activeSubGroupId]);
 
+  const loadDeleteVotes = useCallback(async () => {
+    if (!activeSubGroupId || !user) return;
+    const [votesRes, membersRes] = await Promise.all([
+      supabase.from("sub_group_delete_votes").select("*").eq("sub_group_id", activeSubGroupId),
+      supabase.from("sub_group_members").select("*", { count: "exact", head: true }).eq("sub_group_id", activeSubGroupId),
+    ]);
+    const votes = (votesRes.data || []).filter((v: any) => v.vote === true);
+    setDeleteVotes({
+      votes: votes.length,
+      total: membersRes.count || 0,
+      hasVoted: votes.some((v: any) => v.user_id === user.id),
+    });
+  }, [activeSubGroupId, user]);
+
   useEffect(() => {
     loadSubGroup();
     loadMessages();
     loadDrafts();
     loadRoadmaps();
-  }, [loadSubGroup, loadMessages, loadDrafts, loadRoadmaps]);
+    loadDeleteVotes();
+  }, [loadSubGroup, loadMessages, loadDrafts, loadRoadmaps, loadDeleteVotes]);
 
   // Realtime chat subscription
   useEffect(() => {
