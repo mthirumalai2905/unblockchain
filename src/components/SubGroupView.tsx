@@ -6,6 +6,7 @@ import {
   Trash2, AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import UserAvatar from "@/components/UserAvatar";
 import { useWorkspace } from "@/store/WorkspaceStore";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
