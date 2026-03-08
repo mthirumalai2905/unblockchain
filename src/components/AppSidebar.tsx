@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap, MessageSquare, Brain, CheckSquare, Lightbulb,
   HelpCircle, Clock, Archive, ChevronDown, Plus, Search,
-  Command, LogOut, FileText, Trash2, Twitter, ArchiveRestore, Globe,
+  Command, LogOut, FileText, Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Map } from "lucide-react";
@@ -20,8 +20,6 @@ const navItems: { id: ViewSection; label: string; icon: typeof Brain; badge?: st
   { id: "timeline", label: "Timeline", icon: Clock },
   { id: "draft", label: "Draft PRD", icon: FileText },
   { id: "roadmap", label: "Roadmap", icon: Map },
-  { id: "twitter", label: "Twitter Intel", icon: Twitter, badge: "NEW" },
-  { id: "social", label: "Social Mode", icon: Globe, badge: "NEW" },
   { id: "archive", label: "Archive", icon: Archive },
 ];
 
