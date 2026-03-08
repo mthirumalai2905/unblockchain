@@ -766,9 +766,7 @@ const SubGroupView = () => {
                         disabled={addingMember}
                         className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-accent transition-colors text-left disabled:opacity-50"
                       >
-                        <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-[9px] font-semibold text-muted-foreground">
-                          {p.avatar_initials}
-                        </div>
+                        <UserAvatar avatarUrl={p.avatar_url} initials={p.avatar_initials} size="sm" />
                         <span className="text-[12px] font-medium text-foreground">{p.display_name}</span>
                         <span className="ml-auto text-[10px] text-primary font-medium">+ Add</span>
                       </button>
@@ -781,9 +779,7 @@ const SubGroupView = () => {
               <div className="space-y-1">
                 {members.map((m) => (
                   <div key={m.user_id} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-accent/30 transition-colors">
-                    <div className="w-7 h-7 rounded-full bg-accent flex items-center justify-center text-[10px] font-semibold text-muted-foreground">
-                      {m.avatar_initials}
-                    </div>
+                    <UserAvatar avatarUrl={m.avatar_url} initials={m.avatar_initials} size="md" />
                     <span className="text-[13px] font-medium text-foreground">{m.display_name}</span>
                     {m.user_id === user?.id && (
                       <span className="text-[9px] font-mono text-muted-foreground bg-accent px-1.5 py-0.5 rounded">you</span>
