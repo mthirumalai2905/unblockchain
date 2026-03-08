@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Brain, Loader2, PanelLeftClose, PanelLeft, Menu } from "lucide-react";
+import { Brain, Loader2, PanelLeftClose, PanelLeft, Menu, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/store/WorkspaceStore";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -16,7 +16,7 @@ import AISummaryPanel from "@/components/AISummaryPanel";
 import DraftView from "@/components/DraftView";
 import RoadmapView from "@/components/RoadmapView";
 import ThinkingPanel from "@/components/ThinkingPanel";
-import TwitterConnectorPanel from "@/components/TwitterConnectorPanel";
+
 import ArchiveView from "@/components/ArchiveView";
 import SearchDialog from "@/components/SearchDialog";
 import SocialModeView from "@/components/SocialModeView";
@@ -24,7 +24,7 @@ import SocialModeView from "@/components/SocialModeView";
 const DashboardContent = () => {
   const {
     dumps, activeSection, isProcessing, showAIPanel, toggleAIPanel, selectedDumpId, loading, sessions, activeSessionId,
-    sidebarCollapsed, toggleSidebar, thinkingSteps, showThinking, closeThinking,
+    sidebarCollapsed, toggleSidebar, thinkingSteps, showThinking, closeThinking, socialMode, toggleSocialMode,
   } = useWorkspace();
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -66,10 +66,8 @@ const DashboardContent = () => {
       case "questions": return <QuestionsView />;
       case "timeline": return <TimelineView />;
       case "draft":
-      case "roadmap":
-      case "twitter": return null;
+      case "roadmap": return null;
       case "archive": return <ArchiveView />;
-      case "social": return <SocialModeView />;
       case "dumps":
       default:
         return (
@@ -100,7 +98,7 @@ const DashboardContent = () => {
     }
   };
 
-  const isFullLayout = activeSection === "draft" || activeSection === "roadmap" || activeSection === "twitter";
+  const isFullLayout = activeSection === "draft" || activeSection === "roadmap";
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
@@ -146,8 +144,20 @@ const DashboardContent = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-3">
             <span className="text-[11px] text-muted-foreground font-mono hidden sm:inline">{dumps.length} dumps</span>
+            <button
+              onClick={toggleSocialMode}
+              className={cn(
+                "flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-md text-[11px] sm:text-[12px] font-medium border transition-all duration-150",
+                socialMode
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-transparent text-muted-foreground border-border hover:border-ring/50 hover:text-foreground"
+              )}
+            >
+              <Globe className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{socialMode ? "Social" : "Social"}</span>
+            </button>
             <button
               onClick={toggleAIPanel}
               className={cn(
@@ -166,7 +176,7 @@ const DashboardContent = () => {
         <div className="flex-1 flex overflow-hidden">
           {isFullLayout ? (
             <div className="flex-1 overflow-hidden">
-              {activeSection === "draft" ? <DraftView /> : activeSection === "roadmap" ? <RoadmapView /> : <TwitterConnectorPanel />}
+              {activeSection === "draft" ? <DraftView /> : <RoadmapView />}
             </div>
           ) : (
             <div className="flex-1 overflow-auto cf-scrollbar">
@@ -179,7 +189,7 @@ const DashboardContent = () => {
                     exit={{ opacity: 0, y: -8 }}
                     transition={{ duration: 0.15 }}
                   >
-                    {showAIPanel && activeSection === "dumps" ? <AIStructuredView /> : renderContent()}
+                    {showAIPanel && activeSection === "dumps" ? <AIStructuredView /> : socialMode && activeSection === "dumps" ? <SocialModeView /> : renderContent()}
                   </motion.div>
                 </AnimatePresence>
               </div>
