@@ -134,6 +134,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const [thinkingSteps, setThinkingSteps] = useState<ThinkingStep[]>([]);
   const [showThinking, setShowThinking] = useState(false);
   const [socialMode, setSocialMode] = useState(false);
+  const [activeSubGroupId, setActiveSubGroupId] = useState<string | null>(null);
 
   // Load sessions
   useEffect(() => {
