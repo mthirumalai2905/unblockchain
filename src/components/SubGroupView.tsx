@@ -492,7 +492,7 @@ const SubGroupView = () => {
               exit={{ opacity: 0 }}
               className="flex flex-col h-full"
             >
-              <div className="flex-1 overflow-auto cf-scrollbar p-4 space-y-2">
+              <div className="flex-1 overflow-y-auto p-4 space-y-2" style={{ minHeight: 0 }}>
                 {messages.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <Users className="w-8 h-8 text-muted-foreground/30 mb-2" />
@@ -506,7 +506,7 @@ const SubGroupView = () => {
                     <div key={msg.id} className={cn("flex gap-2", isOwn && "flex-row-reverse", isAI && "justify-center")}>
                       {isAI ? (
                         <div className="max-w-[85%] rounded-lg px-3 py-2 bg-primary/10 border border-primary/20 text-center">
-                          <p className="text-[10px] font-semibold text-primary mb-0.5">🤖 DumpStash AI</p>
+                          <p className="text-[10px] font-semibold text-primary mb-0.5">🤖 Chrome</p>
                           <p className="text-[12px] leading-relaxed text-foreground/80">{msg.content}</p>
                           <p className="text-[9px] mt-1 opacity-50">
                             {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}

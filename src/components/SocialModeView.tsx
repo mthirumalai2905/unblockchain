@@ -1099,7 +1099,7 @@ const SocialModeView = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-6 right-6 z-50 w-[400px] max-h-[540px] rounded-xl border border-border bg-card shadow-2xl flex flex-col overflow-hidden"
+            className="fixed bottom-6 right-6 z-50 w-[400px] h-[500px] rounded-xl border border-border bg-card shadow-2xl flex flex-col overflow-hidden"
           >
             <div className="flex items-center gap-3 p-3 border-b border-border bg-accent/30">
               <img src={dumpstashBot} alt="Chrome AI" className="w-8 h-8 rounded-full" />
@@ -1111,7 +1111,7 @@ const SocialModeView = () => {
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto p-3 space-y-3 min-h-[200px] max-h-[340px]">
+            <div className="flex-1 overflow-y-auto p-3 space-y-3" style={{ minHeight: 0 }}>
               {aiMessages.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
                   <img src={dumpstashBot} alt="Chrome" className="w-16 h-16 mb-3 opacity-60" />
