@@ -449,7 +449,7 @@ const SubGroupView = () => {
               </div>
               {roadmaps.length === 0 ? (
                 <div className="text-center py-12">
-                  <Map className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+                  <MapIcon className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
                   <p className="text-[12px] text-muted-foreground">No roadmaps yet. Generate one from your group's context.</p>
                 </div>
               ) : (
