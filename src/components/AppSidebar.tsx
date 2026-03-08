@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap, MessageSquare, Brain, CheckSquare, Lightbulb,
   HelpCircle, Clock, Archive, ChevronDown, Plus, Search,
-  Command, LogOut, FileText, Trash2,
+  Command, LogOut, FileText, Trash2, Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Map } from "lucide-react";
@@ -11,7 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 import ThemeToggle from "@/components/ThemeToggle";
 
-const navItems: { id: ViewSection; label: string; icon: typeof Brain; badge?: string }[] = [
+const normalNavItems: { id: ViewSection; label: string; icon: typeof Brain; badge?: string }[] = [
   { id: "dumps", label: "Brain Dump", icon: MessageSquare },
   { id: "structures", label: "AI Insights", icon: Brain },
   { id: "actions", label: "Actions", icon: CheckSquare },
@@ -23,12 +23,19 @@ const navItems: { id: ViewSection; label: string; icon: typeof Brain; badge?: st
   { id: "archive", label: "Archive", icon: Archive },
 ];
 
+const socialNavItems: { id: ViewSection; label: string; icon: typeof Brain }[] = [
+  { id: "dumps", label: "Groups", icon: Users },
+  { id: "timeline", label: "Timeline", icon: Clock },
+  { id: "draft", label: "Draft PRD", icon: FileText },
+  { id: "roadmap", label: "Roadmap", icon: Map },
+];
+
 interface AppSidebarProps {
   onSearchOpen?: () => void;
 }
 
 const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
-  const { activeSection, setActiveSection, actions, questions, themes, dumps, sessions, activeSessionId, switchSession, createSession, deleteSession, archiveSession } = useWorkspace();
+  const { activeSection, setActiveSection, actions, questions, themes, dumps, sessions, activeSessionId, switchSession, createSession, deleteSession, archiveSession, socialMode } = useWorkspace();
   const { signOut, user } = useAuth();
   const [sessionsOpen, setSessionsOpen] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -85,7 +92,7 @@ const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
 
       {/* Navigation */}
       <nav className="px-2 py-2 space-y-px">
-        {navItems.map((item) => {
+        {(socialMode ? socialNavItems : normalNavItems).map((item) => {
           const isActive = activeSection === item.id;
           const count = counts[item.id];
           return (
@@ -101,9 +108,9 @@ const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
             >
               <item.icon className={cn("w-4 h-4 shrink-0", isActive && "text-foreground")} />
               <span className="truncate">{item.label}</span>
-              {item.badge && !count && (
+              {'badge' in item && (item as any).badge && !count && (
                 <span className="ml-auto px-1.5 py-0.5 rounded text-[9px] font-bold bg-foreground text-background">
-                  {item.badge}
+                  {(item as any).badge}
                 </span>
               )}
               {count !== undefined && count > 0 && (
