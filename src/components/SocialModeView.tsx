@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowUp, Sparkles, Loader2, ThumbsUp, MessageCircle, ChevronDown, ChevronRight, Hash, Users, Lightbulb, GitBranch, Plus, UserPlus, Search, X, Send, Bot } from "lucide-react";
+import { ArrowUp, Sparkles, Loader2, ThumbsUp, MessageCircle, ChevronDown, ChevronRight, Hash, Users, Lightbulb, GitBranch, Plus, UserPlus, Search, X, Send, Bot, Palette } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/store/WorkspaceStore";
 import { useAuth } from "@/hooks/useAuth";
@@ -56,6 +56,13 @@ interface SubGroup {
   member_count: number;
 }
 
+interface ThemeGroup {
+  id: string;
+  title: string;
+  description: string | null;
+  created_at: string;
+}
+
 const SocialModeView = () => {
   const { activeSessionId, setActiveSubGroupId } = useWorkspace();
   const { user } = useAuth();
@@ -69,7 +76,8 @@ const SocialModeView = () => {
   const [showGuidance, setShowGuidance] = useState(false);
   const [subGroups, setSubGroups] = useState<Record<string, SubGroup[]>>({});
   const [groupsCollapsed, setGroupsCollapsed] = useState(false);
-  const [subGroupInput, setSubGroupInput] = useState<Record<string, string>>({});
+  const [themeGroupsCollapsed, setThemeGroupsCollapsed] = useState(false);
+  const [themeGroups, setThemeGroups] = useState<ThemeGroup[]>([]);
   const [creatingSubGroup, setCreatingSubGroup] = useState<string | null>(null);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [newGroupTitle, setNewGroupTitle] = useState("");
