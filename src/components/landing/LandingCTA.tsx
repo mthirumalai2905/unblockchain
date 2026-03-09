@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
+import { Spotlight } from "@/components/ui/spotlight";
 
 const LandingCTA = () => {
   const navigate = useNavigate();
@@ -14,13 +15,13 @@ const LandingCTA = () => {
           viewport={{ once: true }}
           className="relative p-16 md:p-20 rounded-3xl border border-border overflow-hidden"
         >
-          {/* Background gradient */}
-          <div className="absolute inset-0 bg-gradient-to-br from-card/80 via-background to-card/40" />
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[200px] rounded-full pointer-events-none opacity-[0.04]"
-            style={{ background: "radial-gradient(ellipse, hsl(var(--foreground)) 0%, transparent 70%)" }} />
+          <Spotlight />
+          
+          {/* Background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-card/80 via-background to-card/40 -z-10" />
 
-          <div className="relative">
-            <h2 className="text-3xl md:text-[2.5rem] font-bold tracking-tight mb-5 leading-[1.15]">
+          <div className="relative z-10">
+            <h2 className="text-3xl md:text-[2.5rem] font-bold tracking-[-0.02em] mb-5 leading-[1.15]">
               Stop losing ideas.
               <br />
               <span className="text-muted-foreground">Start shipping them.</span>
@@ -30,10 +31,13 @@ const LandingCTA = () => {
             </p>
             <button
               onClick={() => navigate("/auth")}
-              className="group h-12 px-8 text-[14px] font-semibold bg-foreground text-background rounded-full hover:opacity-90 transition-all inline-flex items-center gap-2"
+              className="group h-12 px-8 text-[14px] font-semibold bg-foreground text-background rounded-full hover:shadow-[0_0_30px_-5px_hsl(var(--foreground)/0.3)] transition-all duration-300 inline-flex items-center gap-2 relative overflow-hidden"
             >
-              Get Started Free
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              <span className="relative z-10 flex items-center gap-2">
+                Get Started Free
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              </span>
+              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-background/10 to-transparent" />
             </button>
           </div>
         </motion.div>
