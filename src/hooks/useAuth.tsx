@@ -11,8 +11,10 @@ export const useAuth = () => {
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+      if (_event === 'TOKEN_REFRESHED' || _event === 'SIGNED_IN' || _event === 'SIGNED_OUT' || _event === 'USER_UPDATED' || _event === 'INITIAL_SESSION') {
+        setSession(session);
+        setUser(session?.user ?? null);
+      }
       // Only set loading false here if we've already initialized
       if (initialized.current) {
         setLoading(false);
@@ -20,9 +22,17 @@ export const useAuth = () => {
     });
 
     // THEN restore session from storage
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        // Clear stale session on refresh token errors
+        console.warn("Session restore failed, clearing:", error.message);
+        supabase.auth.signOut();
+        setSession(null);
+        setUser(null);
+      } else {
+        setSession(session);
+        setUser(session?.user ?? null);
+      }
       initialized.current = true;
       setLoading(false);
     });
