@@ -840,7 +840,7 @@ const SocialModeView = () => {
                                   <UserAvatar avatarUrl={dump.avatar_url} initials={dump.avatar} size="sm" />
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-1.5">
-                                      {!dump.avatar_url && <span className="text-[12px] font-medium text-foreground">{dump.author}</span>}
+                                      <span className="text-[12px] font-medium text-foreground">{dump.author}</span>
                                       {dump.ai_label && (
                                         <span className="inline-flex items-center gap-0.5 px-1.5 py-[1px] rounded text-[9px] font-mono bg-primary/10 text-primary">
                                           <Hash className="w-2 h-2" />
@@ -861,7 +861,7 @@ const SocialModeView = () => {
                                   <div key={comment.id} className="flex items-start gap-2">
                                     <UserAvatar avatarUrl={comment.avatar_url} initials={comment.avatar} size="xs" />
                                     <div>
-                                      {!comment.avatar_url && <span className="text-[11px] font-medium text-foreground">{comment.author}</span>}
+                                      <span className="text-[11px] font-medium text-foreground">{comment.author}</span>
                                       <p className="text-[11px] text-foreground/70">{comment.content}</p>
                                     </div>
                                   </div>
@@ -998,7 +998,7 @@ const SocialModeView = () => {
               <UserAvatar avatarUrl={dump.avatar_url} initials={dump.avatar} size="md" />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                  {!dump.avatar_url && <span className="text-[13px] font-medium text-foreground">{dump.author}</span>}
+                  <span className="text-[13px] font-medium text-foreground">{dump.author}</span>
                   <span className="text-[11px] text-muted-foreground font-mono">
                     {new Date(dump.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })} · {new Date(dump.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
