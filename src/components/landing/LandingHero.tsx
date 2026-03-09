@@ -19,7 +19,7 @@ const LandingHero = () => {
           transition={{ duration: 0.5 }}
           className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-border bg-card/60 backdrop-blur-sm mb-8"
         >
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="w-1.5 h-1.5 rounded-full bg-cf-decision animate-pulse" />
           <span className="text-[12px] text-muted-foreground">Now in public beta — 2,400+ ideas processed</span>
         </motion.div>
 

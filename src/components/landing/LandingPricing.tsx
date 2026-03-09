@@ -107,7 +107,7 @@ const LandingPricing = () => {
               <ul className="space-y-3 mb-8">
                 {plan.features.map((f) => (
                   <li key={f} className="flex items-start gap-2.5 text-[13px]">
-                    <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                    <Check className="w-4 h-4 text-cf-decision shrink-0 mt-0.5" />
                     <span className="text-foreground/80">{f}</span>
                   </li>
                 ))}
