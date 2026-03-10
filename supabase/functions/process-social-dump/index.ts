@@ -197,6 +197,19 @@ IMPORTANT: When creating groups, check if any existing groups already cover the 
       });
     }
 
+    // If labels_only mode, skip group creation
+    if (labels_only) {
+      return new Response(JSON.stringify({
+        success: true,
+        needs_more_context: false,
+        labels_count: result.labels?.length || 0,
+        groups_count: 0,
+        result
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Create NEW idea groups only (no longer deleting existing ones)
     const createdGroups = [];
     if (result.groups?.length > 0) {
