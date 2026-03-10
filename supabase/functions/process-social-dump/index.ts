@@ -17,7 +17,7 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { user_id } = await req.json();
+    const { user_id, labels_only } = await req.json();
 
     const { data: socialDumps, error: dumpsErr } = await supabase
       .from("dumps")
