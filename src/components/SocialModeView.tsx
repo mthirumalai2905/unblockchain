@@ -514,7 +514,7 @@ const SocialModeView = () => {
           </span>
           <div className="flex items-center gap-2.5">
             <button
-              onClick={handleProcess}
+              onClick={() => setShowAutoProcess(true)}
               disabled={isProcessing || socialDumps.length === 0}
               className={cn(
                 "text-[11px] flex items-center gap-1 font-mono px-2 py-1 rounded-md transition-all",
@@ -525,8 +525,8 @@ const SocialModeView = () => {
                   : "text-muted-foreground/50 hover:text-foreground hover:bg-accent cursor-pointer"
               )}
             >
-              {isProcessing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-              {isProcessing ? "grouping..." : "AI group"}
+              {isProcessing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />}
+              {isProcessing ? "processing..." : "auto-process"}
             </button>
             <button
               onClick={handleSubmit}
