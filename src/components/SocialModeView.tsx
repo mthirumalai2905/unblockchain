@@ -87,6 +87,9 @@ const SocialModeView = () => {
   const [showAddMember, setShowAddMember] = useState<string | null>(null);
   const [memberSearch, setMemberSearch] = useState("");
   const [memberResults, setMemberResults] = useState<{ user_id: string; display_name: string; avatar_initials: string; avatar_url: string | null }[]>([]);
+  const [showAutoProcess, setShowAutoProcess] = useState(false);
+  const [autoProcessLabels, setAutoProcessLabels] = useState(true);
+  const [autoProcessGroups, setAutoProcessGroups] = useState(true);
   
   const [aiMessages, setAiMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
   const [aiInput, setAiInput] = useState("");
