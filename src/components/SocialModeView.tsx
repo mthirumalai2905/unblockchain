@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowUp, Sparkles, Loader2, ThumbsUp, MessageCircle, ChevronDown, ChevronRight, Hash, Users, Lightbulb, GitBranch, Plus, UserPlus, Search, X, Send, Bot, Palette, Camera } from "lucide-react";
+import { ArrowUp, Sparkles, Loader2, ThumbsUp, MessageCircle, ChevronDown, ChevronRight, Hash, Users, Lightbulb, GitBranch, Plus, UserPlus, Search, X, Send, Bot, Palette, Camera, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/store/WorkspaceStore";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,6 +16,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface SocialDump {
   id: string;
@@ -86,6 +87,9 @@ const SocialModeView = () => {
   const [showAddMember, setShowAddMember] = useState<string | null>(null);
   const [memberSearch, setMemberSearch] = useState("");
   const [memberResults, setMemberResults] = useState<{ user_id: string; display_name: string; avatar_initials: string; avatar_url: string | null }[]>([]);
+  const [showAutoProcess, setShowAutoProcess] = useState(false);
+  const [autoProcessLabels, setAutoProcessLabels] = useState(true);
+  const [autoProcessGroups, setAutoProcessGroups] = useState(true);
   
   const [aiMessages, setAiMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
   const [aiInput, setAiInput] = useState("");
@@ -382,8 +386,9 @@ const SocialModeView = () => {
     aiChatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [aiMessages]);
 
-  const handleProcess = async () => {
+  const handleProcess = async (labelsOnly: boolean) => {
     if (!user || socialDumps.length === 0) return;
+    setShowAutoProcess(false);
     setIsProcessing(true);
     try {
       const resp = await fetch(
@@ -394,14 +399,13 @@ const SocialModeView = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
-          body: JSON.stringify({ user_id: user.id }),
+          body: JSON.stringify({ user_id: user.id, labels_only: labelsOnly }),
         }
       );
       const data = await resp.json();
       if (!resp.ok) {
         toast.error(data.error || "Processing failed");
       } else if (data.needs_more_context) {
-        // AI decided it needs more context - show guidance dialog
         setContextGuidance({
           message: data.context_message || "Need more dumps to find meaningful patterns.",
           suggestions: data.context_suggestions || [],
@@ -412,7 +416,10 @@ const SocialModeView = () => {
           await loadSocialDumps();
         }
       } else {
-        toast.success(`Created ${data.groups_count} groups from ${data.labels_count} labeled dumps`);
+        const msg = labelsOnly
+          ? `Tagged ${data.labels_count} dumps`
+          : `Created ${data.groups_count} groups from ${data.labels_count} labeled dumps`;
+        toast.success(msg);
         await Promise.all([loadSocialDumps(), loadGroups()]);
       }
     } catch {
@@ -486,8 +493,73 @@ const SocialModeView = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Auto-Process Dialog */}
+      <Dialog open={showAutoProcess} onOpenChange={setShowAutoProcess}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-[15px]">
+              <Zap className="w-4 h-4 text-primary" />
+              Auto-process
+            </DialogTitle>
+            <DialogDescription className="text-[13px] leading-relaxed pt-1">
+              Choose what the AI should do with your dumps.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 pt-2">
+            <label className="flex items-start gap-3 p-3 rounded-lg border border-border bg-accent/30 cursor-pointer hover:bg-accent/50 transition-colors">
+              <Checkbox
+                checked={autoProcessLabels}
+                onCheckedChange={(checked) => setAutoProcessLabels(!!checked)}
+                className="mt-0.5"
+              />
+              <div>
+                <p className="text-[13px] font-medium text-foreground">Tag dumps</p>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Attach relevant labels (e.g. market-gap, feature-request) to each dump
+                </p>
+              </div>
+            </label>
+            <label className="flex items-start gap-3 p-3 rounded-lg border border-border bg-accent/30 cursor-pointer hover:bg-accent/50 transition-colors">
+              <Checkbox
+                checked={autoProcessGroups}
+                onCheckedChange={(checked) => setAutoProcessGroups(!!checked)}
+                className="mt-0.5"
+              />
+              <div>
+                <p className="text-[13px] font-medium text-foreground">Create groups</p>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Automatically group similar dumps into idea clusters
+                </p>
+              </div>
+            </label>
+          </div>
+          <div className="flex justify-end gap-2 pt-3">
+            <button
+              onClick={() => setShowAutoProcess(false)}
+              className="px-3 py-1.5 rounded-md text-[12px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => handleProcess(!autoProcessGroups)}
+              disabled={!autoProcessLabels && !autoProcessGroups}
+              className={cn(
+                "px-4 py-1.5 rounded-md text-[12px] font-medium transition-all",
+                !autoProcessLabels && !autoProcessGroups
+                  ? "bg-muted text-muted-foreground cursor-not-allowed"
+                  : "bg-foreground text-background hover:opacity-90"
+              )}
+            >
+              <span className="flex items-center gap-1.5">
+                <Zap className="w-3 h-3" />
+                Process
+              </span>
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-      {/* Social dump input */}
+
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -507,7 +579,7 @@ const SocialModeView = () => {
           </span>
           <div className="flex items-center gap-2.5">
             <button
-              onClick={handleProcess}
+              onClick={() => setShowAutoProcess(true)}
               disabled={isProcessing || socialDumps.length === 0}
               className={cn(
                 "text-[11px] flex items-center gap-1 font-mono px-2 py-1 rounded-md transition-all",
@@ -518,8 +590,8 @@ const SocialModeView = () => {
                   : "text-muted-foreground/50 hover:text-foreground hover:bg-accent cursor-pointer"
               )}
             >
-              {isProcessing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-              {isProcessing ? "grouping..." : "AI group"}
+              {isProcessing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />}
+              {isProcessing ? "processing..." : "auto-process"}
             </button>
             <button
               onClick={handleSubmit}

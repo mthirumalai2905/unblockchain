@@ -17,7 +17,7 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { user_id } = await req.json();
+    const { user_id, labels_only } = await req.json();
 
     const { data: socialDumps, error: dumpsErr } = await supabase
       .from("dumps")
@@ -192,6 +192,19 @@ IMPORTANT: When creating groups, check if any existing groups already cover the 
         context_suggestions: result.context_suggestions || [],
         labels_count: result.labels?.length || 0,
         groups_count: 0,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // If labels_only mode, skip group creation
+    if (labels_only) {
+      return new Response(JSON.stringify({
+        success: true,
+        needs_more_context: false,
+        labels_count: result.labels?.length || 0,
+        groups_count: 0,
+        result
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
