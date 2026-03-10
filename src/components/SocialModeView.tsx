@@ -386,8 +386,9 @@ const SocialModeView = () => {
     aiChatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [aiMessages]);
 
-  const handleProcess = async () => {
+  const handleProcess = async (labelsOnly: boolean) => {
     if (!user || socialDumps.length === 0) return;
+    setShowAutoProcess(false);
     setIsProcessing(true);
     try {
       const resp = await fetch(
@@ -398,14 +399,13 @@ const SocialModeView = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
-          body: JSON.stringify({ user_id: user.id }),
+          body: JSON.stringify({ user_id: user.id, labels_only: labelsOnly }),
         }
       );
       const data = await resp.json();
       if (!resp.ok) {
         toast.error(data.error || "Processing failed");
       } else if (data.needs_more_context) {
-        // AI decided it needs more context - show guidance dialog
         setContextGuidance({
           message: data.context_message || "Need more dumps to find meaningful patterns.",
           suggestions: data.context_suggestions || [],
@@ -416,7 +416,10 @@ const SocialModeView = () => {
           await loadSocialDumps();
         }
       } else {
-        toast.success(`Created ${data.groups_count} groups from ${data.labels_count} labeled dumps`);
+        const msg = labelsOnly
+          ? `Tagged ${data.labels_count} dumps`
+          : `Created ${data.groups_count} groups from ${data.labels_count} labeled dumps`;
+        toast.success(msg);
         await Promise.all([loadSocialDumps(), loadGroups()]);
       }
     } catch {
