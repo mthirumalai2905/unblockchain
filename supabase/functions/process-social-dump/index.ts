@@ -19,15 +19,34 @@ serve(async (req) => {
 
     const { user_id, labels_only } = await req.json();
 
-    const { data: socialDumps, error: dumpsErr } = await supabase
+    // Fetch ALL social dumps for context, but track which need tagging
+    const { data: allSocialDumps, error: dumpsErr } = await supabase
       .from("dumps")
       .select("*")
       .eq("mode", "social")
       .order("created_at", { ascending: true });
 
-    if (dumpsErr || !socialDumps || socialDumps.length === 0) {
+    if (dumpsErr || !allSocialDumps || allSocialDumps.length === 0) {
       throw new Error("No social dumps found");
     }
+
+    // Only process untagged dumps for labeling
+    const untaggedDumps = allSocialDumps.filter((d: any) => !d.ai_label);
+    
+    if (untaggedDumps.length === 0 && labels_only) {
+      return new Response(JSON.stringify({
+        success: true,
+        needs_more_context: false,
+        labels_count: 0,
+        groups_count: 0,
+        message: "All dumps are already tagged."
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Use untagged dumps for AI processing, but keep all dumps reference for grouping
+    const socialDumps = untaggedDumps.length > 0 ? untaggedDumps : allSocialDumps;
 
     // Get existing groups to avoid recreating them
     const { data: existingGroups } = await supabase
