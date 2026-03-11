@@ -101,7 +101,7 @@ const DashboardContent = () => {
     }
   };
 
-  const isFullLayout = activeSection === "draft" || activeSection === "roadmap";
+  const isFullLayout = activeSection === "draft" || activeSection === "roadmap" || activeSection === "personal";
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
