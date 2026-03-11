@@ -18,6 +18,7 @@ const normalNavItems: { id: ViewSection; label: string; icon: typeof Brain; badg
   { id: "dumps", label: "Brain Dump", icon: MessageSquare },
   { id: "structures", label: "AI Insights", icon: Brain },
   { id: "actions", label: "Actions", icon: CheckSquare },
+  { id: "personal", label: "Personal", icon: ListTodo },
   { id: "themes", label: "Themes", icon: Lightbulb },
   { id: "questions", label: "Questions", icon: HelpCircle },
   { id: "timeline", label: "Timeline", icon: Clock },
