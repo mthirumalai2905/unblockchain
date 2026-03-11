@@ -21,6 +21,7 @@ import ArchiveView from "@/components/ArchiveView";
 import SearchDialog from "@/components/SearchDialog";
 import SocialModeView from "@/components/SocialModeView";
 import SubGroupView from "@/components/SubGroupView";
+import PersonalTodoView from "@/components/PersonalTodoView";
 
 const DashboardContent = () => {
   const {
