@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Map, Play, Loader2, RefreshCw, Check, ChevronDown, ChevronRight,
-  Flag, Circle, Target, Search, Milestone, Download,
+  Flag, Circle, Target, Search, Milestone, Download, Square, CheckSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/store/WorkspaceStore";
@@ -41,7 +41,7 @@ interface Roadmap {
 }
 
 const statusColors: Record<string, { bg: string; border: string; text: string; dot: string }> = {
-  done: { bg: "bg-cf-decision/10", border: "border-cf-decision/30", text: "text-cf-decision", dot: "bg-cf-decision" },
+  done: { bg: "bg-cf-idea/10", border: "border-cf-idea/30", text: "text-cf-idea", dot: "bg-cf-idea" },
   current: { bg: "bg-cf-idea/10", border: "border-cf-idea/30", text: "text-cf-idea", dot: "bg-cf-idea" },
   upcoming: { bg: "bg-accent/50", border: "border-border", text: "text-muted-foreground", dot: "bg-muted-foreground/30" },
 };
@@ -69,14 +69,24 @@ const RoadmapView = () => {
     return new Set();
   });
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
+  const [checkedItems, setCheckedItems] = useState<Set<string>>(() => {
+    const cached = sessionStorage.getItem(`roadmap-checked-${activeSessionId}`);
+    return cached ? new Set(JSON.parse(cached)) : new Set();
+  });
   const roadmapRef = useRef<HTMLDivElement>(null);
 
-  // Persist roadmap to sessionStorage
+  // Persist
   useEffect(() => {
     if (roadmap && activeSessionId) {
       sessionStorage.setItem(`roadmap-${activeSessionId}`, JSON.stringify(roadmap));
     }
   }, [roadmap, activeSessionId]);
+
+  useEffect(() => {
+    if (activeSessionId) {
+      sessionStorage.setItem(`roadmap-checked-${activeSessionId}`, JSON.stringify([...checkedItems]));
+    }
+  }, [checkedItems, activeSessionId]);
 
   const generate = useCallback(async () => {
     if (!activeSessionId || dumps.length === 0) {
@@ -93,12 +103,12 @@ const RoadmapView = () => {
         },
         body: JSON.stringify({ session_id: activeSessionId }),
       });
-
       if (!resp.ok) throw new Error(`Failed: ${resp.status}`);
       const data = await resp.json();
       if (data.error) throw new Error(data.error);
       setRoadmap(data);
       setExpandedPhases(new Set(data.phases.map((p: Phase) => p.id)));
+      setCheckedItems(new Set());
       toast.success("Roadmap generated!");
     } catch (e) {
       console.error(e);
@@ -112,37 +122,24 @@ const RoadmapView = () => {
     if (!roadmapRef.current) return;
     toast.info("Generating PDF...");
     try {
-      // Expand all phases for export
-      if (roadmap) {
-        setExpandedPhases(new Set(roadmap.phases.map((p) => p.id)));
-      }
+      if (roadmap) setExpandedPhases(new Set(roadmap.phases.map((p) => p.id)));
       await new Promise((r) => setTimeout(r, 300));
-
-      const canvas = await html2canvas(roadmapRef.current, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#0a0a0a",
-      });
-
+      const canvas = await html2canvas(roadmapRef.current, { scale: 2, useCORS: true, logging: false, backgroundColor: "#0a0a0a" });
       const imgWidth = 210;
       const pageHeight = 297;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       const pdf = new jsPDF("p", "mm", "a4");
       const imgData = canvas.toDataURL("image/png");
-
       let heightLeft = imgHeight;
       let position = 0;
       pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
       heightLeft -= pageHeight;
-
       while (heightLeft > 0) {
         position = heightLeft - imgHeight;
         pdf.addPage();
         pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
         heightLeft -= pageHeight;
       }
-
       pdf.save(`roadmap-${roadmap?.title?.replace(/\s+/g, "-").toLowerCase() || "export"}.pdf`);
       toast.success("PDF downloaded!");
     } catch (e) {
@@ -167,9 +164,17 @@ const RoadmapView = () => {
     });
   };
 
+  const toggleChecked = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCheckedItems((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
   return (
     <div className="h-full flex flex-col">
-      {/* Toolbar */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
         <div className="flex items-center gap-2">
           <Map className="w-4 h-4 text-muted-foreground" />
@@ -177,10 +182,7 @@ const RoadmapView = () => {
         </div>
         <div className="flex items-center gap-2">
           {roadmap && (
-            <button
-              onClick={downloadPDF}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[12px] text-muted-foreground hover:text-foreground border border-border hover:border-ring/50 transition-all"
-            >
+            <button onClick={downloadPDF} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[12px] text-muted-foreground hover:text-foreground border border-border hover:border-ring/50 transition-all">
               <Download className="w-3.5 h-3.5" />
               PDF
             </button>
@@ -190,38 +192,22 @@ const RoadmapView = () => {
             disabled={isGenerating || dumps.length === 0}
             className={cn(
               "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all",
-              isGenerating
-                ? "bg-accent text-muted-foreground cursor-not-allowed"
-                : "bg-foreground text-background hover:opacity-90"
+              isGenerating ? "bg-accent text-muted-foreground cursor-not-allowed" : "bg-foreground text-background hover:opacity-90"
             )}
           >
-            {isGenerating ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : roadmap ? (
-              <RefreshCw className="w-3.5 h-3.5" />
-            ) : (
-              <Play className="w-3.5 h-3.5" />
-            )}
+            {isGenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : roadmap ? <RefreshCw className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
             {isGenerating ? "Generating..." : roadmap ? "Regenerate" : "Generate Roadmap"}
           </button>
         </div>
       </div>
 
-      {/* Roadmap content with dotted canvas bg */}
       <div
         className="flex-1 overflow-auto cf-scrollbar relative"
-        style={{
-          backgroundImage: "radial-gradient(circle, hsl(0 0% 20%) 1px, transparent 1px)",
-          backgroundSize: "20px 20px",
-        }}
+        style={{ backgroundImage: "radial-gradient(circle, hsl(0 0% 20%) 1px, transparent 1px)", backgroundSize: "20px 20px" }}
       >
         {roadmap ? (
           <div ref={roadmapRef} className="max-w-3xl mx-auto p-6">
-            <motion.h2
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-lg font-semibold text-foreground mb-6"
-            >
+            <motion.h2 initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-lg font-semibold text-foreground mb-6">
               {roadmap.title}
             </motion.h2>
 
@@ -229,21 +215,13 @@ const RoadmapView = () => {
               {roadmap.phases.map((phase, phaseIdx) => {
                 const isPhaseExpanded = expandedPhases.has(phase.id);
                 const phaseColors = statusColors[phase.status] || statusColors.upcoming;
-                const completedSteps = phase.steps.filter((s) => s.status === "done").length;
+                const completedSteps = phase.steps.filter((s) => checkedItems.has(s.id) || s.status === "done").length;
 
                 return (
-                  <motion.div
-                    key={phase.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: phaseIdx * 0.08 }}
-                  >
+                  <motion.div key={phase.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: phaseIdx * 0.08 }}>
                     <button
                       onClick={() => togglePhase(phase.id)}
-                      className={cn(
-                        "w-full flex items-center gap-3 p-4 rounded-lg border transition-all hover:cf-shadow-md bg-card/90 backdrop-blur-sm",
-                        phaseColors.border
-                      )}
+                      className={cn("w-full flex items-center gap-3 p-4 rounded-lg border transition-all hover:cf-shadow-md bg-card/90 backdrop-blur-sm", phaseColors.border)}
                     >
                       <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shrink-0", phaseColors.bg)}>
                         <Milestone className={cn("w-4 h-4", phaseColors.text)} />
@@ -258,80 +236,83 @@ const RoadmapView = () => {
                         <p className="text-[11px] text-muted-foreground mt-0.5">{phase.description}</p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-[10px] font-mono text-muted-foreground">
-                          {completedSteps}/{phase.steps.length}
-                        </span>
-                        {isPhaseExpanded ? (
-                          <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                        ) : (
-                          <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                        )}
+                        <span className="text-[10px] font-mono text-muted-foreground">{completedSteps}/{phase.steps.length}</span>
+                        {isPhaseExpanded ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
                       </div>
                     </button>
 
                     <AnimatePresence>
                       {isPhaseExpanded && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          className="overflow-hidden"
-                        >
+                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
                           <div className="ml-8 pl-4 border-l-2 border-border space-y-1 py-2">
                             {phase.steps.map((step, stepIdx) => {
-                              const stepColors = statusColors[step.status] || statusColors.upcoming;
+                              const isChecked = checkedItems.has(step.id);
+                              const stepColors = isChecked ? statusColors.done : (statusColors[step.status] || statusColors.upcoming);
                               const StepIcon = typeIcons[step.type] || Circle;
                               const isStepExpanded = expandedSteps.has(step.id);
                               const hasSubsteps = step.substeps && step.substeps.length > 0;
 
                               return (
-                                <motion.div
-                                  key={step.id}
-                                  initial={{ opacity: 0, x: -10 }}
-                                  animate={{ opacity: 1, x: 0 }}
-                                  transition={{ delay: stepIdx * 0.04 }}
-                                >
-                                  <button
-                                    onClick={() => hasSubsteps && toggleStep(step.id)}
+                                <motion.div key={step.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: stepIdx * 0.04 }}>
+                                  <div
                                     className={cn(
                                       "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-md border transition-all text-left bg-card/70 backdrop-blur-sm",
                                       stepColors.border,
                                       hasSubsteps ? "cursor-pointer hover:cf-shadow-sm" : "cursor-default",
-                                      step.status === "current" && "ring-1 ring-cf-idea/20"
+                                      isChecked && "bg-cf-idea/5"
                                     )}
                                   >
-                                    <div className={cn("absolute -left-[21px] w-2.5 h-2.5 rounded-full border-2 border-background", stepColors.dot)} />
-                                    <StepIcon className={cn("w-3.5 h-3.5 shrink-0", stepColors.text)} />
-                                    <div className="flex-1 min-w-0">
-                                      <span className={cn("text-[12px] font-medium", step.status === "done" ? "line-through text-muted-foreground" : "text-foreground")}>
-                                        {step.title}
+                                    {/* Checkbox */}
+                                    <button
+                                      onClick={(e) => toggleChecked(step.id, e)}
+                                      className="shrink-0 p-0"
+                                    >
+                                      {isChecked ? (
+                                        <CheckSquare className="w-4 h-4 text-cf-idea" />
+                                      ) : (
+                                        <Square className="w-4 h-4 text-muted-foreground/40 hover:text-cf-idea transition-colors" />
+                                      )}
+                                    </button>
+
+                                    <div
+                                      className="flex-1 flex items-center gap-2.5 min-w-0"
+                                      onClick={() => hasSubsteps && toggleStep(step.id)}
+                                    >
+                                      <div className={cn("absolute -left-[21px] w-2.5 h-2.5 rounded-full border-2 border-background", stepColors.dot)} />
+                                      <StepIcon className={cn("w-3.5 h-3.5 shrink-0", stepColors.text)} />
+                                      <div className="flex-1 min-w-0">
+                                        <span className={cn("text-[12px] font-medium", isChecked ? "line-through text-cf-idea/60" : step.status === "done" ? "line-through text-muted-foreground" : "text-foreground")}>
+                                          {step.title}
+                                        </span>
+                                        {step.description && (
+                                          <p className="text-[10px] text-muted-foreground/70 mt-0.5 truncate">{step.description}</p>
+                                        )}
+                                      </div>
+                                      <span className={cn("text-[9px] font-mono px-1.5 py-0.5 rounded shrink-0", stepColors.bg, stepColors.text)}>
+                                        {step.type}
                                       </span>
-                                      {step.description && (
-                                        <p className="text-[10px] text-muted-foreground/70 mt-0.5 truncate">{step.description}</p>
+                                      {hasSubsteps && (
+                                        isStepExpanded ? <ChevronDown className="w-3 h-3 text-muted-foreground" /> : <ChevronRight className="w-3 h-3 text-muted-foreground" />
                                       )}
                                     </div>
-                                    <span className={cn("text-[9px] font-mono px-1.5 py-0.5 rounded shrink-0", stepColors.bg, stepColors.text)}>
-                                      {step.type}
-                                    </span>
-                                    {hasSubsteps && (
-                                      isStepExpanded ? <ChevronDown className="w-3 h-3 text-muted-foreground" /> : <ChevronRight className="w-3 h-3 text-muted-foreground" />
-                                    )}
-                                  </button>
+                                  </div>
 
                                   <AnimatePresence>
                                     {isStepExpanded && hasSubsteps && (
-                                      <motion.div
-                                        initial={{ height: 0, opacity: 0 }}
-                                        animate={{ height: "auto", opacity: 1 }}
-                                        exit={{ height: 0, opacity: 0 }}
-                                        className="overflow-hidden ml-6 pl-3 border-l border-border/50 space-y-0.5 py-1"
-                                      >
+                                      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden ml-6 pl-3 border-l border-border/50 space-y-0.5 py-1">
                                         {step.substeps!.map((sub) => {
-                                          const subColors = statusColors[sub.status] || statusColors.upcoming;
+                                          const isSubChecked = checkedItems.has(sub.id);
+                                          const subColors = isSubChecked ? statusColors.done : (statusColors[sub.status] || statusColors.upcoming);
                                           return (
                                             <div key={sub.id} className="flex items-center gap-2 px-2 py-1.5 rounded">
-                                              <div className={cn("w-1.5 h-1.5 rounded-full shrink-0", subColors.dot)} />
-                                              <span className={cn("text-[11px]", sub.status === "done" ? "line-through text-muted-foreground" : "text-foreground/70")}>
+                                              <button onClick={(e) => toggleChecked(sub.id, e)} className="shrink-0 p-0">
+                                                {isSubChecked ? (
+                                                  <CheckSquare className="w-3.5 h-3.5 text-cf-idea" />
+                                                ) : (
+                                                  <Square className="w-3.5 h-3.5 text-muted-foreground/40 hover:text-cf-idea transition-colors" />
+                                                )}
+                                              </button>
+                                              <span className={cn("text-[11px]", isSubChecked ? "line-through text-cf-idea/60" : sub.status === "done" ? "line-through text-muted-foreground" : "text-foreground/70")}>
                                                 {sub.title}
                                               </span>
                                             </div>
@@ -364,19 +345,13 @@ const RoadmapView = () => {
               <Map className="w-6 h-6 text-muted-foreground" />
             </div>
             <p className="text-[13px] text-muted-foreground mb-1">No roadmap generated yet</p>
-            <p className="text-[11px] text-muted-foreground/50">
-              Click "Generate Roadmap" to create a step-by-step product roadmap from your session
-            </p>
+            <p className="text-[11px] text-muted-foreground/50">Click "Generate Roadmap" to create a step-by-step product roadmap from your session</p>
           </div>
         )}
       </div>
 
       {isGenerating && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="px-4 py-2 border-t border-border flex items-center gap-2"
-        >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="px-4 py-2 border-t border-border flex items-center gap-2">
           <div className="w-1.5 h-1.5 rounded-full bg-cf-idea animate-pulse" />
           <span className="text-[11px] font-mono text-muted-foreground">AI is building your roadmap...</span>
         </motion.div>
