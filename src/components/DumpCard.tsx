@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { useWorkspace, Dump, DumpType } from "@/store/WorkspaceStore";
 import { supabase } from "@/integrations/supabase/client";
 import ThreadPanel from "@/components/ThreadPanel";
+import LinkEmbed from "@/components/LinkEmbed";
 
 const typeConfig: Record<DumpType, { icon: typeof Lightbulb; label: string; dotColor: string; bgClass: string; textClass: string }> = {
   idea: { icon: Lightbulb, label: "Idea", dotColor: "bg-cf-idea", bgClass: "bg-cf-idea/10", textClass: "text-cf-idea" },
@@ -25,6 +26,40 @@ const typeConfig: Record<DumpType, { icon: typeof Lightbulb; label: string; dotC
   goal: { icon: Flag, label: "Goal", dotColor: "bg-cf-goal", bgClass: "bg-cf-goal/10", textClass: "text-cf-goal" },
 };
 
+// Extract URLs from content
+const extractUrls = (text: string): string[] => {
+  // Match markdown links like [title](url) → extract url
+  const markdownLinkRegex = /\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/g;
+  const plainUrlRegex = /(?<!\()(?<!\[)(https?:\/\/[^\s)<>\]]+)/g;
+  
+  const urls: string[] = [];
+  let match;
+
+  while ((match = markdownLinkRegex.exec(text)) !== null) {
+    urls.push(match[2]);
+  }
+
+  // Also check for plain URLs not inside markdown
+  const textWithoutMdLinks = text.replace(markdownLinkRegex, "");
+  while ((match = plainUrlRegex.exec(textWithoutMdLinks)) !== null) {
+    urls.push(match[0]);
+  }
+
+  return [...new Set(urls)];
+};
+
+// Remove link section from content for display
+const getCleanContent = (text: string): string => {
+  // Remove the 🔗 link line and blockquote
+  return text
+    .replace(/\n\n🔗 \[.*?\]\(.*?\)(\n>.*)?/g, "")
+    .trim();
+};
+
+const hasEmbeddedLink = (text: string): boolean => {
+  return text.includes("🔗 [") || /https?:\/\/[^\s]+/.test(text);
+};
+
 interface DumpCardProps {
   dump: Dump;
   index: number;
@@ -37,7 +72,10 @@ const DumpCard = ({ dump, index }: DumpCardProps) => {
   const [threadOpen, setThreadOpen] = useState(false);
   const [threadCount, setThreadCount] = useState(0);
 
-  // Load thread count on mount
+  const urls = extractUrls(dump.content);
+  const isLinkDump = urls.length > 0;
+  const cleanContent = isLinkDump ? getCleanContent(dump.content) : dump.content;
+
   useEffect(() => {
     supabase
       .from("dump_threads")
@@ -82,7 +120,15 @@ const DumpCard = ({ dump, index }: DumpCardProps) => {
               </span>
             </div>
 
-            <p className="text-[13px] text-foreground/80 leading-[1.6]">{dump.content}</p>
+            {/* Show clean text content if there is any */}
+            {cleanContent && (
+              <p className="text-[13px] text-foreground/80 leading-[1.6]">{cleanContent}</p>
+            )}
+
+            {/* Rich link embeds */}
+            {isLinkDump && urls.map((url) => (
+              <LinkEmbed key={url} url={url} />
+            ))}
 
             <div className="flex items-center gap-3 mt-2.5 flex-wrap">
               {themes.length > 0 && themes.map((theme) => (
@@ -96,7 +142,6 @@ const DumpCard = ({ dump, index }: DumpCardProps) => {
                 </button>
               ))}
 
-              {/* Thread button */}
               <button
                 onClick={(e) => { e.stopPropagation(); setThreadOpen(true); }}
                 className="inline-flex items-center gap-1 px-2 py-[2px] rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-accent/80 transition-colors"

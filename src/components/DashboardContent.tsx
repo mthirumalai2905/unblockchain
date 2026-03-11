@@ -21,6 +21,7 @@ import ArchiveView from "@/components/ArchiveView";
 import SearchDialog from "@/components/SearchDialog";
 import SocialModeView from "@/components/SocialModeView";
 import SubGroupView from "@/components/SubGroupView";
+import PersonalTodoView from "@/components/PersonalTodoView";
 
 const DashboardContent = () => {
   const {
@@ -100,7 +101,7 @@ const DashboardContent = () => {
     }
   };
 
-  const isFullLayout = activeSection === "draft" || activeSection === "roadmap";
+  const isFullLayout = activeSection === "draft" || activeSection === "roadmap" || activeSection === "personal";
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
@@ -193,7 +194,7 @@ const DashboardContent = () => {
         <div className="flex-1 flex overflow-hidden">
           {isFullLayout ? (
             <div className="flex-1 overflow-hidden">
-              {activeSection === "draft" ? <DraftView /> : <RoadmapView />}
+              {activeSection === "draft" ? <DraftView /> : activeSection === "personal" ? <PersonalTodoView /> : <RoadmapView />}
             </div>
           ) : (
             <div className="flex-1 overflow-auto cf-scrollbar">

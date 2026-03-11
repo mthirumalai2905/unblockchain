@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap, MessageSquare, Brain, CheckSquare, Lightbulb,
   HelpCircle, Clock, Archive, ChevronDown, ChevronRight, Plus, Search,
-  Command, LogOut, FileText, Trash2, Users, GitBranch, Camera, Loader2,
+  Command, LogOut, FileText, Trash2, Users, GitBranch, Camera, Loader2, ListTodo,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Map } from "lucide-react";
@@ -18,6 +18,7 @@ const normalNavItems: { id: ViewSection; label: string; icon: typeof Brain; badg
   { id: "dumps", label: "Brain Dump", icon: MessageSquare },
   { id: "structures", label: "AI Insights", icon: Brain },
   { id: "actions", label: "Actions", icon: CheckSquare },
+  { id: "personal", label: "Personal", icon: ListTodo },
   { id: "themes", label: "Themes", icon: Lightbulb },
   { id: "questions", label: "Questions", icon: HelpCircle },
   { id: "timeline", label: "Timeline", icon: Clock },
@@ -141,12 +142,14 @@ const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
     <aside className="w-[240px] h-screen flex flex-col bg-sidebar border-r border-sidebar-border shrink-0 select-none">
       {/* Logo */}
       <div className="h-14 px-4 flex items-center gap-2.5 border-b border-sidebar-border">
-        <div className="w-6 h-6 rounded-md bg-foreground flex items-center justify-center">
-          <Zap className="w-3.5 h-3.5 text-background" />
-        </div>
-        <span className="text-sm font-semibold text-sidebar-primary tracking-tight">
-          DumpStash
-        </span>
+        <a href="/" className="flex items-center gap-2.5 cursor-pointer">
+          <div className="w-6 h-6 rounded-md bg-foreground flex items-center justify-center">
+            <Zap className="w-3.5 h-3.5 text-background" />
+          </div>
+          <span className="text-sm font-semibold text-sidebar-primary tracking-tight">
+            DumpStash
+          </span>
+        </a>
         <div className="ml-auto">
           <ThemeToggle />
         </div>
