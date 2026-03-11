@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap, MessageSquare, Brain, CheckSquare, Lightbulb,
   HelpCircle, Clock, Archive, ChevronDown, ChevronRight, Plus, Search,
-  Command, LogOut, FileText, Trash2, Users, GitBranch, Camera, Loader2,
+  Command, LogOut, FileText, Trash2, Users, GitBranch, Camera, Loader2, ListTodo,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Map } from "lucide-react";
