@@ -54,7 +54,7 @@ export interface Question {
   sourceDumpIds: string[];
 }
 
-export type ViewSection = "dumps" | "structures" | "actions" | "themes" | "questions" | "timeline" | "archive" | "draft" | "roadmap" | "social";
+export type ViewSection = "dumps" | "structures" | "actions" | "themes" | "questions" | "timeline" | "archive" | "draft" | "roadmap" | "social" | "personal";
 
 // Archive helpers
 export interface ArchivedSession extends Session {
