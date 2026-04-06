@@ -25,9 +25,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Convert audio to base64
+    // Convert audio to base64 (chunked to avoid stack overflow)
     const arrayBuffer = await audioFile.arrayBuffer();
-    const base64Audio = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    const bytes = new Uint8Array(arrayBuffer);
+    let binary = "";
+    const chunkSize = 8192;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      binary += String.fromCharCode(...bytes.slice(i, i + chunkSize));
+    }
+    const base64Audio = btoa(binary);
     const mimeType = audioFile.type || "audio/webm";
 
     // Use Gemini multimodal to transcribe
