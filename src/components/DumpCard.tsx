@@ -66,7 +66,7 @@ interface DumpCardProps {
 }
 
 const DumpCard = ({ dump, index }: DumpCardProps) => {
-  const { getThemesForDump, selectTheme, setActiveSection, selectDump } = useWorkspace();
+  const { getThemesForDump, selectTheme, setActiveSection, selectDump, selectedDumpId: _sd } = useWorkspace();
   const config = typeConfig[dump.type] || typeConfig.note;
   const themes = getThemesForDump(dump.id);
   const [threadOpen, setThreadOpen] = useState(false);
@@ -91,8 +91,10 @@ const DumpCard = ({ dump, index }: DumpCardProps) => {
     setActiveSection("themes");
   };
 
+  const { selectedDumpId } = useWorkspace();
+
   const handleCardClick = () => {
-    selectDump(dump.id);
+    selectDump(selectedDumpId === dump.id ? null : dump.id);
   };
 
   return (
