@@ -3,13 +3,24 @@ import { motion } from "framer-motion";
 import {
   Lightbulb, CheckCircle2, HelpCircle, AlertTriangle,
   ListTodo, MessageSquare, MoreHorizontal,
-  ArrowUpRight, Target, MessageCircle, BookOpen, Flame, Flag, Sparkles,
+  ArrowUpRight, Target, MessageCircle, BookOpen, Flame, Flag, Sparkles, Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace, Dump, DumpType } from "@/store/WorkspaceStore";
 import { supabase } from "@/integrations/supabase/client";
 import ThreadPanel from "@/components/ThreadPanel";
 import LinkEmbed from "@/components/LinkEmbed";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 const typeConfig: Record<DumpType, { icon: typeof Lightbulb; label: string; dotColor: string; bgClass: string; textClass: string }> = {
   idea: { icon: Lightbulb, label: "Idea", dotColor: "bg-cf-idea", bgClass: "bg-cf-idea/10", textClass: "text-cf-idea" },
@@ -26,12 +37,33 @@ const typeConfig: Record<DumpType, { icon: typeof Lightbulb; label: string; dotC
   goal: { icon: Flag, label: "Goal", dotColor: "bg-cf-goal", bgClass: "bg-cf-goal/10", textClass: "text-cf-goal" },
 };
 
-// Extract URLs from content
+// Extract embedded images (base64 data urls or markdown images)
+const extractImages = (text: string): string[] => {
+  const imgs: string[] = [];
+  // Our custom [img:data:...] format
+  const customImgRegex = /\[img:(data:[^\]]+)\]/g;
+  let m;
+  while ((m = customImgRegex.exec(text)) !== null) imgs.push(m[1]);
+  // Markdown image format
+  const mdImgRegex = /!\[image\]\((https?:\/\/[^\s)]+)\)/g;
+  while ((m = mdImgRegex.exec(text)) !== null) imgs.push(m[1]);
+  return imgs;
+};
+
+// Remove image tags from content for text display
+const removeImageTags = (text: string): string => {
+  return text
+    .replace(/\n*\[img:data:[^\]]+\]/g, "")
+    .replace(/\n*!\[image\]\(https?:\/\/[^\s)]+\)/g, "")
+    .trim();
+};
+
+// Extract URLs from text (markdown links and plain URLs)
 const extractUrls = (text: string): string[] => {
   // Match markdown links like [title](url) → extract url
   const markdownLinkRegex = /\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/g;
   const plainUrlRegex = /(?<!\()(?<!\[)(https?:\/\/[^\s)<>\]]+)/g;
-  
+
   const urls: string[] = [];
   let match;
 
@@ -71,10 +103,34 @@ const DumpCard = ({ dump, index }: DumpCardProps) => {
   const themes = getThemesForDump(dump.id);
   const [threadOpen, setThreadOpen] = useState(false);
   const [threadCount, setThreadCount] = useState(0);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const urls = extractUrls(dump.content);
+  const embeddedImages = extractImages(dump.content);
+  const contentWithoutImages = removeImageTags(dump.content);
+  const urls = extractUrls(contentWithoutImages);
   const isLinkDump = urls.length > 0;
-  const cleanContent = isLinkDump ? getCleanContent(dump.content) : dump.content;
+  const cleanContent = isLinkDump ? getCleanContent(contentWithoutImages) : contentWithoutImages;
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase.from("dumps").delete().eq("id", dump.id);
+      if (error) throw error;
+      toast.success("Dump deleted");
+      // Trigger a page refresh by dispatching a custom event
+      window.dispatchEvent(new CustomEvent("dump-deleted", { detail: { dumpId: dump.id } }));
+    } catch (err: any) {
+      toast.error("Failed to delete: " + (err.message || "Unknown error"));
+    }
+    setIsDeleting(false);
+    setShowDeleteDialog(false);
+  };
 
   useEffect(() => {
     supabase
@@ -125,6 +181,20 @@ const DumpCard = ({ dump, index }: DumpCardProps) => {
               <p className="text-[13px] text-foreground/80 leading-[1.6]">{cleanContent}</p>
             )}
 
+            {/* Embedded images */}
+            {embeddedImages.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {embeddedImages.map((src, i) => (
+                  <img
+                    key={i}
+                    src={src}
+                    alt="attachment"
+                    className="max-h-48 max-w-full rounded-lg object-cover border border-border"
+                  />
+                ))}
+              </div>
+            )}
+
             {/* Rich link embeds */}
             {isLinkDump && urls.map((url) => (
               <LinkEmbed key={url} url={url} />
@@ -160,6 +230,13 @@ const DumpCard = ({ dump, index }: DumpCardProps) => {
             >
               <Sparkles className="w-3.5 h-3.5" />
             </button>
+            <button
+              onClick={handleDelete}
+              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+              title="Delete dump"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
             <button className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-accent text-muted-foreground">
               <MoreHorizontal className="w-3.5 h-3.5" />
             </button>
@@ -175,6 +252,27 @@ const DumpCard = ({ dump, index }: DumpCardProps) => {
         onClose={() => setThreadOpen(false)}
         onThreadCountChange={setThreadCount}
       />
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this dump?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove this dump. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };
