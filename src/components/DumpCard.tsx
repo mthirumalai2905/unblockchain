@@ -91,8 +91,6 @@ const DumpCard = ({ dump, index }: DumpCardProps) => {
     setActiveSection("themes");
   };
 
-  const { selectedDumpId } = useWorkspace();
-
   const handleCardClick = () => {
     selectDump(selectedDumpId === dump.id ? null : dump.id);
   };
