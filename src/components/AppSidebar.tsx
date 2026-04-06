@@ -292,7 +292,7 @@ const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
         </div>
       ) : (
         /* Sessions (normal mode) */
-        <div className="px-2 flex-1 overflow-auto cf-scrollbar">
+        <div className="px-2 flex-1 min-h-0 overflow-y-auto cf-scrollbar">
           <button
             onClick={() => setSessionsOpen(!sessionsOpen)}
             className="w-full flex items-center gap-1 px-2.5 py-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-sidebar-muted hover:text-sidebar-foreground transition-colors"
