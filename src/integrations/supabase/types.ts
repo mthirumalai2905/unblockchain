@@ -397,6 +397,44 @@ export type Database = {
           },
         ]
       }
+      session_shares: {
+        Row: {
+          created_at: string
+          id: string
+          permission: Database["public"]["Enums"]["share_permission"]
+          session_id: string
+          shared_by: string
+          shared_with_email: string
+          shared_with_user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          permission?: Database["public"]["Enums"]["share_permission"]
+          session_id: string
+          shared_by: string
+          shared_with_email: string
+          shared_with_user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          permission?: Database["public"]["Enums"]["share_permission"]
+          session_id?: string
+          shared_by?: string
+          shared_with_email?: string
+          shared_with_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_shares_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sessions: {
         Row: {
           created_at: string
@@ -797,6 +835,7 @@ export type Database = {
         | "reference"
         | "rant"
         | "goal"
+      share_permission: "read" | "write"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -938,6 +977,7 @@ export const Constants = {
         "rant",
         "goal",
       ],
+      share_permission: ["read", "write"],
     },
   },
 } as const
