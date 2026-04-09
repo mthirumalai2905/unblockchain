@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Brain, Loader2, PanelLeftClose, PanelLeft, Menu, Globe, Bot } from "lucide-react";
+import { Brain, Loader2, PanelLeftClose, PanelLeft, Menu, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/store/WorkspaceStore";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -16,22 +16,20 @@ import AISummaryPanel from "@/components/AISummaryPanel";
 import DraftView from "@/components/DraftView";
 import RoadmapView from "@/components/RoadmapView";
 import ThinkingPanel from "@/components/ThinkingPanel";
-
 import ArchiveView from "@/components/ArchiveView";
 import SearchDialog from "@/components/SearchDialog";
-import SocialModeView from "@/components/SocialModeView";
-import SubGroupView from "@/components/SubGroupView";
 import PersonalTodoView from "@/components/PersonalTodoView";
+import ShareDialog from "@/components/ShareDialog";
 
 const DashboardContent = () => {
   const {
     dumps, activeSection, isProcessing, showAIPanel, toggleAIPanel, selectedDumpId, loading, sessions, activeSessionId,
-    sidebarCollapsed, toggleSidebar, thinkingSteps, showThinking, closeThinking, socialMode, toggleSocialMode, activeSubGroupId,
-    showChromeChat, toggleChromeChat,
+    sidebarCollapsed, toggleSidebar, thinkingSteps, showThinking, closeThinking,
   } = useWorkspace();
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const activeSession = sessions.find((s) => s.id === activeSessionId);
 
@@ -39,7 +37,6 @@ const DashboardContent = () => {
     ? dumps.filter((d) => d.id === selectedDumpId)
     : dumps;
 
-  // Global Cmd+K shortcut
   const handleSearchToggle = useCallback(() => setSearchOpen(p => !p), []);
 
   useEffect(() => {
@@ -150,44 +147,24 @@ const DashboardContent = () => {
           <div className="flex items-center gap-2 sm:gap-3">
             <span className="text-[11px] text-muted-foreground font-mono hidden sm:inline">{dumps.length} dumps</span>
             <button
-              onClick={toggleSocialMode}
+              onClick={() => setShareOpen(true)}
+              className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-md text-[11px] sm:text-[12px] font-medium border border-border text-muted-foreground hover:border-ring/50 hover:text-foreground transition-all duration-150"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Share</span>
+            </button>
+            <button
+              onClick={toggleAIPanel}
               className={cn(
                 "flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-md text-[11px] sm:text-[12px] font-medium border transition-all duration-150",
-                socialMode
-                  ? "bg-primary text-primary-foreground border-primary"
+                showAIPanel
+                  ? "bg-foreground text-background border-foreground"
                   : "bg-transparent text-muted-foreground border-border hover:border-ring/50 hover:text-foreground"
               )}
             >
-              <Globe className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{socialMode ? "Social" : "Social"}</span>
+              <Brain className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{showAIPanel ? "AI On" : "AI Off"}</span>
             </button>
-            {socialMode ? (
-              <button
-                onClick={toggleChromeChat}
-                className={cn(
-                  "flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-md text-[11px] sm:text-[12px] font-medium border transition-all duration-150",
-                  showChromeChat
-                    ? "bg-foreground text-background border-foreground"
-                    : "bg-transparent text-muted-foreground border-border hover:border-ring/50 hover:text-foreground"
-                )}
-              >
-                <Bot className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Chrome</span>
-              </button>
-            ) : (
-              <button
-                onClick={toggleAIPanel}
-                className={cn(
-                  "flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-md text-[11px] sm:text-[12px] font-medium border transition-all duration-150",
-                  showAIPanel
-                    ? "bg-foreground text-background border-foreground"
-                    : "bg-transparent text-muted-foreground border-border hover:border-ring/50 hover:text-foreground"
-                )}
-              >
-                <Brain className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">{showAIPanel ? "AI On" : "AI Off"}</span>
-              </button>
-            )}
           </div>
         </header>
 
@@ -207,7 +184,7 @@ const DashboardContent = () => {
                     exit={{ opacity: 0, y: -8 }}
                     transition={{ duration: 0.15 }}
                   >
-                    {socialMode && activeSubGroupId ? <SubGroupView /> : showAIPanel && activeSection === "dumps" ? <AIStructuredView /> : socialMode && activeSection === "dumps" ? <SocialModeView /> : renderContent()}
+                    {showAIPanel && activeSection === "dumps" ? <AIStructuredView /> : renderContent()}
                   </motion.div>
                 </AnimatePresence>
               </div>
@@ -232,6 +209,12 @@ const DashboardContent = () => {
 
       <ThinkingPanel steps={thinkingSteps} isOpen={showThinking} onClose={closeThinking} />
       <SearchDialog isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+      <ShareDialog
+        isOpen={shareOpen}
+        onClose={() => setShareOpen(false)}
+        sessionId={activeSessionId}
+        sessionName={activeSession?.name || "Untitled"}
+      />
     </div>
   );
 };
