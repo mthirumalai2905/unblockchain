@@ -14,6 +14,7 @@ export interface Session {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  user_id?: string;
 }
 
 export interface Dump {
@@ -54,9 +55,8 @@ export interface Question {
   sourceDumpIds: string[];
 }
 
-export type ViewSection = "dumps" | "structures" | "actions" | "themes" | "questions" | "timeline" | "archive" | "draft" | "roadmap" | "social" | "personal";
+export type ViewSection = "dumps" | "structures" | "actions" | "themes" | "questions" | "timeline" | "archive" | "draft" | "roadmap" | "personal";
 
-// Archive helpers
 export interface ArchivedSession extends Session {
   is_active: false;
 }
@@ -77,9 +77,6 @@ interface WorkspaceState {
   sidebarCollapsed: boolean;
   thinkingSteps: ThinkingStep[];
   showThinking: boolean;
-  socialMode: boolean;
-  activeSubGroupId: string | null;
-  showChromeChat: boolean;
 }
 
 interface WorkspaceActions {
@@ -103,9 +100,6 @@ interface WorkspaceActions {
   processAllDumps: () => void;
   toggleSidebar: () => void;
   closeThinking: () => void;
-  toggleSocialMode: () => void;
-  setActiveSubGroupId: (id: string | null) => void;
-  toggleChromeChat: () => void;
 }
 
 const WorkspaceContext = createContext<(WorkspaceState & WorkspaceActions) | null>(null);
@@ -135,22 +129,41 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [thinkingSteps, setThinkingSteps] = useState<ThinkingStep[]>([]);
   const [showThinking, setShowThinking] = useState(false);
-  const [socialMode, setSocialMode] = useState(false);
-  const [activeSubGroupId, setActiveSubGroupId] = useState<string | null>(null);
 
-  // Load sessions
+  // Load sessions (own + shared)
   useEffect(() => {
     if (!user) { setLoading(false); return; }
     const loadSessions = async () => {
       try {
-        const { data, error } = await supabase
+        // Load own sessions
+        const { data: ownSessions, error } = await supabase
           .from("sessions")
           .select("*")
           .order("updated_at", { ascending: false });
         if (error) { console.error(error); setLoading(false); return; }
-        if (data && data.length > 0) {
-          setSessions(data as Session[]);
-          setActiveSessionId(data[0].id);
+
+        // Load shared sessions
+        const { data: shares } = await supabase
+          .from("session_shares")
+          .select("session_id, permission")
+          .eq("shared_with_user_id", user.id);
+
+        let sharedSessions: Session[] = [];
+        if (shares && shares.length > 0) {
+          const sharedIds = shares.map((s: any) => s.session_id);
+          const { data: sharedData } = await supabase
+            .from("sessions")
+            .select("*")
+            .in("id", sharedIds)
+            .order("updated_at", { ascending: false });
+          sharedSessions = (sharedData || []) as Session[];
+        }
+
+        const allSessions = [...(ownSessions || []), ...sharedSessions] as Session[];
+
+        if (allSessions.length > 0) {
+          setSessions(allSessions);
+          setActiveSessionId(allSessions[0].id);
         } else {
           const { data: newSession, error: createErr } = await supabase
             .from("sessions")
@@ -176,75 +189,58 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     if (!activeSessionId || !user) return;
     const loadSessionData = async () => {
       try {
-      const [dumpsRes, themesRes, actionsRes, questionsRes] = await Promise.all([
-        supabase.from("dumps").select("*").eq("session_id", activeSessionId).eq("mode", "normal").order("created_at", { ascending: false }),
-        supabase.from("themes").select("*").eq("session_id", activeSessionId),
-        supabase.from("actions").select("*").eq("session_id", activeSessionId),
-        supabase.from("questions").select("*").eq("session_id", activeSessionId),
-      ]);
+        const [dumpsRes, themesRes, actionsRes, questionsRes] = await Promise.all([
+          supabase.from("dumps").select("*").eq("session_id", activeSessionId).eq("mode", "normal").order("created_at", { ascending: false }),
+          supabase.from("themes").select("*").eq("session_id", activeSessionId),
+          supabase.from("actions").select("*").eq("session_id", activeSessionId),
+          supabase.from("questions").select("*").eq("session_id", activeSessionId),
+        ]);
 
-      if (dumpsRes.data) {
-        // Get profiles for authors
-        const userIds = [...new Set(dumpsRes.data.map((d: any) => d.user_id))];
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("user_id, display_name, avatar_initials")
-          .in("user_id", userIds);
-        const profileMap = new Map(profiles?.map((p: any) => [p.user_id, p]) || []);
+        if (dumpsRes.data) {
+          const userIds = [...new Set(dumpsRes.data.map((d: any) => d.user_id))];
+          const { data: profiles } = await supabase
+            .from("profiles")
+            .select("user_id, display_name, avatar_initials")
+            .in("user_id", userIds);
+          const profileMap = new Map(profiles?.map((p: any) => [p.user_id, p]) || []);
 
-        setDumps(dumpsRes.data.map((d: any) => {
-          const profile = profileMap.get(d.user_id) as any;
-          return {
-            id: d.id,
-            session_id: d.session_id,
-            content: d.content,
-            type: d.type as DumpType,
-            created_at: d.created_at,
-            author: profile?.display_name || "Unknown",
-            avatar: profile?.avatar_initials || "??",
-          };
-        }));
-      }
+          setDumps(dumpsRes.data.map((d: any) => {
+            const profile = profileMap.get(d.user_id) as any;
+            return {
+              id: d.id, session_id: d.session_id, content: d.content,
+              type: d.type as DumpType, created_at: d.created_at,
+              author: profile?.display_name || "Unknown",
+              avatar: profile?.avatar_initials || "??",
+            };
+          }));
+        }
 
-      if (themesRes.data) {
-        // Load dump-theme relations
-        const themeIds = themesRes.data.map((t: any) => t.id);
-        const { data: relations } = themeIds.length > 0
-          ? await supabase.from("dump_themes").select("*").in("theme_id", themeIds)
-          : { data: [] };
+        if (themesRes.data) {
+          const themeIds = themesRes.data.map((t: any) => t.id);
+          const { data: relations } = themeIds.length > 0
+            ? await supabase.from("dump_themes").select("*").in("theme_id", themeIds)
+            : { data: [] };
+          setThemes(themesRes.data.map((t: any) => ({
+            id: t.id, session_id: t.session_id, title: t.title,
+            tags: t.tags || [], confidence: t.confidence || 0,
+            dumpIds: (relations || []).filter((r: any) => r.theme_id === t.id).map((r: any) => r.dump_id),
+          })));
+        }
 
-        setThemes(themesRes.data.map((t: any) => ({
-          id: t.id,
-          session_id: t.session_id,
-          title: t.title,
-          tags: t.tags || [],
-          confidence: t.confidence || 0,
-          dumpIds: (relations || []).filter((r: any) => r.theme_id === t.id).map((r: any) => r.dump_id),
-        })));
-      }
+        if (actionsRes.data) {
+          setActions(actionsRes.data.map((a: any) => ({
+            id: a.id, session_id: a.session_id, text: a.text,
+            owner: a.owner || "Unassigned", priority: a.priority as "high" | "medium" | "low",
+            done: a.done, sourceDumpIds: a.source_dump_ids || [],
+          })));
+        }
 
-      if (actionsRes.data) {
-        setActions(actionsRes.data.map((a: any) => ({
-          id: a.id,
-          session_id: a.session_id,
-          text: a.text,
-          owner: a.owner || "Unassigned",
-          priority: a.priority as "high" | "medium" | "low",
-          done: a.done,
-          sourceDumpIds: a.source_dump_ids || [],
-        })));
-      }
-
-      if (questionsRes.data) {
-        setQuestions(questionsRes.data.map((q: any) => ({
-          id: q.id,
-          session_id: q.session_id,
-          text: q.text,
-          votes: q.votes,
-          answered: q.answered,
-          sourceDumpIds: q.source_dump_ids || [],
-        })));
-      }
+        if (questionsRes.data) {
+          setQuestions(questionsRes.data.map((q: any) => ({
+            id: q.id, session_id: q.session_id, text: q.text,
+            votes: q.votes, answered: q.answered, sourceDumpIds: q.source_dump_ids || [],
+          })));
+        }
       } catch (e) {
         console.error("Failed to load session data:", e);
       }
@@ -263,7 +259,6 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
 
     if (error) { toast.error("Failed to save dump"); setIsProcessing(false); return; }
 
-    // Get profile
     const { data: profile } = await supabase
       .from("profiles")
       .select("display_name, avatar_initials")
@@ -271,36 +266,22 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
       .maybeSingle();
 
     const newDump: Dump = {
-      id: data.id,
-      session_id: data.session_id,
-      content: data.content,
-      type: data.type as DumpType,
-      created_at: data.created_at,
-      author: profile?.display_name || "You",
-      avatar: profile?.avatar_initials || "YO",
+      id: data.id, session_id: data.session_id, content: data.content,
+      type: data.type as DumpType, created_at: data.created_at,
+      author: profile?.display_name || "You", avatar: profile?.avatar_initials || "YO",
     };
     setDumps((prev) => [newDump, ...prev]);
-
-    // Update session timestamp
     await supabase.from("sessions").update({ updated_at: new Date().toISOString() }).eq("id", activeSessionId);
     setIsProcessing(false);
   }, [user, activeSessionId]);
 
-
   const createSession = useCallback(async (name: string) => {
     if (!user) return;
-    const { data, error } = await supabase
-      .from("sessions")
-      .insert({ user_id: user.id, name })
-      .select()
-      .single();
+    const { data, error } = await supabase.from("sessions").insert({ user_id: user.id, name }).select().single();
     if (error) { toast.error("Failed to create session"); return; }
     setSessions((prev) => [data as Session, ...prev]);
     setActiveSessionId(data.id);
-    setDumps([]);
-    setThemes([]);
-    setActions([]);
-    setQuestions([]);
+    setDumps([]); setThemes([]); setActions([]); setQuestions([]);
     toast.success("Session created!");
   }, [user]);
 
@@ -313,9 +294,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
 
   const renameSession = useCallback(async (id: string, name: string) => {
     const { error } = await supabase.from("sessions").update({ name }).eq("id", id);
-    if (!error) {
-      setSessions((prev) => prev.map((s) => s.id === id ? { ...s, name } : s));
-    }
+    if (!error) setSessions((prev) => prev.map((s) => s.id === id ? { ...s, name } : s));
   }, []);
 
   const deleteSession = useCallback(async (id: string) => {
@@ -329,11 +308,8 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     if (error) { toast.error("Failed to delete session"); return; }
     setSessions((prev) => {
       const remaining = prev.filter((s) => s.id !== id);
-      if (id === activeSessionId && remaining.length > 0) {
-        setActiveSessionId(remaining[0].id);
-      } else if (remaining.length === 0) {
-        setActiveSessionId(null);
-      }
+      if (id === activeSessionId && remaining.length > 0) setActiveSessionId(remaining[0].id);
+      else if (remaining.length === 0) setActiveSessionId(null);
       return remaining;
     });
     toast.success("Session deleted");
@@ -397,12 +373,8 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     const unprocessed = dumps.filter((d) => d.type === "note");
     const toProcess = unprocessed.length > 0 ? unprocessed : dumps;
 
-    // Initialize thinking steps
     const initialSteps: ThinkingStep[] = toProcess.map((d) => ({
-      dumpId: d.id,
-      dumpContent: d.content,
-      status: "pending" as const,
-      reasoning: [],
+      dumpId: d.id, dumpContent: d.content, status: "pending" as const, reasoning: [],
     }));
     setThinkingSteps(initialSteps);
     setShowThinking(true);
@@ -410,53 +382,27 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     try {
       for (let i = 0; i < toProcess.length; i++) {
         const dump = toProcess[i];
-        // Mark current as processing
-        setThinkingSteps((prev) =>
-          prev.map((s, idx) => idx === i ? { ...s, status: "processing" as const } : s)
-        );
-
+        setThinkingSteps((prev) => prev.map((s, idx) => idx === i ? { ...s, status: "processing" as const } : s));
         try {
           const resp = await fetch(
             `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/process-dump`,
             {
               method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-              },
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
               body: JSON.stringify({ dump_id: dump.id, session_id: activeSessionId, user_id: user.id }),
             }
           );
           const data = await resp.json();
-
           if (data.success && data.result) {
             const r = data.result;
-            setThinkingSteps((prev) =>
-              prev.map((s, idx) =>
-                idx === i
-                  ? {
-                      ...s,
-                      status: "done" as const,
-                      reasoning: r.reasoning || ["Analysis complete"],
-                      result: {
-                        type: r.type || "note",
-                        actionsCount: r.actions?.length || 0,
-                        questionsCount: r.questions?.length || 0,
-                        themesCount: r.themes?.length || 0,
-                      },
-                    }
-                  : s
-              )
-            );
+            setThinkingSteps((prev) => prev.map((s, idx) =>
+              idx === i ? { ...s, status: "done" as const, reasoning: r.reasoning || ["Analysis complete"], result: { type: r.type || "note", actionsCount: r.actions?.length || 0, questionsCount: r.questions?.length || 0, themesCount: r.themes?.length || 0 } } : s
+            ));
           } else {
-            setThinkingSteps((prev) =>
-              prev.map((s, idx) => idx === i ? { ...s, status: "error" as const, reasoning: [data.error || "Failed"] } : s)
-            );
+            setThinkingSteps((prev) => prev.map((s, idx) => idx === i ? { ...s, status: "error" as const, reasoning: [data.error || "Failed"] } : s));
           }
         } catch {
-          setThinkingSteps((prev) =>
-            prev.map((s, idx) => idx === i ? { ...s, status: "error" as const, reasoning: ["Network error"] } : s)
-          );
+          setThinkingSteps((prev) => prev.map((s, idx) => idx === i ? { ...s, status: "error" as const, reasoning: ["Network error"] } : s));
         }
       }
       await refreshSessionData();
@@ -472,26 +418,19 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     const action = actions.find((a) => a.id === id);
     if (!action) return;
     const { error } = await supabase.from("actions").update({ done: !action.done }).eq("id", id);
-    if (!error) {
-      setActions((prev) => prev.map((a) => a.id === id ? { ...a, done: !a.done } : a));
-    }
+    if (!error) setActions((prev) => prev.map((a) => a.id === id ? { ...a, done: !a.done } : a));
   }, [actions]);
 
   const voteQuestion = useCallback(async (id: string) => {
     const q = questions.find((q) => q.id === id);
     if (!q) return;
     const { error } = await supabase.from("questions").update({ votes: q.votes + 1 }).eq("id", id);
-    if (!error) {
-      setQuestions((prev) => prev.map((q) => q.id === id ? { ...q, votes: q.votes + 1 } : q));
-    }
+    if (!error) setQuestions((prev) => prev.map((q) => q.id === id ? { ...q, votes: q.votes + 1 } : q));
   }, [questions]);
 
   const toggleAIPanel = useCallback(() => setShowAIPanel((p) => !p), []);
   const toggleSidebar = useCallback(() => setSidebarCollapsed((p) => !p), []);
   const closeThinking = useCallback(() => setShowThinking(false), []);
-  const toggleSocialMode = useCallback(() => setSocialMode((p) => !p), []);
-  const [showChromeChat, setShowChromeChat] = useState(false);
-  const toggleChromeChat = useCallback(() => setShowChromeChat((p) => !p), []);
 
   const getDumpsForTheme = useCallback((themeId: string) => {
     const theme = themes.find((t) => t.id === themeId);
@@ -512,13 +451,12 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const value = useMemo(() => ({
     sessions, activeSessionId, dumps, themes, actions, questions,
     activeSection, selectedThemeId, selectedDumpId, isProcessing, showAIPanel, loading,
-    sidebarCollapsed, thinkingSteps, showThinking, socialMode, activeSubGroupId, showChromeChat,
+    sidebarCollapsed, thinkingSteps, showThinking,
     addDump, createSession, deleteSession, switchSession, renameSession, archiveSession, restoreSession,
     setActiveSection, selectTheme, selectDump,
-    toggleAction, voteQuestion, toggleAIPanel, toggleSidebar, closeThinking, toggleSocialMode,
+    toggleAction, voteQuestion, toggleAIPanel, toggleSidebar, closeThinking,
     getDumpsForTheme, getDumpsForAction, getThemesForDump, refreshSessionData, processAllDumps,
-    setActiveSubGroupId, toggleChromeChat,
-  }), [sessions, activeSessionId, dumps, themes, actions, questions, activeSection, selectedThemeId, selectedDumpId, isProcessing, showAIPanel, loading, sidebarCollapsed, thinkingSteps, showThinking, socialMode, activeSubGroupId, showChromeChat, addDump, createSession, deleteSession, switchSession, renameSession, archiveSession, restoreSession, toggleAction, voteQuestion, toggleAIPanel, toggleSidebar, closeThinking, toggleSocialMode, getDumpsForTheme, getDumpsForAction, getThemesForDump, refreshSessionData, processAllDumps, setActiveSubGroupId, toggleChromeChat]);
+  }), [sessions, activeSessionId, dumps, themes, actions, questions, activeSection, selectedThemeId, selectedDumpId, isProcessing, showAIPanel, loading, sidebarCollapsed, thinkingSteps, showThinking, addDump, createSession, deleteSession, switchSession, renameSession, archiveSession, restoreSession, toggleAction, voteQuestion, toggleAIPanel, toggleSidebar, closeThinking, getDumpsForTheme, getDumpsForAction, getThemesForDump, refreshSessionData, processAllDumps]);
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
 };
