@@ -812,8 +812,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      has_shared_access: {
+        Args: { _session_id: string; _user_id: string }
+        Returns: boolean
+      }
+      has_write_shared_access: {
+        Args: { _session_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_group_member: {
         Args: { _group_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_session_owner: {
+        Args: { _session_id: string; _user_id: string }
         Returns: boolean
       }
       is_sub_group_member: {
