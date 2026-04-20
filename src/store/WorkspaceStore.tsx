@@ -25,6 +25,7 @@ export interface Dump {
   created_at: string;
   author: string;
   avatar: string;
+  position?: number;
 }
 
 export interface Theme {
@@ -100,6 +101,7 @@ interface WorkspaceActions {
   processAllDumps: () => void;
   toggleSidebar: () => void;
   closeThinking: () => void;
+  reorderDumps: (newOrder: Dump[]) => void;
 }
 
 const WorkspaceContext = createContext<(WorkspaceState & WorkspaceActions) | null>(null);
@@ -190,7 +192,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     const loadSessionData = async () => {
       try {
         const [dumpsRes, themesRes, actionsRes, questionsRes] = await Promise.all([
-          supabase.from("dumps").select("*").eq("session_id", activeSessionId).eq("mode", "normal").order("created_at", { ascending: false }),
+          supabase.from("dumps").select("*").eq("session_id", activeSessionId).eq("mode", "normal").order("position", { ascending: true, nullsFirst: false }).order("created_at", { ascending: false }),
           supabase.from("themes").select("*").eq("session_id", activeSessionId),
           supabase.from("actions").select("*").eq("session_id", activeSessionId),
           supabase.from("questions").select("*").eq("session_id", activeSessionId),
@@ -211,6 +213,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
               type: d.type as DumpType, created_at: d.created_at,
               author: profile?.display_name || "Unknown",
               avatar: profile?.avatar_initials || "??",
+              position: d.position ?? undefined,
             };
           }));
         }
@@ -251,9 +254,12 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const addDump = useCallback(async (content: string) => {
     if (!user || !activeSessionId) return;
     setIsProcessing(true);
+    // New dumps get a position smaller than the smallest existing → appear at top
+    const minPos = dumps.reduce((m, d) => (d.position !== undefined && d.position < m ? d.position : m), Infinity);
+    const newPos = minPos === Infinity ? 0 : minPos - 1;
     const { data, error } = await supabase
       .from("dumps")
-      .insert({ session_id: activeSessionId, user_id: user.id, content, type: "note", mode: "normal" })
+      .insert({ session_id: activeSessionId, user_id: user.id, content, type: "note", mode: "normal", position: newPos })
       .select()
       .single();
 
@@ -269,11 +275,12 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
       id: data.id, session_id: data.session_id, content: data.content,
       type: data.type as DumpType, created_at: data.created_at,
       author: profile?.display_name || "You", avatar: profile?.avatar_initials || "YO",
+      position: (data as any).position ?? newPos,
     };
     setDumps((prev) => [newDump, ...prev]);
     await supabase.from("sessions").update({ updated_at: new Date().toISOString() }).eq("id", activeSessionId);
     setIsProcessing(false);
-  }, [user, activeSessionId]);
+  }, [user, activeSessionId, dumps]);
 
   const createSession = useCallback(async (name: string) => {
     if (!user) return;
@@ -340,7 +347,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const refreshSessionData = useCallback(async () => {
     if (!activeSessionId || !user) return;
     const [dumpsRes, themesRes, actionsRes, questionsRes] = await Promise.all([
-      supabase.from("dumps").select("*").eq("session_id", activeSessionId).eq("mode", "normal").order("created_at", { ascending: false }),
+      supabase.from("dumps").select("*").eq("session_id", activeSessionId).eq("mode", "normal").order("position", { ascending: true, nullsFirst: false }).order("created_at", { ascending: false }),
       supabase.from("themes").select("*").eq("session_id", activeSessionId),
       supabase.from("actions").select("*").eq("session_id", activeSessionId),
       supabase.from("questions").select("*").eq("session_id", activeSessionId),
@@ -351,7 +358,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
       const profileMap = new Map(profiles?.map((p: any) => [p.user_id, p]) || []);
       setDumps(dumpsRes.data.map((d: any) => {
         const profile = profileMap.get(d.user_id) as any;
-        return { id: d.id, session_id: d.session_id, content: d.content, type: d.type as DumpType, created_at: d.created_at, author: profile?.display_name || "Unknown", avatar: profile?.avatar_initials || "??" };
+        return { id: d.id, session_id: d.session_id, content: d.content, type: d.type as DumpType, created_at: d.created_at, author: profile?.display_name || "Unknown", avatar: profile?.avatar_initials || "??", position: d.position ?? undefined };
       }));
     }
     if (themesRes.data) {
@@ -448,6 +455,20 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     return themes.filter((t) => t.dumpIds.includes(dumpId));
   }, [themes]);
 
+  const reorderDumps = useCallback(async (newOrder: Dump[]) => {
+    // Assign sequential positions and persist
+    const updated = newOrder.map((d, i) => ({ ...d, position: i }));
+    setDumps(updated);
+    try {
+      await Promise.all(
+        updated.map((d) => supabase.from("dumps").update({ position: d.position }).eq("id", d.id))
+      );
+    } catch (e) {
+      console.error("Reorder persist failed:", e);
+      toast.error("Failed to save new order");
+    }
+  }, []);
+
   const value = useMemo(() => ({
     sessions, activeSessionId, dumps, themes, actions, questions,
     activeSection, selectedThemeId, selectedDumpId, isProcessing, showAIPanel, loading,
@@ -455,8 +476,8 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     addDump, createSession, deleteSession, switchSession, renameSession, archiveSession, restoreSession,
     setActiveSection, selectTheme, selectDump,
     toggleAction, voteQuestion, toggleAIPanel, toggleSidebar, closeThinking,
-    getDumpsForTheme, getDumpsForAction, getThemesForDump, refreshSessionData, processAllDumps,
-  }), [sessions, activeSessionId, dumps, themes, actions, questions, activeSection, selectedThemeId, selectedDumpId, isProcessing, showAIPanel, loading, sidebarCollapsed, thinkingSteps, showThinking, addDump, createSession, deleteSession, switchSession, renameSession, archiveSession, restoreSession, toggleAction, voteQuestion, toggleAIPanel, toggleSidebar, closeThinking, getDumpsForTheme, getDumpsForAction, getThemesForDump, refreshSessionData, processAllDumps]);
+    getDumpsForTheme, getDumpsForAction, getThemesForDump, refreshSessionData, processAllDumps, reorderDumps,
+  }), [sessions, activeSessionId, dumps, themes, actions, questions, activeSection, selectedThemeId, selectedDumpId, isProcessing, showAIPanel, loading, sidebarCollapsed, thinkingSteps, showThinking, addDump, createSession, deleteSession, switchSession, renameSession, archiveSession, restoreSession, toggleAction, voteQuestion, toggleAIPanel, toggleSidebar, closeThinking, getDumpsForTheme, getDumpsForAction, getThemesForDump, refreshSessionData, processAllDumps, reorderDumps]);
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
 };

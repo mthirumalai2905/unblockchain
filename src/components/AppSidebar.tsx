@@ -9,6 +9,7 @@ import { Map } from "lucide-react";
 import { useWorkspace, ViewSection } from "@/store/WorkspaceStore";
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import ThemeToggle from "@/components/ThemeToggle";
 import UserAvatar from "@/components/UserAvatar";
@@ -38,6 +39,7 @@ const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
     archiveSession,
   } = useWorkspace();
   const { signOut, user } = useAuth();
+  const navigate = useNavigate();
   const [sessionsOpen, setSessionsOpen] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [newSessionName, setNewSessionName] = useState("");
@@ -246,18 +248,20 @@ const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
         <input type="file" ref={fileInputRef} accept="image/*" className="hidden" onChange={handleAvatarUpload} />
         <div className="flex items-center gap-2.5">
           <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploadingAvatar}
+            onClick={() => navigate("/profile")}
             className="relative w-8 h-8 rounded-full shrink-0 overflow-hidden group hover:ring-2 hover:ring-primary/30 transition-all"
+            title="View profile"
           >
             <UserAvatar avatarUrl={userProfile?.avatar_url} initials={userProfile?.avatar_initials || "??"} size="md" className="w-8 h-8" />
-            <div className="absolute inset-0 bg-background/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              {uploadingAvatar ? <Loader2 className="w-3 h-3 animate-spin text-foreground" /> : <Camera className="w-3 h-3 text-foreground" />}
-            </div>
           </button>
-          <div className="flex-1 min-w-0">
-            <p className="text-[12px] font-medium text-sidebar-foreground truncate">{userProfile?.display_name || "User"}</p>
-          </div>
+          <button
+            onClick={() => navigate("/profile")}
+            className="flex-1 min-w-0 text-left"
+            title="View profile"
+          >
+            <p className="text-[12px] font-medium text-sidebar-foreground truncate hover:text-foreground transition">{userProfile?.display_name || "User"}</p>
+            <p className="text-[10px] text-sidebar-muted truncate">View profile</p>
+          </button>
           <button
             onClick={signOut}
             className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors"
