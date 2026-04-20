@@ -455,6 +455,20 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     return themes.filter((t) => t.dumpIds.includes(dumpId));
   }, [themes]);
 
+  const reorderDumps = useCallback(async (newOrder: Dump[]) => {
+    // Assign sequential positions and persist
+    const updated = newOrder.map((d, i) => ({ ...d, position: i }));
+    setDumps(updated);
+    try {
+      await Promise.all(
+        updated.map((d) => supabase.from("dumps").update({ position: d.position }).eq("id", d.id))
+      );
+    } catch (e) {
+      console.error("Reorder persist failed:", e);
+      toast.error("Failed to save new order");
+    }
+  }, []);
+
   const value = useMemo(() => ({
     sessions, activeSessionId, dumps, themes, actions, questions,
     activeSection, selectedThemeId, selectedDumpId, isProcessing, showAIPanel, loading,
@@ -462,8 +476,8 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     addDump, createSession, deleteSession, switchSession, renameSession, archiveSession, restoreSession,
     setActiveSection, selectTheme, selectDump,
     toggleAction, voteQuestion, toggleAIPanel, toggleSidebar, closeThinking,
-    getDumpsForTheme, getDumpsForAction, getThemesForDump, refreshSessionData, processAllDumps,
-  }), [sessions, activeSessionId, dumps, themes, actions, questions, activeSection, selectedThemeId, selectedDumpId, isProcessing, showAIPanel, loading, sidebarCollapsed, thinkingSteps, showThinking, addDump, createSession, deleteSession, switchSession, renameSession, archiveSession, restoreSession, toggleAction, voteQuestion, toggleAIPanel, toggleSidebar, closeThinking, getDumpsForTheme, getDumpsForAction, getThemesForDump, refreshSessionData, processAllDumps]);
+    getDumpsForTheme, getDumpsForAction, getThemesForDump, refreshSessionData, processAllDumps, reorderDumps,
+  }), [sessions, activeSessionId, dumps, themes, actions, questions, activeSection, selectedThemeId, selectedDumpId, isProcessing, showAIPanel, loading, sidebarCollapsed, thinkingSteps, showThinking, addDump, createSession, deleteSession, switchSession, renameSession, archiveSession, restoreSession, toggleAction, voteQuestion, toggleAIPanel, toggleSidebar, closeThinking, getDumpsForTheme, getDumpsForAction, getThemesForDump, refreshSessionData, processAllDumps, reorderDumps]);
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
 };
