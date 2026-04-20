@@ -25,6 +25,7 @@ export interface Dump {
   created_at: string;
   author: string;
   avatar: string;
+  position?: number;
 }
 
 export interface Theme {
@@ -100,6 +101,7 @@ interface WorkspaceActions {
   processAllDumps: () => void;
   toggleSidebar: () => void;
   closeThinking: () => void;
+  reorderDumps: (newOrder: Dump[]) => void;
 }
 
 const WorkspaceContext = createContext<(WorkspaceState & WorkspaceActions) | null>(null);
