@@ -163,9 +163,14 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
 
         const allSessions = [...(ownSessions || []), ...sharedSessions] as Session[];
 
+        // Honor a requested session id (e.g. from profile page session click)
+        const requestedId = typeof window !== "undefined" ? sessionStorage.getItem("dumpstash:openSessionId") : null;
+        const requestedExists = requestedId && allSessions.some((s) => s.id === requestedId);
+        if (requestedId) sessionStorage.removeItem("dumpstash:openSessionId");
+
         if (allSessions.length > 0) {
           setSessions(allSessions);
-          setActiveSessionId(allSessions[0].id);
+          setActiveSessionId(requestedExists ? requestedId! : allSessions[0].id);
         } else {
           const { data: newSession, error: createErr } = await supabase
             .from("sessions")

@@ -344,7 +344,10 @@ const ProfilePage = () => {
                   initial={{ opacity: 0, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.02 }}
-                  onClick={() => navigate("/dashboard")}
+                  onClick={() => {
+                    sessionStorage.setItem("dumpstash:openSessionId", s.id);
+                    navigate("/dashboard");
+                  }}
                   className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-accent/40 transition-colors"
                 >
                   <div className="min-w-0">
