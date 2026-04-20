@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback } from "react";
 import AppSidebar from "@/components/AppSidebar";
 import DumpInput from "@/components/DumpInput";
 import DumpCard from "@/components/DumpCard";
+import SortableDumpList from "@/components/SortableDumpList";
 import AIStructuredView from "@/components/AIStructuredView";
 import ThemesView from "@/components/ThemesView";
 import ActionsView from "@/components/ActionsView";
@@ -83,10 +84,16 @@ const DashboardContent = () => {
                 <span className="text-[12px] text-muted-foreground font-mono">Processing dump...</span>
               </motion.div>
             )}
-            <div className="space-y-1.5">
-              {filteredDumps.map((dump, i) => (
-                <DumpCard key={dump.id} dump={dump} index={i} />
-              ))}
+            <div>
+              {selectedDumpId ? (
+                <div className="space-y-1.5">
+                  {filteredDumps.map((dump, i) => (
+                    <DumpCard key={dump.id} dump={dump} index={i} />
+                  ))}
+                </div>
+              ) : (
+                <SortableDumpList dumps={filteredDumps} />
+              )}
               {dumps.length === 0 && !isProcessing && (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
                   <p className="text-[13px] text-muted-foreground">No dumps yet. Start typing above!</p>
