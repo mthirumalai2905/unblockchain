@@ -192,7 +192,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     const loadSessionData = async () => {
       try {
         const [dumpsRes, themesRes, actionsRes, questionsRes] = await Promise.all([
-          supabase.from("dumps").select("*").eq("session_id", activeSessionId).eq("mode", "normal").order("created_at", { ascending: false }),
+          supabase.from("dumps").select("*").eq("session_id", activeSessionId).eq("mode", "normal").order("position", { ascending: true, nullsFirst: false }).order("created_at", { ascending: false }),
           supabase.from("themes").select("*").eq("session_id", activeSessionId),
           supabase.from("actions").select("*").eq("session_id", activeSessionId),
           supabase.from("questions").select("*").eq("session_id", activeSessionId),
@@ -213,6 +213,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
               type: d.type as DumpType, created_at: d.created_at,
               author: profile?.display_name || "Unknown",
               avatar: profile?.avatar_initials || "??",
+              position: d.position ?? undefined,
             };
           }));
         }
@@ -253,9 +254,12 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const addDump = useCallback(async (content: string) => {
     if (!user || !activeSessionId) return;
     setIsProcessing(true);
+    // New dumps get a position smaller than the smallest existing → appear at top
+    const minPos = dumps.reduce((m, d) => (d.position !== undefined && d.position < m ? d.position : m), Infinity);
+    const newPos = minPos === Infinity ? 0 : minPos - 1;
     const { data, error } = await supabase
       .from("dumps")
-      .insert({ session_id: activeSessionId, user_id: user.id, content, type: "note", mode: "normal" })
+      .insert({ session_id: activeSessionId, user_id: user.id, content, type: "note", mode: "normal", position: newPos })
       .select()
       .single();
 
@@ -271,11 +275,12 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
       id: data.id, session_id: data.session_id, content: data.content,
       type: data.type as DumpType, created_at: data.created_at,
       author: profile?.display_name || "You", avatar: profile?.avatar_initials || "YO",
+      position: (data as any).position ?? newPos,
     };
     setDumps((prev) => [newDump, ...prev]);
     await supabase.from("sessions").update({ updated_at: new Date().toISOString() }).eq("id", activeSessionId);
     setIsProcessing(false);
-  }, [user, activeSessionId]);
+  }, [user, activeSessionId, dumps]);
 
   const createSession = useCallback(async (name: string) => {
     if (!user) return;
@@ -342,7 +347,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
   const refreshSessionData = useCallback(async () => {
     if (!activeSessionId || !user) return;
     const [dumpsRes, themesRes, actionsRes, questionsRes] = await Promise.all([
-      supabase.from("dumps").select("*").eq("session_id", activeSessionId).eq("mode", "normal").order("created_at", { ascending: false }),
+      supabase.from("dumps").select("*").eq("session_id", activeSessionId).eq("mode", "normal").order("position", { ascending: true, nullsFirst: false }).order("created_at", { ascending: false }),
       supabase.from("themes").select("*").eq("session_id", activeSessionId),
       supabase.from("actions").select("*").eq("session_id", activeSessionId),
       supabase.from("questions").select("*").eq("session_id", activeSessionId),
@@ -353,7 +358,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
       const profileMap = new Map(profiles?.map((p: any) => [p.user_id, p]) || []);
       setDumps(dumpsRes.data.map((d: any) => {
         const profile = profileMap.get(d.user_id) as any;
-        return { id: d.id, session_id: d.session_id, content: d.content, type: d.type as DumpType, created_at: d.created_at, author: profile?.display_name || "Unknown", avatar: profile?.avatar_initials || "??" };
+        return { id: d.id, session_id: d.session_id, content: d.content, type: d.type as DumpType, created_at: d.created_at, author: profile?.display_name || "Unknown", avatar: profile?.avatar_initials || "??", position: d.position ?? undefined };
       }));
     }
     if (themesRes.data) {
