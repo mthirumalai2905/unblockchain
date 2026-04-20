@@ -15,38 +15,47 @@ const LandingNav = () => {
   }, []);
 
   return (
-    <nav className={cn(
-      "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
-      scrolled ? "bg-background/80 backdrop-blur-xl border-b border-border" : "bg-transparent"
-    )}>
-      <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-4">
-        <a href="/" className="flex items-center gap-2.5 cursor-pointer">
-          <div className="w-8 h-8 rounded-lg bg-foreground flex items-center justify-center">
-            <Zap className="w-4 h-4 text-background" />
+    <nav
+      className={cn(
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+        scrolled ? "py-2" : "py-4"
+      )}
+    >
+      <div
+        className={cn(
+          "mx-auto flex items-center justify-between transition-all duration-300 px-5",
+          scrolled
+            ? "max-w-3xl rounded-full border border-border bg-background/70 backdrop-blur-xl py-2 shadow-[0_8px_32px_-12px_hsl(var(--foreground)/0.12)]"
+            : "max-w-6xl py-3"
+        )}
+      >
+        <a href="/" className="flex items-center gap-2 cursor-pointer shrink-0">
+          <div className="w-7 h-7 rounded-md bg-foreground flex items-center justify-center">
+            <Zap className="w-3.5 h-3.5 text-background" />
           </div>
-          <span className="text-[15px] font-bold tracking-tight">DumpStash</span>
+          <span className="text-[14px] font-bold tracking-tight">DumpStash</span>
         </a>
 
         {/* Desktop links */}
-        <div className="hidden md:flex items-center gap-8">
-          <a href="#features" className="text-[13px] text-muted-foreground hover:text-foreground transition-colors">Features</a>
-          <a href="#how-it-works" className="text-[13px] text-muted-foreground hover:text-foreground transition-colors">How it works</a>
-          <a href="#pricing" className="text-[13px] text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
+        <div className="hidden md:flex items-center gap-7 absolute left-1/2 -translate-x-1/2">
+          <a href="#features" className="text-[12px] text-muted-foreground hover:text-foreground transition-colors">Features</a>
+          <a href="#how-it-works" className="text-[12px] text-muted-foreground hover:text-foreground transition-colors">How it works</a>
+          <a href="#pricing" className="text-[12px] text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
         </div>
 
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-2">
           <button
             onClick={() => navigate("/auth")}
-            className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5"
+            className="text-[12px] text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5"
           >
             Log in
           </button>
           <button
             onClick={() => navigate("/auth")}
-            className="text-[13px] font-medium h-9 px-5 bg-foreground text-background rounded-full hover:opacity-90 transition-opacity flex items-center gap-1.5"
+            className="text-[12px] font-medium h-8 px-4 bg-foreground text-background rounded-full hover:opacity-90 transition-opacity flex items-center gap-1.5"
           >
-            Get Started
-            <ArrowRight className="w-3.5 h-3.5" />
+            Get started
+            <ArrowRight className="w-3 h-3" />
           </button>
         </div>
 
@@ -57,12 +66,12 @@ const LandingNav = () => {
       </div>
 
       {mobileOpen && (
-        <div className="md:hidden bg-background/95 backdrop-blur-xl border-b border-border px-6 pb-6 space-y-4">
-          <a href="#features" className="block text-[14px] text-muted-foreground" onClick={() => setMobileOpen(false)}>Features</a>
-          <a href="#how-it-works" className="block text-[14px] text-muted-foreground" onClick={() => setMobileOpen(false)}>How it works</a>
-          <a href="#pricing" className="block text-[14px] text-muted-foreground" onClick={() => setMobileOpen(false)}>Pricing</a>
-          <button onClick={() => navigate("/auth")} className="w-full text-[14px] font-medium h-10 bg-foreground text-background rounded-full">
-            Get Started
+        <div className="md:hidden mx-4 mt-2 rounded-2xl border border-border bg-background/95 backdrop-blur-xl px-6 py-5 space-y-4">
+          <a href="#features" className="block text-[13px] text-muted-foreground" onClick={() => setMobileOpen(false)}>Features</a>
+          <a href="#how-it-works" className="block text-[13px] text-muted-foreground" onClick={() => setMobileOpen(false)}>How it works</a>
+          <a href="#pricing" className="block text-[13px] text-muted-foreground" onClick={() => setMobileOpen(false)}>Pricing</a>
+          <button onClick={() => navigate("/auth")} className="w-full text-[13px] font-medium h-10 bg-foreground text-background rounded-full">
+            Get started
           </button>
         </div>
       )}
