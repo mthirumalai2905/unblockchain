@@ -45,7 +45,15 @@ const LandingNav = () => {
           <a href="#pricing" className="text-[12px] text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
         </div>
 
-        <div className="hidden md:flex items-center gap-2">
+        <div className="hidden md:flex items-center gap-1.5">
+          <button
+            onClick={toggle}
+            className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+            title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+            aria-label="Toggle theme"
+          >
+            {theme === "dark" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+          </button>
           <button
             onClick={() => navigate("/auth")}
             className="text-[12px] text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5"
