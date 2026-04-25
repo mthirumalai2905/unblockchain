@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Zap, ArrowRight, Menu, X } from "lucide-react";
+import { Zap, ArrowRight, Menu, X, Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/hooks/useTheme";
 
 const LandingNav = () => {
   const navigate = useNavigate();
