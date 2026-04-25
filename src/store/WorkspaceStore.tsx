@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useMemo, useEf
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { logEvent } from "@/lib/audit";
 import type { ThinkingStep } from "@/components/ThinkingPanel";
 
 // ─── Types ──────────────────────────────────────────────
