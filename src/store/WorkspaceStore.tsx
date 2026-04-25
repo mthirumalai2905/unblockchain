@@ -327,6 +327,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
       else if (remaining.length === 0) setActiveSessionId(null);
       return remaining;
     });
+    void logEvent({ event_name: "session_deleted", category: "session", metadata: { session_id: id } });
     toast.success("Session deleted");
   }, [activeSessionId]);
 
