@@ -89,7 +89,7 @@ export async function logEvent(event: AuditEvent): Promise<void> {
       user_email: user?.email ?? null,
       event_name: event.event_name,
       category: event.category ?? "general",
-      metadata: event.metadata ?? {},
+      metadata: (event.metadata ?? {}) as never,
       ...ctx,
     };
 
