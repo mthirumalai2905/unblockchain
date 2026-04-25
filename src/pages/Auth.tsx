@@ -56,6 +56,8 @@ const Auth = () => {
       } else if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        // Defer to allow auth state to settle so user_id is captured in log
+        setTimeout(() => logEvent({ event_name: "user_login", category: "auth", metadata: { method: "password", email } }), 200);
         toast.success("Welcome back!");
         navigate("/dashboard");
       } else {
@@ -68,6 +70,7 @@ const Auth = () => {
           },
         });
         if (error) throw error;
+        setTimeout(() => logEvent({ event_name: "user_signup", category: "auth", metadata: { email } }), 200);
         toast.success("Account created! Signing you in...");
         navigate("/dashboard");
       }
