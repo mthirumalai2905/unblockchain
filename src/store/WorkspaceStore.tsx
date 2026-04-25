@@ -285,6 +285,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     };
     setDumps((prev) => [newDump, ...prev]);
     await supabase.from("sessions").update({ updated_at: new Date().toISOString() }).eq("id", activeSessionId);
+    void logEvent({ event_name: "dump_created", category: "dump", metadata: { dump_id: newDump.id, session_id: activeSessionId, length: content.length } });
     setIsProcessing(false);
   }, [user, activeSessionId, dumps]);
 
