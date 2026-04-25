@@ -296,6 +296,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     setSessions((prev) => [data as Session, ...prev]);
     setActiveSessionId(data.id);
     setDumps([]); setThemes([]); setActions([]); setQuestions([]);
+    void logEvent({ event_name: "session_created", category: "session", metadata: { session_id: data.id, name } });
     toast.success("Session created!");
   }, [user]);
 
