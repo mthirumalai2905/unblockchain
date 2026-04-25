@@ -40,6 +40,7 @@ const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
     archiveSession,
   } = useWorkspace();
   const { signOut, user } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const navigate = useNavigate();
   const [sessionsOpen, setSessionsOpen] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
