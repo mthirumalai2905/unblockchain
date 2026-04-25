@@ -10,7 +10,9 @@ import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import { usePageViewTracker } from "@/hooks/usePageViewTracker";
 
 const queryClient = new QueryClient();
 
