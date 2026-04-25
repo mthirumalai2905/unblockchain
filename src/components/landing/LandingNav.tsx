@@ -6,6 +6,7 @@ import { useTheme } from "@/hooks/useTheme";
 
 const LandingNav = () => {
   const navigate = useNavigate();
+  const { theme, toggle } = useTheme();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
