@@ -180,7 +180,7 @@ const LandingHowItWorks = () => {
         </div>
       </div>
 
-      <div className="h-24" />
+      
     </section>
   );
 };
