@@ -77,24 +77,30 @@ const LandingHero = () => {
           transition={{ duration: 0.6, delay: 0.4 }}
           className="flex flex-col sm:flex-row items-center justify-center gap-3"
         >
+          {/* Primary — animated conic-gradient border (Aceternity-style) */}
           <button
             onClick={() => navigate("/auth")}
-            className="group relative h-12 px-7 text-[14px] font-semibold bg-foreground text-background rounded-full hover:shadow-[0_0_50px_-8px_hsl(var(--foreground)/0.45)] transition-all duration-300 flex items-center gap-2 overflow-hidden"
+            className="group relative inline-flex h-12 overflow-hidden rounded-full p-[1.5px] focus:outline-none"
           >
-            <span className="relative z-10 flex items-center gap-2">
+            <span className="absolute inset-[-1000%] animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,hsl(var(--foreground))_0%,hsl(var(--muted-foreground))_50%,hsl(var(--foreground))_100%)]" />
+            <span className="relative z-10 inline-flex h-full w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-foreground px-7 text-[14px] font-semibold text-background backdrop-blur-3xl transition-all duration-300 group-hover:shadow-[0_0_60px_-8px_hsl(var(--foreground)/0.55)]">
               Start for free
-              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
             </span>
-            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-background/20 to-transparent" />
           </button>
+
+          {/* Secondary — shimmer / glass */}
           <a
             href="#features"
-            className="group h-12 px-6 text-[14px] text-foreground/80 rounded-full hover:text-foreground transition-all duration-200 flex items-center gap-2 border border-border hover:border-foreground/30 hover:bg-card/40"
+            className="group relative h-12 inline-flex items-center gap-2 px-6 text-[14px] text-foreground/85 rounded-full border border-border hover:border-foreground/30 hover:bg-card/50 transition-all duration-200 overflow-hidden"
           >
-            Explore features
-            <kbd className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground border border-border rounded bg-background/50">
-              <Command className="w-2.5 h-2.5" />K
-            </kbd>
+            <span className="relative z-10 flex items-center gap-2">
+              Explore features
+              <kbd className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground border border-border rounded bg-background/50">
+                <Command className="w-2.5 h-2.5" />K
+              </kbd>
+            </span>
+            <span className="pointer-events-none absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-foreground/10 to-transparent" />
           </a>
         </motion.div>
 
