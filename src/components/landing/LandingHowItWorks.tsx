@@ -141,7 +141,7 @@ const LandingHowItWorks = () => {
 
   return (
     <section id="how-it-works" className="relative px-6">
-      <div className="max-w-6xl mx-auto py-24">
+      <div className="max-w-6xl mx-auto pt-20 pb-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -160,7 +160,7 @@ const LandingHowItWorks = () => {
       </div>
 
       {/* Sticky scroll section */}
-      <div ref={containerRef} className="relative max-w-6xl mx-auto" style={{ height: `${cardLength * 90}vh` }}>
+      <div ref={containerRef} className="relative max-w-6xl mx-auto px-6" style={{ height: `${cardLength * 60}vh` }}>
         <div className="sticky top-0 h-screen flex items-center">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16 w-full items-center">
             {/* Left: text steps */}
@@ -180,7 +180,7 @@ const LandingHowItWorks = () => {
         </div>
       </div>
 
-      <div className="h-24" />
+      
     </section>
   );
 };

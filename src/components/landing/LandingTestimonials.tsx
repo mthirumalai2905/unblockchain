@@ -37,7 +37,7 @@ const LandingTestimonials = () => {
   const row2 = [...testimonials.slice().reverse(), ...testimonials.slice().reverse()];
 
   return (
-    <section className="relative py-28 px-0 overflow-hidden">
+    <section className="relative py-20 px-0 overflow-hidden">
       <div className="max-w-6xl mx-auto px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

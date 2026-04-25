@@ -1,12 +1,10 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Sparkles, Command } from "lucide-react";
+import { ArrowRight, Command } from "lucide-react";
 import { Spotlight } from "@/components/ui/spotlight";
-import { FlipWords } from "@/components/ui/flip-words";
 
 const LandingHero = () => {
   const navigate = useNavigate();
-  const flipWords = ["sticky notes.", "scattered docs.", "messy threads.", "forgotten ideas.", "abandoned drafts."];
 
   return (
     <section className="relative pt-36 md:pt-44 pb-32 px-6 overflow-hidden">
@@ -35,28 +33,29 @@ const LandingHero = () => {
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="group inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border/80 bg-card/40 backdrop-blur-md mb-9 hover:border-foreground/30 transition-colors"
+          className="group inline-flex items-center gap-2.5 pl-1.5 pr-3.5 py-1.5 rounded-full border border-border/80 bg-card/40 backdrop-blur-md mb-10 hover:border-foreground/30 transition-colors"
         >
-          <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-foreground text-background">
-            <Sparkles className="w-2.5 h-2.5" />
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-foreground text-background text-[9px] font-bold tracking-[0.12em] uppercase">
+            New
           </span>
-          <span className="text-[11px] text-muted-foreground font-medium tracking-wide uppercase">
-            Public beta · 2,400+ ideas processed
+          <span className="text-[11.5px] text-foreground/75 font-medium">
+            Voice dumps + auto-threading just shipped
           </span>
           <ArrowRight className="w-3 h-3 text-muted-foreground/60 group-hover:text-foreground group-hover:translate-x-0.5 transition-all" />
         </motion.button>
 
-        {/* Headline */}
+        {/* Headline — editorial, mixed weight, hand-set feel */}
         <motion.h1
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.05 }}
-          className="text-[clamp(2.75rem,8vw,6.5rem)] font-extrabold tracking-[-0.055em] leading-[0.95] mb-7"
+          className="text-[clamp(2.5rem,7.5vw,5.75rem)] tracking-[-0.05em] leading-[0.98] mb-8"
         >
-          <span className="block">Your ideas deserve</span>
-          <span className="block">
-            <span className="text-muted-foreground/70">better than </span>
-            <FlipWords words={flipWords} className="text-foreground" />
+          <span className="block font-light text-foreground/55">Think out loud.</span>
+          <span className="block font-bold">
+            Ship something{" "}
+            <span className="italic font-serif font-normal text-foreground">real</span>
+            <span className="text-foreground">.</span>
           </span>
         </motion.h1>
 
@@ -65,10 +64,10 @@ const LandingHero = () => {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.25 }}
-          className="text-[16px] md:text-[18px] text-muted-foreground max-w-2xl mx-auto leading-[1.7] mb-12"
+          className="text-[16px] md:text-[17px] text-muted-foreground max-w-xl mx-auto leading-[1.7] mb-11"
         >
-          DumpStash turns raw brain dumps into structured product docs, roadmaps, and
-          action plans. The AI workspace that thinks alongside you — not at you.
+          A workspace for the messy middle — where half-formed thoughts
+          become roadmaps, PRDs, and the next thing you actually ship.
         </motion.p>
 
         {/* CTA buttons */}
