@@ -264,6 +264,15 @@ const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
             <p className="text-[12px] font-medium text-sidebar-foreground truncate hover:text-foreground transition">{userProfile?.display_name || "User"}</p>
             <p className="text-[10px] text-sidebar-muted truncate">View profile</p>
           </button>
+          {isAdmin && (
+            <button
+              onClick={() => navigate("/admin")}
+              className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors"
+              title="Admin console"
+            >
+              <Shield className="w-3.5 h-3.5" />
+            </button>
+          )}
           <button
             onClick={signOut}
             className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors"
