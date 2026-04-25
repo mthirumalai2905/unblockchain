@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
+import { logEvent } from "@/lib/audit";
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -41,6 +42,7 @@ export const useAuth = () => {
   }, []);
 
   const signOut = async () => {
+    void logEvent({ event_name: "user_logout", category: "auth" });
     await supabase.auth.signOut();
   };
 

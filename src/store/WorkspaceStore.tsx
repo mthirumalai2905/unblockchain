@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useMemo, useEf
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { logEvent } from "@/lib/audit";
 import type { ThinkingStep } from "@/components/ThinkingPanel";
 
 // ─── Types ──────────────────────────────────────────────
@@ -284,6 +285,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     };
     setDumps((prev) => [newDump, ...prev]);
     await supabase.from("sessions").update({ updated_at: new Date().toISOString() }).eq("id", activeSessionId);
+    void logEvent({ event_name: "dump_created", category: "dump", metadata: { dump_id: newDump.id, session_id: activeSessionId, length: content.length } });
     setIsProcessing(false);
   }, [user, activeSessionId, dumps]);
 
@@ -294,6 +296,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
     setSessions((prev) => [data as Session, ...prev]);
     setActiveSessionId(data.id);
     setDumps([]); setThemes([]); setActions([]); setQuestions([]);
+    void logEvent({ event_name: "session_created", category: "session", metadata: { session_id: data.id, name } });
     toast.success("Session created!");
   }, [user]);
 
@@ -324,6 +327,7 @@ export const WorkspaceProvider = ({ children }: { children: React.ReactNode }) =
       else if (remaining.length === 0) setActiveSessionId(null);
       return remaining;
     });
+    void logEvent({ event_name: "session_deleted", category: "session", metadata: { session_id: id } });
     toast.success("Session deleted");
   }, [activeSessionId]);
 

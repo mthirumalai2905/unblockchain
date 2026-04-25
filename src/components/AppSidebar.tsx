@@ -2,12 +2,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap, MessageSquare, Brain, CheckSquare, Lightbulb,
   HelpCircle, Clock, Archive, ChevronDown, Plus, Search,
-  Command, LogOut, FileText, Trash2, Camera, Loader2, ListTodo, Share2,
+  Command, LogOut, FileText, Trash2, Camera, Loader2, ListTodo, Share2, Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Map } from "lucide-react";
 import { useWorkspace, ViewSection } from "@/store/WorkspaceStore";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,6 +40,7 @@ const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
     archiveSession,
   } = useWorkspace();
   const { signOut, user } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const navigate = useNavigate();
   const [sessionsOpen, setSessionsOpen] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -262,6 +264,15 @@ const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
             <p className="text-[12px] font-medium text-sidebar-foreground truncate hover:text-foreground transition">{userProfile?.display_name || "User"}</p>
             <p className="text-[10px] text-sidebar-muted truncate">View profile</p>
           </button>
+          {isAdmin && (
+            <button
+              onClick={() => navigate("/admin")}
+              className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors"
+              title="Admin console"
+            >
+              <Shield className="w-3.5 h-3.5" />
+            </button>
+          )}
           <button
             onClick={signOut}
             className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors"

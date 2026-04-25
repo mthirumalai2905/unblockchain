@@ -10,7 +10,9 @@ import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import { usePageViewTracker } from "@/hooks/usePageViewTracker";
 
 const queryClient = new QueryClient();
 
@@ -31,12 +33,14 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <PageViewTracker />
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
@@ -44,6 +48,11 @@ const App = () => {
     </QueryClientProvider>
   </ThemeProvider>
   );
+};
+
+const PageViewTracker = () => {
+  usePageViewTracker();
+  return null;
 };
 
 export default App;
