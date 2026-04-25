@@ -1,12 +1,10 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Sparkles, Command } from "lucide-react";
+import { ArrowRight, Command } from "lucide-react";
 import { Spotlight } from "@/components/ui/spotlight";
-import { FlipWords } from "@/components/ui/flip-words";
 
 const LandingHero = () => {
   const navigate = useNavigate();
-  const flipWords = ["sticky notes.", "scattered docs.", "messy threads.", "forgotten ideas.", "abandoned drafts."];
 
   return (
     <section className="relative pt-36 md:pt-44 pb-32 px-6 overflow-hidden">
