@@ -68,7 +68,6 @@ const LandingHero = () => {
         >
           A workspace for the messy middle — where half-formed thoughts
           become roadmaps, PRDs, and the next thing you actually ship.
-          <FlipWords words={[]} className="hidden" />
         </motion.p>
 
         {/* CTA buttons */}
