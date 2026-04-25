@@ -42,7 +42,6 @@ const Landing = () => {
       <LandingTestimonials />
       <LandingIntegrations />
       <LandingPricing />
-      <LandingCTA />
       <LandingFooter />
     </div>
   );
