@@ -42,6 +42,7 @@ export const useAuth = () => {
   }, []);
 
   const signOut = async () => {
+    void logEvent({ event_name: "user_logout", category: "auth" });
     await supabase.auth.signOut();
   };
 
