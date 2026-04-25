@@ -8,7 +8,6 @@ import LandingHowItWorks from "@/components/landing/LandingHowItWorks";
 import LandingTestimonials from "@/components/landing/LandingTestimonials";
 import LandingIntegrations from "@/components/landing/LandingIntegrations";
 import LandingPricing from "@/components/landing/LandingPricing";
-import LandingCTA from "@/components/landing/LandingCTA";
 import LandingNav from "@/components/landing/LandingNav";
 import LandingFooter from "@/components/landing/LandingFooter";
 
