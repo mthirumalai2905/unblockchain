@@ -141,7 +141,7 @@ const LandingHowItWorks = () => {
 
   return (
     <section id="how-it-works" className="relative px-6">
-      <div className="max-w-6xl mx-auto py-24">
+      <div className="max-w-6xl mx-auto pt-20 pb-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
