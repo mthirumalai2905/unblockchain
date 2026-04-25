@@ -96,7 +96,7 @@ export async function logEvent(event: AuditEvent): Promise<void> {
     // Fire-and-forget; never throw to caller
     void supabase
       .from("audit_logs")
-      .insert(payload)
+      .insert([payload])
       .then(({ error }) => {
         if (error) console.warn("[audit] insert failed:", error.message);
       });
