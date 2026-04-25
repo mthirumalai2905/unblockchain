@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { Map } from "lucide-react";
 import { useWorkspace, ViewSection } from "@/store/WorkspaceStore";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
