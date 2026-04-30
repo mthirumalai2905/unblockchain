@@ -87,8 +87,22 @@ serve(async (req) => {
     });
   } catch (e) {
     console.error("fetch-link-preview error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
-      status: 500,
+    let fallback: Record<string, unknown> = { fallback: true, error: e instanceof Error ? e.message : "Unknown error" };
+    try {
+      const body = await req.clone().json().catch(() => ({}));
+      if (body?.url) {
+        const p = new URL(body.url);
+        fallback = {
+          ...fallback,
+          url: body.url,
+          title: p.hostname.replace("www.", ""),
+          siteName: p.hostname.replace("www.", ""),
+          favicon: `${p.origin}/favicon.ico`,
+        };
+      }
+    } catch (_) { /* ignore */ }
+    return new Response(JSON.stringify(fallback), {
+      status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
