@@ -20,7 +20,20 @@ serve(async (req) => {
       redirect: "follow",
     });
 
-    if (!response.ok) throw new Error(`Failed to fetch: ${response.status}`);
+    if (!response.ok) {
+      const parsedUrl = new URL(url);
+      return new Response(
+        JSON.stringify({
+          url,
+          title: parsedUrl.hostname.replace("www.", ""),
+          siteName: parsedUrl.hostname.replace("www.", ""),
+          favicon: `${parsedUrl.origin}/favicon.ico`,
+          fallback: true,
+          status: response.status,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     const html = await response.text();
 
