@@ -289,6 +289,13 @@ const DumpCard = ({ dump, index }: DumpCardProps) => {
 
           <div className="flex items-center gap-1">
             <button
+              onClick={handleCopy}
+              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground"
+              title="Copy with formatting"
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-cf-decision" /> : <Copy className="w-3.5 h-3.5" />}
+            </button>
+            <button
               onClick={(e) => { e.stopPropagation(); setThreadOpen(true); }}
               className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-accent text-cf-idea"
               title="AI Thread"
