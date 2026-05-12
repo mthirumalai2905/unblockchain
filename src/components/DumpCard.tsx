@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import {
   Lightbulb, CheckCircle2, HelpCircle, AlertTriangle,
   ListTodo, MessageSquare, MoreHorizontal,
-  ArrowUpRight, Target, MessageCircle, BookOpen, Flame, Flag, Sparkles, Trash2,
+  ArrowUpRight, Target, MessageCircle, BookOpen, Flame, Flag, Sparkles, Trash2, Copy, Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace, Dump, DumpType } from "@/store/WorkspaceStore";
