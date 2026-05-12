@@ -118,6 +118,70 @@ const DumpCard = ({ dump, index }: DumpCardProps) => {
     setShowDeleteDialog(true);
   };
 
+  // Convert lightweight markdown to HTML, preserving formatting (bold, italic, links, code, lists, line breaks)
+  const markdownToHtml = (md: string): string => {
+    const escape = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const lines = md.split("\n");
+    const out: string[] = [];
+    let inList: "ul" | "ol" | null = null;
+    const closeList = () => { if (inList) { out.push(`</${inList}>`); inList = null; } };
+    const inline = (s: string) =>
+      escape(s)
+        .replace(/`([^`]+)`/g, "<code>$1</code>")
+        .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+        .replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>")
+        .replace(/\[([^\]]+)\]\((https?:[^)]+)\)/g, '<a href="$2">$1</a>')
+        .replace(/(?<!["=>])(https?:\/\/[^\s<]+)/g, '<a href="$1">$1</a>');
+    for (const raw of lines) {
+      const line = raw.trimEnd();
+      let m;
+      if ((m = line.match(/^(#{1,6})\s+(.*)$/))) {
+        closeList();
+        out.push(`<h${m[1].length}>${inline(m[2])}</h${m[1].length}>`);
+      } else if ((m = line.match(/^[-*]\s+(.*)$/))) {
+        if (inList !== "ul") { closeList(); out.push("<ul>"); inList = "ul"; }
+        out.push(`<li>${inline(m[1])}</li>`);
+      } else if ((m = line.match(/^\d+\.\s+(.*)$/))) {
+        if (inList !== "ol") { closeList(); out.push("<ol>"); inList = "ol"; }
+        out.push(`<li>${inline(m[1])}</li>`);
+      } else if (line.startsWith("> ")) {
+        closeList();
+        out.push(`<blockquote>${inline(line.slice(2))}</blockquote>`);
+      } else if (line === "") {
+        closeList();
+        out.push("<br/>");
+      } else {
+        closeList();
+        out.push(`<p>${inline(line)}</p>`);
+      }
+    }
+    closeList();
+    return out.join("");
+  };
+
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const plain = cleanContent || dump.content;
+    const html = markdownToHtml(plain);
+    try {
+      if (navigator.clipboard && (window as any).ClipboardItem) {
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            "text/plain": new Blob([plain], { type: "text/plain" }),
+            "text/html": new Blob([html], { type: "text/html" }),
+          }),
+        ]);
+      } else {
+        await navigator.clipboard.writeText(plain);
+      }
+      setCopied(true);
+      toast.success("Copied with formatting");
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      try { await navigator.clipboard.writeText(plain); toast.success("Copied"); } catch { toast.error("Copy failed"); }
+    }
+  };
+
   const confirmDelete = async () => {
     setIsDeleting(true);
     try {
