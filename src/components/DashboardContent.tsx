@@ -154,6 +154,7 @@ const DashboardContent = () => {
 
           <div className="flex items-center gap-2 sm:gap-3">
             <span className="text-[11px] text-muted-foreground font-mono hidden sm:inline">{dumps.length} dumps</span>
+            <SessionActivityCalendar />
             <button
               onClick={() => setShareOpen(true)}
               className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-md text-[11px] sm:text-[12px] font-medium border border-border text-muted-foreground hover:border-ring/50 hover:text-foreground transition-all duration-150"
