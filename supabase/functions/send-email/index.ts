@@ -92,6 +92,27 @@ function buildEmail(type: string, data: Record<string, string>) {
         ),
       };
 
+    case "share_invite": {
+      const ownerName = data.ownerName || "Someone";
+      const sessionName = data.sessionName || "a dump session";
+      const permission = data.permission || "read";
+      return {
+        subject: `${ownerName} shared "${sessionName}" with you on DumpStash`,
+        html: wrapper(
+          "You've been invited",
+          `<p style="margin:0 0 24px;font-size:14px;color:${brandStyles.muted};line-height:1.6;">
+            <strong style="color:${brandStyles.text};">${ownerName}</strong> invited you to <strong style="color:${brandStyles.text};">${permission === "write" ? "collaborate on" : "view"}</strong> their session <strong style="color:${brandStyles.text};">"${sessionName}"</strong> on DumpStash.
+          </p>
+          <a href="${confirmationUrl}" style="display:inline-block;padding:10px 24px;background:${brandStyles.accent};color:${brandStyles.accentFg};text-decoration:none;border-radius:${brandStyles.radius};font-size:13px;font-weight:600;">
+            Open DumpStash
+          </a>
+          <p style="margin:20px 0 0;font-size:12px;color:${brandStyles.muted};line-height:1.5;">
+            Sign in with <strong style="color:${brandStyles.text};">${email}</strong> to access the shared session. If you don't have an account yet, sign up with this email.
+          </p>`
+        ),
+      };
+    }
+
     case "magic_link":
       return {
         subject: "Your DumpStash sign-in link",
