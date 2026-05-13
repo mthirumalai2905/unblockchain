@@ -21,6 +21,7 @@ import ArchiveView from "@/components/ArchiveView";
 import SearchDialog from "@/components/SearchDialog";
 import PersonalTodoView from "@/components/PersonalTodoView";
 import ShareDialog from "@/components/ShareDialog";
+import SessionActivityCalendar from "@/components/SessionActivityCalendar";
 
 const DashboardContent = () => {
   const {
