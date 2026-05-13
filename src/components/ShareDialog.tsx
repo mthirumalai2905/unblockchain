@@ -61,6 +61,25 @@ const ShareDialog = ({ isOpen, onClose, sessionId, sessionName }: ShareDialogPro
       else toast.error("Failed to share: " + error.message);
     } else {
       toast.success(`Shared with ${email.trim()} (${permission})`);
+      // Send invite email (best effort)
+      const ownerName =
+        (user.user_metadata as { display_name?: string } | undefined)?.display_name ||
+        user.email?.split("@")[0] ||
+        "Someone";
+      supabase.functions
+        .invoke("send-email", {
+          body: {
+            type: "share_invite",
+            email: email.trim(),
+            confirmationUrl: window.location.origin,
+            ownerName,
+            sessionName,
+            permission,
+          },
+        })
+        .then(({ error: emailErr }) => {
+          if (emailErr) console.warn("Invite email failed:", emailErr.message);
+        });
       setEmail("");
       loadShares();
     }
