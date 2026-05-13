@@ -146,7 +146,8 @@ serve(async (req) => {
   }
 
   try {
-    const { type, email, confirmationUrl } = await req.json();
+    const body = await req.json();
+    const { type, email, confirmationUrl } = body;
 
     if (!RESEND_API_KEY) {
       throw new Error("RESEND_API_KEY not configured");
@@ -156,7 +157,11 @@ serve(async (req) => {
       throw new Error("Missing required fields: email, type");
     }
 
-    const { subject, html } = buildEmail(type, { email, confirmationUrl: confirmationUrl || "" });
+    const { subject, html } = buildEmail(type, {
+      ...body,
+      email,
+      confirmationUrl: confirmationUrl || "",
+    });
 
     const resendRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
