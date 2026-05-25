@@ -1,73 +1,102 @@
 # DumpStash
 
-> Transform raw brain dumps into structured, actionable documents through continuous AI processing.
+Transform unstructured thoughts into structured, actionable knowledge through continuous AI processing.
 
-DumpStash is an AI-native thinking workspace. You write fast, messy thoughts — ideas, decisions, questions, todos, rants — and the system continuously classifies, threads, summarizes, and reshapes them into PRDs, roadmaps, and personal task lists in the background.
-
----
-
-## ✨ Core Features
-
-### 🧠 Brain Dump → Structure
-- **Frictionless capture** — type, paste links, drop images, or record voice notes.
-- **Auto-classification** with Groq Llama-3.3-70b into a fixed taxonomy: `todo`, `insight`, `feedback`, `reference`, `rant`, `goal`.
-- **Color-coded** at a glance: Blue (Ideas), Green (Decisions), Yellow (Questions), and more.
-- **Threading** — replies and follow-ups stay nested, with Gemini-2.5-flash auto-responses.
-
-### 📄 AI Document Generation
-- **PRD Draft View** — split-screen markdown editor with specialized typography.
-- **Roadmap View** — dynamic phases with interactive checkboxes and strikethrough completion.
-- **Personal To-do View** — auto-suggested when 5+ todos are detected, with a live progress bar.
-- **PDF export** for both PRDs and roadmaps.
-- Session-storage caching so AI artifacts persist across reloads.
-
-### 🗂️ Sessions & Organization
-- Create, switch, rename, archive, and delete sessions.
-- **Archive** hides sessions from the primary sidebar without losing data.
-- **Drag-and-drop reordering** of dumps via `@dnd-kit`, persisted to the database.
-- **Activity calendar** — month-grid heatmap of dumps per day, per session.
-
-### 🔗 Rich Content
-- **Link previews** — Open Graph cards with external redirect confirmation.
-- **Image and voice support** — voice is transcribed via a chunked-base64 Gemini edge function.
-- **Copy-to-clipboard** on every dump, preserving formatting.
-
-### 👥 Sharing & Collaboration
-- Granular RLS-backed read/write sharing per dump.
-- "Shared with me" sidebar view.
-- Email invites delivered via Resend.
-
-### 👤 Profiles
-- Editable banner, avatar, display name, and bio.
-- Stats, activity heatmap, and full session history at `/profile`.
-
-### 🛡️ Admin Audit Console
-- `/admin` route gated by `user_roles` + `has_role()` security-definer function.
-- Full event audit log with realtime feed, device/browser/OS analytics, CSV export.
-
-### 🎨 Design
-- Vercel/Notion-inspired minimalist aesthetic.
-- **Inter** for UI, **JetBrains Mono** for metadata.
-- Full light and dark themes.
-- Dashboard uses a full-width, edge-to-edge layout — no social interaction cruft.
+DumpStash is an AI-native workspace designed for rapid thinking and asynchronous organization. Capture ideas, decisions, questions, tasks, research, and notes in real time while the system continuously classifies, organizes, summarizes, and transforms information into usable outputs such as PRDs, roadmaps, and task lists.
 
 ---
 
-## 🏗️ Tech Stack
+# Core Capabilities
+
+## Intelligent Thought Processing
+
+- Frictionless capture for text, links, voice notes, and rich content
+- Real-time AI classification using a structured taxonomy:
+  - Todo
+  - Insight
+  - Feedback
+  - Reference
+  - Goal
+- Automatic contextual threading for related conversations and follow-ups
+- Continuous background summarization and refinement
+
+---
+
+## AI-Powered Document Generation
+
+### PRD Generation
+Generate structured product requirement documents directly from raw notes and discussions.
+
+### Roadmap Generation
+Convert ideas and priorities into phase-based execution roadmaps.
+
+### Task Extraction
+Automatically detect and organize actionable tasks from unstructured inputs.
+
+### Export Support
+Export generated documents in markdown and PDF formats.
+
+---
+
+## Workspace Management
+
+- Multi-session workspace support
+- Session creation, renaming, archiving, and deletion
+- Persistent AI-generated artifacts across reloads
+- Drag-and-drop organization with database persistence
+- Historical activity tracking and session analytics
+
+---
+
+## Collaboration & Sharing
+
+- Secure document sharing with granular permissions
+- Shared workspace visibility
+- Email-based collaboration invitations
+- Realtime synchronization across sessions
+
+---
+
+## User Profiles
+
+- Customizable user profiles
+- Activity tracking and contribution history
+- Session overview and analytics dashboard
+
+---
+
+## Administrative Controls
+
+- Role-based access control
+- Administrative audit console
+- Event logging and realtime monitoring
+- CSV export for audit data and analytics
+
+---
+
+# Design Philosophy
+
+DumpStash is designed around speed, clarity, and minimal friction.
+
+The interface prioritizes focused thinking and fast capture while AI handles organization and restructuring in the background. The experience is optimized for professionals, founders, developers, researchers, and teams managing large volumes of unstructured information.
+
+---
+
+# Technology Stack
 
 | Layer | Technology |
 |---|---|
-| Frontend | React 18, Vite 5, TypeScript 5, Tailwind CSS v3 |
-| UI | shadcn/ui, Framer Motion, Aceternity UI |
-| Backend | Lovable Cloud (Supabase) — Postgres, Auth, Storage, Edge Functions, Realtime |
-| AI — Labels | Groq Llama-3.3-70b |
-| AI — Generation & Audio | Google Gemini 2.5 Flash |
-| Email | Resend |
+| Frontend | React 18, Vite 5, TypeScript 5, Tailwind CSS |
+| UI Framework | shadcn/ui, Framer Motion |
+| Backend | Supabase — Postgres, Auth, Storage, Edge Functions, Realtime |
+| AI Processing | Groq Llama 3.3 70B |
+| AI Generation | Google Gemini 2.5 Flash |
+| Email Infrastructure | Resend |
 | Payments | Stripe |
 
 ---
 
-## 💳 Pricing
+# Pricing
 
 | Tier | Sessions | Price |
 |---|---|---|
@@ -77,11 +106,8 @@ DumpStash is an AI-native thinking workspace. You write fast, messy thoughts —
 
 ---
 
-## 🚀 Getting Started
+# Getting Started
 
 ```bash
 npm install
 npm run dev
-```
-
-The app boots against Lovable Cloud — no separate backend setup needed.
