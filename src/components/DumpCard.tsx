@@ -106,6 +106,7 @@ const DumpCard = ({ dump, index }: DumpCardProps) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [formatting, setFormatting] = useState(false);
 
   const embeddedImages = extractImages(dump.content);
   const contentWithoutImages = removeImageTags(dump.content);
