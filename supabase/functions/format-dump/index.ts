@@ -21,9 +21,10 @@ Rules:
 - Preserve ALL original meaning, words, and information. Do NOT summarize, shorten, rewrite, translate, or add new content.
 - Fix capitalization, punctuation, and obvious typos only when it improves readability.
 - Break long run-on text into logical paragraphs (blank line between paragraphs).
+- DIALOG / CONVERSATIONS: If the text contains a back-and-forth between named speakers (e.g. "Person A:", "Person B:", "A:", "B:", "Alice:", "Bob:", "Q:", "A:", "Interviewer:", "Me:", "Him:", "Her:"), put EACH speaker turn on its OWN new line. Bold the speaker label, e.g. "**Person A:** Hallo!". Keep the turns in their original order. If the same text appears as a translation block after the original (e.g. "**Translation**" section), keep that section separated by a blank line and apply the same per-speaker line breaks inside it.
 - When the text contains a list of items or steps, format them as a markdown bullet list ("- item") or numbered list.
-- Use **bold** sparingly for clear emphasis terms that already exist in the text.
-- Preserve any URLs, code, image tags like [img:...], and markdown links exactly.
+- Use **bold** sparingly for clear emphasis terms that already exist in the text (and for speaker labels as above).
+- Preserve any URLs, code, image tags like [img:...], emoji, and markdown links exactly.
 - Do NOT wrap output in code fences. Do NOT add a preamble like "Here is...". Return ONLY the formatted text.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
