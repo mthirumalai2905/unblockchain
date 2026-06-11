@@ -318,6 +318,14 @@ const DumpCard = ({ dump, index }: DumpCardProps) => {
 
           <div className="flex items-center gap-1">
             <button
+              onClick={handleFormat}
+              disabled={formatting}
+              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground disabled:opacity-50"
+              title="Reformat for readability"
+            >
+              {formatting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5" />}
+            </button>
+            <button
               onClick={handleCopy}
               className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground"
               title="Copy with formatting"
