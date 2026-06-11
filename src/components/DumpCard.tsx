@@ -273,7 +273,7 @@ const DumpCard = ({ dump, index }: DumpCardProps) => {
 
             {/* Show clean text content if there is any */}
             {cleanContent && (
-              <p className="text-[13px] text-foreground/80 leading-[1.6]">{cleanContent}</p>
+              <p className="text-[13px] text-foreground/80 leading-[1.6] whitespace-pre-wrap">{cleanContent}</p>
             )}
 
             {/* Embedded images */}
