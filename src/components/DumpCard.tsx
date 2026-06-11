@@ -203,6 +203,7 @@ const DumpCard = ({ dump, index }: DumpCardProps) => {
           .eq("id", dump.id);
         if (updErr) throw updErr;
         toast.success("Formatted for better readability");
+        await refreshSessionData();
         window.dispatchEvent(new CustomEvent("dump-updated", { detail: { dumpId: dump.id } }));
       }
     } catch (err: any) {
