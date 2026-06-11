@@ -183,6 +183,34 @@ const DumpCard = ({ dump, index }: DumpCardProps) => {
     }
   };
 
+  const handleFormat = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (formatting) return;
+    setFormatting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("format-dump", {
+        body: { content: dump.content },
+      });
+      if (error) throw error;
+      const formatted = (data as any)?.formatted as string | undefined;
+      if (!formatted) throw new Error("No formatted text returned");
+      if (formatted.trim() === dump.content.trim()) {
+        toast.info("Already nicely formatted");
+      } else {
+        const { error: updErr } = await supabase
+          .from("dumps")
+          .update({ content: formatted })
+          .eq("id", dump.id);
+        if (updErr) throw updErr;
+        toast.success("Formatted for better readability");
+        window.dispatchEvent(new CustomEvent("dump-updated", { detail: { dumpId: dump.id } }));
+      }
+    } catch (err: any) {
+      toast.error("Format failed: " + (err.message || "Unknown error"));
+    }
+    setFormatting(false);
+  };
+
   const confirmDelete = async () => {
     setIsDeleting(true);
     try {
