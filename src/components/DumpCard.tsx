@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import {
   Lightbulb, CheckCircle2, HelpCircle, AlertTriangle,
   ListTodo, MessageSquare, MoreHorizontal,
-  ArrowUpRight, Target, MessageCircle, BookOpen, Flame, Flag, Sparkles, Trash2, Copy, Check,
+  ArrowUpRight, Target, MessageCircle, BookOpen, Flame, Flag, Sparkles, Trash2, Copy, Check, Wand2, Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace, Dump, DumpType } from "@/store/WorkspaceStore";
@@ -98,7 +98,7 @@ interface DumpCardProps {
 }
 
 const DumpCard = ({ dump, index }: DumpCardProps) => {
-  const { getThemesForDump, selectTheme, setActiveSection, selectDump, selectedDumpId } = useWorkspace();
+  const { getThemesForDump, selectTheme, setActiveSection, selectDump, selectedDumpId, refreshSessionData } = useWorkspace();
   const config = typeConfig[dump.type] || typeConfig.note;
   const themes = getThemesForDump(dump.id);
   const [threadOpen, setThreadOpen] = useState(false);
@@ -106,6 +106,7 @@ const DumpCard = ({ dump, index }: DumpCardProps) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [formatting, setFormatting] = useState(false);
 
   const embeddedImages = extractImages(dump.content);
   const contentWithoutImages = removeImageTags(dump.content);
@@ -180,6 +181,35 @@ const DumpCard = ({ dump, index }: DumpCardProps) => {
     } catch {
       try { await navigator.clipboard.writeText(plain); toast.success("Copied"); } catch { toast.error("Copy failed"); }
     }
+  };
+
+  const handleFormat = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (formatting) return;
+    setFormatting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("format-dump", {
+        body: { content: dump.content },
+      });
+      if (error) throw error;
+      const formatted = (data as any)?.formatted as string | undefined;
+      if (!formatted) throw new Error("No formatted text returned");
+      if (formatted.trim() === dump.content.trim()) {
+        toast.info("Already nicely formatted");
+      } else {
+        const { error: updErr } = await supabase
+          .from("dumps")
+          .update({ content: formatted })
+          .eq("id", dump.id);
+        if (updErr) throw updErr;
+        toast.success("Formatted for better readability");
+        await refreshSessionData();
+        window.dispatchEvent(new CustomEvent("dump-updated", { detail: { dumpId: dump.id } }));
+      }
+    } catch (err: any) {
+      toast.error("Format failed: " + (err.message || "Unknown error"));
+    }
+    setFormatting(false);
   };
 
   const confirmDelete = async () => {
@@ -288,6 +318,14 @@ const DumpCard = ({ dump, index }: DumpCardProps) => {
           </div>
 
           <div className="flex items-center gap-1">
+            <button
+              onClick={handleFormat}
+              disabled={formatting}
+              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground disabled:opacity-50"
+              title="Reformat for readability"
+            >
+              {formatting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5" />}
+            </button>
             <button
               onClick={handleCopy}
               className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground"
