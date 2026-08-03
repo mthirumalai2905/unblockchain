@@ -46,6 +46,8 @@ const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
   const [sessionsOpen, setSessionsOpen] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [newSessionName, setNewSessionName] = useState("");
+  const [sessionsHeight, setSessionsHeight] = useState(260);
+  const [isResizing, setIsResizing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [userProfile, setUserProfile] = useState<{ display_name: string; avatar_initials: string; avatar_url: string | null } | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
