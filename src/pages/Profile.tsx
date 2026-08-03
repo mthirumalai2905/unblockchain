@@ -116,9 +116,9 @@ const ProfilePage = () => {
     toast.success("Bio updated");
   };
 
-  // Build heatmap for last 12 weeks (84 days)
+  // Build heatmap for last 365 days
   const heatmap = useMemo(() => {
-    const days = 84;
+    const days = 365;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const counts = new Map<string, number>();
