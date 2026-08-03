@@ -196,7 +196,7 @@ const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
 
       {/* Sessions */}
       <div
-        className="px-2 flex-1 min-h-0 overflow-y-auto cf-scrollbar"
+        className="px-2 flex-1 min-h-[160px] overflow-y-auto cf-scrollbar"
       >
         <button
           onClick={() => setSessionsOpen(!sessionsOpen)}
