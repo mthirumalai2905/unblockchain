@@ -223,7 +223,7 @@ const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
       </div>
 
       {/* New Session + Profile */}
-      <div className="p-3 space-y-2 border-t border-sidebar-border">
+      <div className="p-3 space-y-2 border-t border-sidebar-border shrink-0">
         <AnimatePresence>
           {isCreating && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
