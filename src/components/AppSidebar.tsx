@@ -3,6 +3,7 @@ import {
   Zap, MessageSquare, Brain, CheckSquare, Lightbulb,
   HelpCircle, Clock, Archive, ChevronDown, Plus, Search,
   Command, LogOut, FileText, Trash2, Camera, Loader2, ListTodo, Share2, Shield,
+  GripHorizontal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Map } from "lucide-react";
@@ -45,6 +46,8 @@ const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
   const [sessionsOpen, setSessionsOpen] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [newSessionName, setNewSessionName] = useState("");
+  const [sessionsHeight, setSessionsHeight] = useState(260);
+  const [isResizing, setIsResizing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [userProfile, setUserProfile] = useState<{ display_name: string; avatar_initials: string; avatar_url: string | null } | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -100,6 +103,28 @@ const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
     } else {
       setIsCreating(true);
     }
+  };
+
+  const handleResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+    const startY = e.clientY;
+    const startHeight = sessionsHeight;
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const delta = moveEvent.clientY - startY;
+      const newHeight = Math.max(140, Math.min(420, startHeight + delta));
+      setSessionsHeight(newHeight);
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
   };
 
   const renderSessionList = (sessionList: typeof sessions, label?: string) => (
@@ -194,10 +219,24 @@ const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
         })}
       </nav>
 
-      <div className="mx-3 my-1 h-px bg-sidebar-border" />
+      {/* Adjustable divider */}
+      <div
+        onMouseDown={handleResizeStart}
+        className={cn(
+          "mx-3 h-3 flex items-center justify-center cursor-row-resize group relative shrink-0",
+          isResizing && "cursor-row-resize"
+        )}
+        title="Drag to resize sessions"
+      >
+        <div className={cn("w-full h-px bg-sidebar-border transition-colors", "group-hover:bg-sidebar-muted")} />
+        <GripHorizontal className={cn("absolute w-3 h-3 text-sidebar-muted opacity-0 group-hover:opacity-100 transition-opacity", isResizing && "opacity-100")} />
+      </div>
 
       {/* Sessions */}
-      <div className="px-2 flex-1 min-h-0 overflow-y-auto cf-scrollbar">
+      <div
+        style={{ height: sessionsHeight }}
+        className="px-2 min-h-0 overflow-y-auto cf-scrollbar shrink-0"
+      >
         <button
           onClick={() => setSessionsOpen(!sessionsOpen)}
           className="w-full flex items-center gap-1 px-2.5 py-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-sidebar-muted hover:text-sidebar-foreground transition-colors"
