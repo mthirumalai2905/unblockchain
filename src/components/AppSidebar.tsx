@@ -194,23 +194,9 @@ const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
         })}
       </nav>
 
-      {/* Adjustable divider */}
-      <div
-        onMouseDown={handleResizeStart}
-        className={cn(
-          "mx-3 h-3 flex items-center justify-center cursor-row-resize group relative shrink-0",
-          isResizing && "cursor-row-resize"
-        )}
-        title="Drag to resize sessions"
-      >
-        <div className={cn("w-full h-px bg-sidebar-border transition-colors", "group-hover:bg-sidebar-muted")} />
-        <GripHorizontal className={cn("absolute w-3 h-3 text-sidebar-muted opacity-0 group-hover:opacity-100 transition-opacity", isResizing && "opacity-100")} />
-      </div>
-
       {/* Sessions */}
       <div
-        style={{ height: sessionsHeight }}
-        className="px-2 min-h-0 overflow-y-auto cf-scrollbar shrink-0"
+        className="px-2 flex-1 min-h-0 overflow-y-auto cf-scrollbar"
       >
         <button
           onClick={() => setSessionsOpen(!sessionsOpen)}
