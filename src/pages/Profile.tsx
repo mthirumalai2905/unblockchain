@@ -116,9 +116,9 @@ const ProfilePage = () => {
     toast.success("Bio updated");
   };
 
-  // Build heatmap for last 12 weeks (84 days)
+  // Build heatmap for last 365 days
   const heatmap = useMemo(() => {
-    const days = 84;
+    const days = 365;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const counts = new Map<string, number>();
@@ -301,7 +301,7 @@ const ProfilePage = () => {
 
           {/* Heatmap */}
           <div className="mt-8">
-            <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">Activity · last 12 weeks</h3>
+            <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">Activity · last 365 days</h3>
             <div className="rounded-lg border border-border bg-card p-4 overflow-x-auto">
               <div className="grid grid-flow-col grid-rows-7 gap-[3px] w-fit">
                 {heatmap.map((cell) => (
