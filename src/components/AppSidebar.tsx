@@ -45,8 +45,6 @@ const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
   const [sessionsOpen, setSessionsOpen] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [newSessionName, setNewSessionName] = useState("");
-  const [sessionsHeight, setSessionsHeight] = useState(260);
-  const [isResizing, setIsResizing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [userProfile, setUserProfile] = useState<{ display_name: string; avatar_initials: string; avatar_url: string | null } | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -102,28 +100,6 @@ const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
     } else {
       setIsCreating(true);
     }
-  };
-
-  const handleResizeStart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsResizing(true);
-    const startY = e.clientY;
-    const startHeight = sessionsHeight;
-
-    const handleMouseMove = (moveEvent: MouseEvent) => {
-      const delta = moveEvent.clientY - startY;
-      const newHeight = Math.max(140, Math.min(420, startHeight + delta));
-      setSessionsHeight(newHeight);
-    };
-
-    const handleMouseUp = () => {
-      setIsResizing(false);
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
-
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
   };
 
   const renderSessionList = (sessionList: typeof sessions, label?: string) => (
