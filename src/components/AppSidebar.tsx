@@ -3,6 +3,7 @@ import {
   Zap, MessageSquare, Brain, CheckSquare, Lightbulb,
   HelpCircle, Clock, Archive, ChevronDown, Plus, Search,
   Command, LogOut, FileText, Trash2, Camera, Loader2, ListTodo, Share2, Shield,
+  GripHorizontal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Map } from "lucide-react";
