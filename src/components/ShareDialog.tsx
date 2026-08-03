@@ -103,40 +103,42 @@ const ShareDialog = ({ isOpen, onClose, sessionId, sessionName }: ShareDialogPro
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-w-[min(100%,28rem)]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-base">
-            <Share2 className="w-4 h-4" />
-            Share "{sessionName}"
+          <DialogTitle className="flex items-center gap-2 text-base pr-6">
+            <Share2 className="w-4 h-4 shrink-0" />
+            <span className="truncate">Share &quot;{sessionName}&quot;</span>
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           {/* Add new share */}
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <Input
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Email address..."
-              className="flex-1 text-sm"
+              className="flex-1 text-sm min-w-0"
               onKeyDown={(e) => e.key === "Enter" && handleShare()}
             />
-            <Select value={permission} onValueChange={(v) => setPermission(v as "read" | "write")}>
-              <SelectTrigger className="w-[100px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="read">
-                  <span className="flex items-center gap-1.5"><Eye className="w-3 h-3" /> Read</span>
-                </SelectItem>
-                <SelectItem value="write">
-                  <span className="flex items-center gap-1.5"><Pencil className="w-3 h-3" /> Write</span>
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            <Button onClick={handleShare} disabled={loading || !email.trim()} size="sm">
-              Share
-            </Button>
+            <div className="flex gap-2">
+              <Select value={permission} onValueChange={(v) => setPermission(v as "read" | "write")}>
+                <SelectTrigger className="w-[110px] shrink-0">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="read">
+                    <span className="flex items-center gap-1.5"><Eye className="w-3 h-3" /> Read</span>
+                  </SelectItem>
+                  <SelectItem value="write">
+                    <span className="flex items-center gap-1.5"><Pencil className="w-3 h-3" /> Write</span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <Button onClick={handleShare} disabled={loading || !email.trim()} size="sm" className="shrink-0">
+                Share
+              </Button>
+            </div>
           </div>
 
           {/* Existing shares */}

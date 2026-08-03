@@ -1,147 +1,84 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Command } from "lucide-react";
-import { Spotlight } from "@/components/ui/spotlight";
+import { ArrowRight } from "lucide-react";
+import { DotBackground } from "@/components/ui/dot-background";
+import { SpotlightGroup } from "@/components/ui/spotlight";
+import { FlipWords } from "@/components/ui/flip-words";
+
+const ease = [0.22, 1, 0.36, 1] as const;
 
 const LandingHero = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="relative pt-36 md:pt-44 pb-32 px-6 overflow-hidden">
-      <Spotlight className="z-0" />
+    <section className="relative min-h-[100svh] flex flex-col items-center justify-center overflow-hidden px-4 sm:px-6 pt-24 sm:pt-28 pb-12 sm:pb-16">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute inset-0 landing-mesh opacity-80" />
+        <DotBackground className="opacity-70" size={20} />
+        <SpotlightGroup />
+        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
+      </div>
 
-      {/* Layered background grid */}
-      <div
-        className="absolute inset-0 -z-10 opacity-[0.04]"
-        style={{
-          backgroundImage:
-            "linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)",
-          backgroundSize: "56px 56px",
-          maskImage: "radial-gradient(ellipse 70% 60% at 50% 30%, black 30%, transparent 80%)",
-          WebkitMaskImage: "radial-gradient(ellipse 70% 60% at 50% 30%, black 30%, transparent 80%)",
-        }}
-      />
-
-      {/* Faint orbs */}
-      <div className="absolute top-1/3 left-[8%] w-[420px] h-[420px] rounded-full bg-foreground/[0.025] blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-0 right-[8%] w-[480px] h-[480px] rounded-full bg-foreground/[0.02] blur-[140px] pointer-events-none" />
-
-      <div className="max-w-5xl mx-auto text-center relative z-10">
-        {/* Status badge */}
-        <motion.button
-          onClick={() => navigate("/auth")}
-          initial={{ opacity: 0, y: -8 }}
+      <div className="relative z-10 w-full max-w-3xl mx-auto flex flex-col items-center text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="group inline-flex items-center gap-2.5 pl-1.5 pr-3.5 py-1.5 rounded-full border border-border/80 bg-card/40 backdrop-blur-md mb-10 hover:border-foreground/30 transition-colors"
+          transition={{ duration: 0.6, ease }}
+          className="lab-mono inline-flex flex-wrap items-center justify-center gap-2 text-[10px] sm:text-[11px] text-muted-foreground mb-6 sm:mb-8 px-2"
         >
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-foreground text-background text-[9px] font-bold tracking-[0.12em] uppercase">
-            New
-          </span>
-          <span className="text-[11.5px] text-foreground/75 font-medium">
-            Voice dumps + auto-threading just shipped
-          </span>
-          <ArrowRight className="w-3 h-3 text-muted-foreground/60 group-hover:text-foreground group-hover:translate-x-0.5 transition-all" />
-        </motion.button>
+          <span className="w-1.5 h-1.5 rounded-full bg-cf-decision shrink-0" />
+          <span>dumpstash lab</span>
+          <span className="text-border">/</span>
+          <span>public beta</span>
+        </motion.div>
 
-        {/* Headline — editorial, mixed weight, hand-set feel */}
         <motion.h1
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.05 }}
-          className="text-[clamp(2.5rem,7.5vw,5.75rem)] tracking-[-0.05em] leading-[0.98] mb-8"
+          transition={{ duration: 0.7, ease }}
+          className="font-display text-[clamp(2.1rem,9vw,5.5rem)] font-semibold tracking-[-0.055em] leading-[1.08] mb-5 sm:mb-6 w-full px-1"
         >
-          <span className="block font-light text-foreground/55">Think out loud.</span>
-          <span className="block font-bold">
-            Ship something{" "}
-            <span className="italic font-serif font-normal text-foreground">real</span>
-            <span className="text-foreground">.</span>
+          <span className="block text-center">Dump your chaos.</span>
+          <span className="mt-1.5 flex flex-wrap items-center justify-center gap-x-[0.35em] gap-y-1 text-muted-foreground font-medium">
+            <span>Ship with</span>
+            <FlipWords
+              words={["clarity.", "structure.", "velocity.", "focus."]}
+              className="text-foreground font-semibold"
+            />
           </span>
         </motion.h1>
 
-        {/* Subtitle */}
         <motion.p
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.25 }}
-          className="text-[16px] md:text-[17px] text-muted-foreground max-w-xl mx-auto leading-[1.7] mb-11"
+          transition={{ duration: 0.6, delay: 0.1, ease }}
+          className="text-[14px] sm:text-[16px] md:text-[17px] text-muted-foreground max-w-md mx-auto leading-[1.7] mb-8 sm:mb-10 text-center font-normal tracking-[-0.015em] px-2"
         >
-          A workspace for the messy middle — where half-formed thoughts
-          become roadmaps, PRDs, and the next thing you actually ship.
+          A thinking lab for builders. Drop raw notes, get structured ideas,
+          PRDs, and roadmaps back.
         </motion.p>
 
-        {/* CTA buttons */}
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-3"
+          transition={{ duration: 0.55, delay: 0.18, ease }}
+          className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 w-full max-w-sm sm:max-w-none px-2"
         >
-          {/* Primary — animated conic-gradient border (Aceternity-style) */}
-          <button
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => navigate("/auth")}
-            className="group relative inline-flex h-12 overflow-hidden rounded-full p-[1.5px] focus:outline-none"
+            className="group h-11 px-6 text-[13px] font-medium bg-foreground text-background rounded-full inline-flex items-center justify-center gap-2 w-full sm:w-auto"
           >
-            <span className="absolute inset-[-1000%] animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,hsl(var(--foreground))_0%,hsl(var(--muted-foreground))_50%,hsl(var(--foreground))_100%)]" />
-            <span className="relative z-10 inline-flex h-full w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-foreground px-7 text-[14px] font-semibold text-background backdrop-blur-3xl transition-all duration-300 group-hover:shadow-[0_0_60px_-8px_hsl(var(--foreground)/0.55)]">
-              Start for free
-              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-            </span>
-          </button>
-
-          {/* Secondary — shimmer / glass */}
+            Start free
+            <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+          </motion.button>
           <a
-            href="#features"
-            className="group relative h-12 inline-flex items-center gap-2 px-6 text-[14px] text-foreground/85 rounded-full border border-border hover:border-foreground/30 hover:bg-card/50 transition-all duration-200 overflow-hidden"
+            href="#how-it-works"
+            className="h-11 px-6 text-[13px] text-muted-foreground rounded-full border border-border inline-flex items-center justify-center hover:text-foreground hover:border-foreground/25 transition-colors w-full sm:w-auto"
           >
-            <span className="relative z-10 flex items-center gap-2">
-              Explore features
-              <kbd className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground border border-border rounded bg-background/50">
-                <Command className="w-2.5 h-2.5" />K
-              </kbd>
-            </span>
-            <span className="pointer-events-none absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-foreground/10 to-transparent" />
+            See how it works
           </a>
-        </motion.div>
-
-        {/* Product preview window */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, delay: 0.6 }}
-          className="mt-24 relative max-w-4xl mx-auto"
-        >
-          <div className="absolute -inset-x-20 -inset-y-10 bg-gradient-to-b from-foreground/[0.03] to-transparent rounded-[3rem] blur-2xl pointer-events-none" />
-          <div className="relative rounded-2xl border border-border bg-card/60 backdrop-blur-md overflow-hidden shadow-[0_30px_80px_-30px_hsl(var(--foreground)/0.15)]">
-            {/* Window chrome */}
-            <div className="flex items-center gap-1.5 px-4 py-3 border-b border-border bg-card/80">
-              <div className="w-2.5 h-2.5 rounded-full bg-foreground/15" />
-              <div className="w-2.5 h-2.5 rounded-full bg-foreground/15" />
-              <div className="w-2.5 h-2.5 rounded-full bg-foreground/15" />
-              <span className="ml-3 text-[11px] font-mono text-muted-foreground">dumpstash · my session</span>
-            </div>
-            {/* Mock content */}
-            <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-3 text-left">
-              {[
-                { tag: "IDEA", text: "Turn the onboarding flow into a 3-step wizard. Way less friction." },
-                { tag: "DECISION", text: "Going with Postgres over Mongo. Relations matter more than scale rn." },
-                { tag: "QUESTION", text: "How are we handling rate limits for free-tier users?" },
-              ].map((d, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1 + i * 0.12 }}
-                  className="rounded-lg border border-border bg-background/60 p-3"
-                >
-                  <span className="text-[9px] font-bold tracking-[0.15em] text-muted-foreground">
-                    {d.tag}
-                  </span>
-                  <p className="text-[12px] mt-1.5 leading-[1.55] text-foreground/80">{d.text}</p>
-                </motion.div>
-              ))}
-            </div>
-          </div>
         </motion.div>
       </div>
     </section>

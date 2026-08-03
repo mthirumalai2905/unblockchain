@@ -311,7 +311,7 @@ const DumpInput = () => {
                 )}
               >
                 {isProcessing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-                {isProcessing ? "processing..." : "auto-process"}
+                {isProcessing ? "processing..." : "auto process"}
               </button>
             )}
             <button

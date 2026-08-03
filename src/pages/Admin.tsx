@@ -195,7 +195,7 @@ const Admin = () => {
             </button>
             <div>
               <h1 className="text-[15px] font-bold tracking-tight">Admin · Audit Console</h1>
-              <p className="text-[11px] text-muted-foreground">Real-time activity across the entire workspace</p>
+              <p className="text-[11px] text-muted-foreground">Live activity across the entire workspace</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -333,11 +333,11 @@ const Admin = () => {
                       <td className="px-4 py-2 font-medium">{l.event_name}</td>
                       <td className="px-4 py-2"><span className="px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wider border border-border">{l.category}</span></td>
                       <td className="px-4 py-2 text-muted-foreground truncate max-w-[180px]">{l.user_email ?? "anon"}</td>
-                      <td className="px-4 py-2 font-mono text-muted-foreground truncate max-w-[140px]">{l.route ?? "—"}</td>
-                      <td className="px-4 py-2 capitalize">{l.device_type ?? "—"}</td>
-                      <td className="px-4 py-2">{l.browser ?? "—"}</td>
-                      <td className="px-4 py-2">{l.os ?? "—"}</td>
-                      <td className="px-4 py-2 text-muted-foreground truncate max-w-[140px]">{l.timezone ?? "—"}</td>
+                      <td className="px-4 py-2 font-mono text-muted-foreground truncate max-w-[140px]">{l.route ?? "n/a"}</td>
+                      <td className="px-4 py-2 capitalize">{l.device_type ?? "n/a"}</td>
+                      <td className="px-4 py-2">{l.browser ?? "n/a"}</td>
+                      <td className="px-4 py-2">{l.os ?? "n/a"}</td>
+                      <td className="px-4 py-2 text-muted-foreground truncate max-w-[140px]">{l.timezone ?? "n/a"}</td>
                     </motion.tr>
                   ))}
                 </tbody>

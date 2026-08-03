@@ -124,7 +124,7 @@ const Auth = () => {
             transition={{ delay: 0.3 }}
             className="text-[14px] text-muted-foreground leading-relaxed mb-8"
           >
-            AI-powered workspace that transforms your raw brain dumps into structured insights, PRDs, and roadmaps.
+            An AI workspace that turns raw brain dumps into structured insights, PRDs, and roadmaps.
           </motion.p>
 
           {/* Feature pills */}
@@ -135,7 +135,7 @@ const Auth = () => {
             className="flex flex-col gap-3"
           >
             {[
-              { icon: Brain, text: "AI auto-classifies your thoughts" },
+              { icon: Brain, text: "AI classifies your thoughts" },
               { icon: FileText, text: "Generate PRDs in one click" },
               { icon: Map, text: "Interactive roadmap builder" },
             ].map((item, i) => (

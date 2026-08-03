@@ -163,7 +163,7 @@ const ProfilePage = () => {
     );
   }
 
-  const memberSince = profile?.created_at ? new Date(profile.created_at).toLocaleDateString(undefined, { month: "long", year: "numeric" }) : "—";
+  const memberSince = profile?.created_at ? new Date(profile.created_at).toLocaleDateString(undefined, { month: "long", year: "numeric" }) : "n/a";
 
   return (
     <div className="min-h-screen bg-background">

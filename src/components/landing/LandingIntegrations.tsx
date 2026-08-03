@@ -4,10 +4,10 @@ import { Zap, Globe, FileText, Brain, Layers, GitBranch } from "lucide-react";
 const integrations = [
   { icon: Globe, label: "Twitter/X", desc: "Import tweets & threads" },
   { icon: FileText, label: "Markdown", desc: "Export anywhere" },
-  { icon: Brain, label: "AI Models", desc: "Multi-model processing" },
+  { icon: Brain, label: "AI Models", desc: "Multiple model support" },
   { icon: Layers, label: "PDF Export", desc: "Share roadmaps" },
-  { icon: GitBranch, label: "Sub-groups", desc: "Branch ideas" },
-  { icon: Zap, label: "Real-time", desc: "Instant sync" },
+  { icon: GitBranch, label: "Subgroups", desc: "Branch ideas" },
+  { icon: Zap, label: "Realtime", desc: "Instant sync" },
 ];
 
 const LandingIntegrations = () => {

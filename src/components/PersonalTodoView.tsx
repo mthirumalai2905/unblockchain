@@ -53,7 +53,7 @@ const PersonalTodoView = () => {
       const toastKey = `todo-toast-${activeSessionId}-${todoDumps.length}`;
       if (!sessionStorage.getItem(toastKey)) {
         sessionStorage.setItem(toastKey, "1");
-        toast.info(`You have ${todoDumps.length} to-dos! Check the Personal section.`, {
+        toast.info(`You have ${todoDumps.length} todos! Check the Personal section.`, {
           duration: 5000,
         });
       }
@@ -112,7 +112,7 @@ const PersonalTodoView = () => {
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
         <div className="flex items-center gap-2">
           <ListTodo className="w-4 h-4 text-muted-foreground" />
-          <span className="text-[13px] font-semibold text-foreground">Personal To-Do</span>
+          <span className="text-[13px] font-semibold text-foreground">Personal Todos</span>
           {totalCount > 0 && (
             <span className="text-[11px] font-mono text-muted-foreground">
               {completedCount}/{totalCount}
@@ -128,7 +128,7 @@ const PersonalTodoView = () => {
             value={newTodo}
             onChange={(e) => setNewTodo(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTodo(); } }}
-            placeholder="Add a new to-do..."
+            placeholder="Add a new todo..."
             className="flex-1 px-3 py-2 rounded-lg border border-border bg-card text-foreground text-[13px] placeholder:text-muted-foreground/50 focus:outline-none focus:border-ring/50 transition-colors"
           />
           <button
@@ -203,9 +203,9 @@ const PersonalTodoView = () => {
               <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center mb-3">
                 <ListTodo className="w-5 h-5 text-muted-foreground" />
               </div>
-              <p className="text-[13px] text-muted-foreground">No to-dos yet</p>
+              <p className="text-[13px] text-muted-foreground">No todos yet</p>
               <p className="text-[11px] text-muted-foreground/50 mt-1">
-                Add one above or dump 5+ to-dos to auto-create them
+                Add one above or dump 5+ todos to create them automatically
               </p>
             </div>
           )}

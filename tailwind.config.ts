@@ -13,7 +13,9 @@ export default {
     extend: {
       fontFamily: {
         sans: ['"Inter"', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
-        mono: ['"JetBrains Mono"', 'monospace'],
+        mono: ['"Geist Mono"', '"IBM Plex Mono"', '"JetBrains Mono"', 'monospace'],
+        display: ['"Geist Sans"', 'system-ui', 'sans-serif'],
+        landing: ['"Geist Sans"', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -106,6 +108,10 @@ export default {
           "0%": { backgroundPosition: "-200% 0" },
           "100%": { backgroundPosition: "200% 0" },
         },
+        spotlight: {
+          "0%": { opacity: "0", transform: "translate(-72%, -62%) scale(0.5)" },
+          "100%": { opacity: "1", transform: "translate(-50%, -40%) scale(1)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -113,6 +119,7 @@ export default {
         "fade-in": "fade-in 0.3s ease-out",
         "pulse-dot": "pulse-dot 2s ease-in-out infinite",
         shimmer: "shimmer 2s linear infinite",
+        spotlight: "spotlight 2s ease 0.75s 1 forwards",
       },
     },
   },

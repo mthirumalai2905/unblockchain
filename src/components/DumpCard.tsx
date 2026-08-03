@@ -29,7 +29,7 @@ const typeConfig: Record<DumpType, { icon: typeof Lightbulb; label: string; dotC
   blocker: { icon: AlertTriangle, label: "Blocker", dotColor: "bg-cf-blocker", bgClass: "bg-cf-blocker/10", textClass: "text-cf-blocker" },
   action: { icon: ListTodo, label: "Action", dotColor: "bg-cf-action", bgClass: "bg-cf-action/10", textClass: "text-cf-action" },
   note: { icon: MessageSquare, label: "Note", dotColor: "bg-cf-note", bgClass: "bg-cf-note/10", textClass: "text-cf-note" },
-  todo: { icon: Target, label: "To-Do", dotColor: "bg-cf-todo", bgClass: "bg-cf-todo/10", textClass: "text-cf-todo" },
+  todo: { icon: Target, label: "Todo", dotColor: "bg-cf-todo", bgClass: "bg-cf-todo/10", textClass: "text-cf-todo" },
   insight: { icon: Lightbulb, label: "Insight", dotColor: "bg-cf-insight", bgClass: "bg-cf-insight/10", textClass: "text-cf-insight" },
   feedback: { icon: MessageCircle, label: "Feedback", dotColor: "bg-cf-feedback", bgClass: "bg-cf-feedback/10", textClass: "text-cf-feedback" },
   reference: { icon: BookOpen, label: "Reference", dotColor: "bg-cf-reference", bgClass: "bg-cf-reference/10", textClass: "text-cf-reference" },
@@ -291,9 +291,13 @@ const DumpCard = ({ dump, index }: DumpCardProps) => {
             )}
 
             {/* Rich link embeds */}
-            {isLinkDump && urls.map((url) => (
-              <LinkEmbed key={url} url={url} />
-            ))}
+            {isLinkDump && urls.length > 0 && (
+              <div className="mt-1.5 space-y-1.5">
+                {urls.map((url) => (
+                  <LinkEmbed key={url} url={url} className="mt-0" />
+                ))}
+              </div>
+            )}
 
             <div className="flex items-center gap-3 mt-2.5 flex-wrap">
               {themes.length > 0 && themes.map((theme) => (

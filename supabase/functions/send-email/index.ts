@@ -77,7 +77,7 @@ function buildEmail(type: string, data: Record<string, string>) {
 
     case "signup":
       return {
-        subject: "Welcome to DumpStash — Confirm your email",
+        subject: "Welcome to DumpStash. Confirm your email",
         html: wrapper(
           "Confirm your email",
           `<p style="margin:0 0 24px;font-size:14px;color:${brandStyles.muted};line-height:1.6;">

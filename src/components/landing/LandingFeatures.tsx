@@ -15,15 +15,15 @@ interface FeatureItem {
 const features: FeatureItem[] = [
   {
     icon: Brain,
-    title: "AI auto-processing",
-    desc: "Drop raw thoughts. AI classifies, labels, and extracts insights in seconds — not hours.",
+    title: "AI processing",
+    desc: "Drop raw thoughts. AI classifies, labels, and extracts insights in seconds, not hours.",
     size: "lg",
     visual: "process",
   },
   {
     icon: FileText,
     title: "PRD generation",
-    desc: "One click turns chaos into polished product docs. Share-ready, every time.",
+    desc: "One click turns chaos into polished product docs. Ready to share every time.",
     size: "md",
     visual: "doc",
   },
@@ -44,14 +44,14 @@ const features: FeatureItem[] = [
   {
     icon: Zap,
     title: "Instant actions",
-    desc: "Every dump analyzed for next steps. To-dos, blockers, decisions — captured.",
+    desc: "Every dump analyzed for next steps. Todos, blockers, and decisions get captured.",
     size: "md",
     visual: "actions",
   },
   {
     icon: MessageSquare,
     title: "Granular sharing",
-    desc: "Invite collaborators with read or write access on a per-session basis.",
+    desc: "Invite collaborators with read or write access for each session.",
     size: "md",
     visual: "share",
   },
@@ -190,7 +190,7 @@ const ModernBentoCard = ({ feature, className }: { feature: FeatureItem; classNa
       viewport={{ once: true, margin: "-50px" }}
       transition={{ duration: 0.5 }}
       className={cn(
-        "group relative overflow-hidden rounded-2xl border border-border bg-card/30 backdrop-blur-sm p-6 hover:bg-card/60 transition-colors flex flex-col",
+        "group relative overflow-hidden rounded-2xl border border-border bg-card/30 backdrop-blur-sm p-4 sm:p-6 hover:bg-card/60 transition-colors flex flex-col min-w-0",
         className
       )}
     >
@@ -232,33 +232,32 @@ const ModernBentoCard = ({ feature, className }: { feature: FeatureItem; classNa
 
 const LandingFeatures = () => {
   return (
-    <section id="features" className="relative py-32 px-6">
+    <section id="features" className="relative py-14 sm:py-16 md:py-20 px-4 sm:px-6">
       <div className="max-w-6xl mx-auto">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 24, filter: "blur(6px)" }}
+          whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+          className="text-center mb-8 sm:mb-10 px-1"
         >
-          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-card/40 text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.18em] mb-5">
-            <span className="w-1 h-1 rounded-full bg-foreground" />
-            Capabilities
-          </span>
-          <h2 className="text-3xl md:text-[3rem] font-bold tracking-[-0.035em] leading-[1.05]">
+          <p className="lab-mono text-[11px] text-muted-foreground mb-3">
+            capabilities
+          </p>
+          <h2 className="font-display text-[1.75rem] sm:text-3xl md:text-[2.75rem] font-semibold tracking-[-0.045em] leading-[1.1]">
             Built for the way
-            <br className="hidden md:block" />
-            <span className="text-muted-foreground/70"> you actually think</span>
+            <br className="hidden sm:block" />
+            <span className="text-muted-foreground"> you actually think</span>
           </h2>
         </motion.div>
 
-        {/* Asymmetric bento */}
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-3 md:gap-4 auto-rows-[260px]">
-          <ModernBentoCard feature={features[0]} className="md:col-span-4" />
-          <ModernBentoCard feature={features[1]} className="md:col-span-2" />
-          <ModernBentoCard feature={features[2]} className="md:col-span-2" />
-          <ModernBentoCard feature={features[3]} className="md:col-span-4" />
-          <ModernBentoCard feature={features[4]} className="md:col-span-3" />
-          <ModernBentoCard feature={features[5]} className="md:col-span-3" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3 md:gap-4 md:auto-rows-[220px]">
+          <ModernBentoCard feature={features[0]} className="md:col-span-4 min-h-[200px] sm:min-h-[220px] md:min-h-0" />
+          <ModernBentoCard feature={features[1]} className="md:col-span-2 min-h-[200px] sm:min-h-[220px] md:min-h-0" />
+          <ModernBentoCard feature={features[2]} className="md:col-span-2 min-h-[200px] sm:min-h-[220px] md:min-h-0" />
+          <ModernBentoCard feature={features[3]} className="md:col-span-4 min-h-[200px] sm:min-h-[220px] md:min-h-0" />
+          <ModernBentoCard feature={features[4]} className="md:col-span-3 min-h-[200px] sm:min-h-[220px] md:min-h-0" />
+          <ModernBentoCard feature={features[5]} className="md:col-span-3 min-h-[200px] sm:min-h-[220px] md:min-h-0" />
         </div>
       </div>
     </section>

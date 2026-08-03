@@ -21,7 +21,7 @@ const AISummaryPanel = () => {
     { type: "blocker", label: "Blockers", color: "bg-cf-blocker", count: typeCounts.blocker || 0 },
     { type: "action", label: "Actions", color: "bg-cf-action", count: typeCounts.action || 0 },
     { type: "note", label: "Notes", color: "bg-cf-note", count: typeCounts.note || 0 },
-    { type: "todo", label: "To-Dos", color: "bg-cf-todo", count: typeCounts.todo || 0 },
+    { type: "todo", label: "Todos", color: "bg-cf-todo", count: typeCounts.todo || 0 },
     { type: "insight", label: "Insights", color: "bg-cf-insight", count: typeCounts.insight || 0 },
     { type: "feedback", label: "Feedback", color: "bg-cf-feedback", count: typeCounts.feedback || 0 },
     { type: "reference", label: "References", color: "bg-cf-reference", count: typeCounts.reference || 0 },
