@@ -10,8 +10,8 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const GROK_API_KEY = Deno.env.get("DUMPIFY_AI_v1") || Deno.env.get("DUMPIFY_AI");
-    if (!GROK_API_KEY) throw new Error("AI key not configured");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("AI key not configured");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -51,15 +51,15 @@ QUESTIONS:
 ${questions.map((q: any) => `- ${q.text} (${q.answered ? "answered" : "open"}, ${q.votes} votes)`).join("\n")}
 `;
 
-    // Stream from Groq
-    const grokResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    // Stream from Lovable AI
+    const grokResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${GROK_API_KEY}`,
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
+        model: "google/gemini-2.5-flash",
         messages: [
           {
             role: "system",
